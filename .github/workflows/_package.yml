@@ -188,7 +188,7 @@ jobs:
 
       - name: Attest SBOM
         if: ${{ inputs.attest && (matrix.os == 'ubuntu-latest' || matrix.os == 'macos-latest' || matrix.os == 'windows-2022') }}
-        uses: actions/attest-sbom@v1
+        uses: actions/attest-sbom@v4
         with:
           subject-path: dist/SHA256SUMS
           sbom-path: dist/limboo-sbom.cdx.json
