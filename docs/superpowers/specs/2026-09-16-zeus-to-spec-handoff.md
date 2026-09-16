@@ -1,9 +1,12 @@
 # ZEUS — Architecture Handoff for `to-spec`
 
 - **Date:** 2026-09-16
-- **Status:** Grilling frontier **closed** (Rounds 1–2). All foundational
-  decisions recorded. This document is the single input for the
-  specification phase.
+- **Status:** Grilling frontier **closed** (Rounds 1–2). This is the
+  **authoritative handoff** for the specification phase.
+- **Closed decisions:** ADRs 0001–0007 are closed and must not be reopened by
+  `to-spec`. `to-spec` translates accepted decisions into implementation-ready
+  specifications; if it discovers an actual contradiction in the codebase, it
+  documents a discrepancy/risk instead of silently changing an ADR.
 - **Authoritative artifacts:** `CONTEXT.md` (glossary), `docs/adr/0001–0007`
   (permanent decisions), this file (scope split + open risks).
 
@@ -25,69 +28,120 @@ plain sessions default; worktrees optional; TypeScript 5 bounded upgrade.
 
 ---
 
-## Work item 1 — Architectural work
+## Binding rules for `to-spec`
 
-These items change or pin the system's structure. Each has an ADR or
-architectural decision behind it; `to-spec` turns each into a spec.
+1. **Closed decisions.** ADRs 0001–0007 are closed and must not be reopened.
+   Discovered code-level contradictions are documented as discrepancies/risks,
+   never resolved by silently changing an ADR. Documentation conflicts are
+   governed by the authority model in `AGENTS.md` (§ Documentation authority):
+   an inherited Limboo statement never silently overrides a closed ZEUS ADR.
+2. **Security is cross-cutting.** ADR 0004 applies to EVERY specification and
+   implementation ticket: every spec accounts for the security invariants
+   relevant to its scope; security regressions are release blockers.
+3. **Provider boundary.** `AgentManager` remains the provider-neutral entry
+   point. The renderer/UI must not become generally coupled to Claude- or
+   Cursor-specific runtime behavior; provider differences surface through
+   normalized capabilities/state wherever possible.
+4. **Session model.** `Workspace → Session → execution root`. Plain session
+   is the default; worktree-backed session is opt-in. No task-centric
+   redesign.
+5. **Migration distinction.** Limboo → ZEUS external migration is NOT
+   supported in v1 (ADR 0005). ZEUS's own schema/settings migrations ARE
+   supported when required. Every storage/settings specification documents
+   its migration/version behavior.
+6. **Impeccable requirement.** Any specification containing UI/UX decisions
+   MUST use the `impeccable` skill before those UI/UX decisions are finalized.
+   The spec captures: UX goals; layout/interaction decisions; accessibility
+   requirements; design-system constraints; important states/edge cases; the
+   outcome of the Impeccable review.
+
+## Specification workflow and ordering
+
+`to-spec` produces specifications only — this ordering is the specification
+workflow, not permission to implement.
+
+### Phase 1 — Infrastructure prerequisites
 
 1. **ZEUS storage identity** (ADR 0005) — `app.setName('zeus')` before any
    persistence-touching boot code; DB filename `limboo.db` → `zeus.db`;
    verify all userData-relative paths (`secrets/`, `worktrees/`,
    `attachments/`, window-state) resolve under the new root; no migration.
-2. **Release-pipeline isolation** (ADR 0006) — remove `.gitlab-ci.yml`
+2. **Voice removal** — one dedicated cleanup change before feature work:
+   `managers/voice/`, `shared/voice-models.ts`, `sherpa-onnx-node` dep, voice
+   IPC channels, preload namespace, renderer UI/store, settings category, and
+   the related `SETTINGS_VERSION` migration handling. No feature flag.
+3. **TypeScript 4.5 → 5.x (bounded)** — narrow scope, no unrelated churn,
+   runtime behavior preserved (esbuild-bundled), validated by build/lint/
+   tests; goal: `tsc --noEmit` runs successfully.
+4. **Vitest foundation** — first targets: `graph/builder.ts`,
+   `telemetry/accumulator.ts`, `src/shared/refName.ts` (fuzz vs real `git
+   check-ref-format`), `SettingsManager.normalize`, git arg/ref parsers.
+5. **CI verification gates** — minimal CI runs build + lint + tests; grows
+   with the test suite; the `vite build + eslint`-only era ends here. This
+   deliverable also replaces the paused Dependabot configuration with the
+   ZEUS-native monthly/security-driven policy.
+6. **Release-pipeline isolation** (ADR 0006) — remove `.gitlab-ci.yml`
    release stage + `v*` triggers, Bitbucket publish pipelines, GH Actions
    release workflows; keep minimal lint/build CI; preserve generic
    artifact-validation logic as reference.
-3. **Session/worktree semantics** — canonical model:
+
+### Phase 2 — Product / architecture specifications
+
+7. **Session/worktree defaults** — canonical model:
    `Workspace → Session → {conversation, terminal, agent run, checkpoints,
    execution root}`. Plain session is the default (execution root = workspace
    directory); worktree-backed sessions are explicit opt-in. Preserve
    `resolveSessionRoot` behavior; change the *product defaults*, not the
    resolver. No task-centric rework.
-4. **Provider/runtime boundaries** (ADR 0003) — AgentManager seam frozen as
-   the only provider entry; new providers (incl. local models, later) enter
-   as adapters only; parity (permissions, context, resume) checked against
-   `decideToolUse`.
-5. **Security invariants** (ADR 0004) — the eleven hardening patterns and
-   three permission layers are non-negotiable constraints on every spec;
-   security regressions are release blockers.
-6. **Verification architecture** (ADR 0007) — Vitest foundation as part of
-   the architecture, prioritizing security-sensitive parsing, git argument
-   construction, state normalization, graph construction, telemetry
-   accumulation, provider-independent logic.
+8. **Provider/runtime boundary contract** (ADR 0003) — AgentManager seam
+   frozen as the only provider entry; new providers (incl. local models,
+   later) enter as adapters only; parity (permissions, context, resume)
+   checked against `decideToolUse`.
+9. **Security invariants as cross-cutting requirements** (ADR 0004) — the
+   eleven hardening patterns and three permission layers are non-negotiable
+   constraints on every spec; security regressions are release blockers.
+10. **Verification architecture integration** (ADR 0007) — how the Vitest
+    foundation, CI gates, and the pure-module discipline attach to product
+    specs; prioritizing security-sensitive parsing, git argument
+    construction, state normalization, graph construction, telemetry
+    accumulation, provider-independent logic.
 
-## Work item 2 — Infrastructure work
+### Specification template
 
-Bounded, ordered enablers — not features:
+Every `to-spec` output contains, in this order:
 
-1. **Voice removal** — one dedicated cleanup change before feature work:
-   `managers/voice/`, `shared/voice-models.ts`, `sherpa-onnx-node` dep, voice
-   IPC channels, preload namespace, renderer UI/store, settings category, and
-   the related `SETTINGS_VERSION` migration handling. No feature flag.
-2. **TypeScript 4.5 → 5.x (bounded)** — narrow scope, no unrelated churn,
-   runtime behavior preserved (esbuild-bundled), validated by build/lint/
-   tests; goal: `tsc --noEmit` runs successfully.
-3. **Vitest foundation** — first targets: `graph/builder.ts`,
-   `telemetry/accumulator.ts`, `src/shared/refName.ts` (fuzz vs real `git
-   check-ref-format`), `SettingsManager.normalize`, git arg/ref parsers.
-4. **CI verification gates** — minimal CI runs build + lint + tests; grows
-   with the test suite; the `vite build + eslint`-only era ends here.
+- Problem
+- Scope
+- **Non-goals** (mandatory)
+- Current architecture
+- Applicable ADR / decision
+- Detailed behavior
+- Files/modules affected
+- Data/migration impact
+- Security impact
+- Windows-specific behavior
+- UI/UX impact
+- Impeccable review requirements, when applicable
+- Verification plan
+- Acceptance criteria
+- Dependencies
+- Known risks
 
-Suggested order: Voice removal → TS 5 → Vitest foundation → CI gates →
-storage identity → release-pipeline isolation → session/worktree defaults.
+## Deferred scope — future work requiring future decisions/specifications
 
-## Work item 3 — Future / deferred work
+These stay out of v1 specifications; none may leak into Phase 1/2 specs:
 
-Explicitly out of scope for the first spec cycle; do not let them leak into
-specs:
-
-- Local-model providers (Ollama/LM Studio) — future adapter behind the seam.
-- Advanced Electron E2E coverage — after the unit foundation matures.
-- ZEUS visual rebrand — deferred; storage identity already decoupled (0005).
-- ZEUS-native release publishing — its own future decision + ADR.
-- Previously identified non-v1 capabilities: Cursor Cloud Agents, ACP
-  adapter, merge-conflict UI, stash, tree-sitter symbol extraction, vector
-  embeddings on BM25, file-writer history → session timeline.
+- Ollama / LM Studio / local model adapters
+- Advanced Electron E2E coverage
+- ZEUS visual rebrand (storage identity already decoupled — ADR 0005)
+- ZEUS-native release publishing
+- Cursor Cloud Agents
+- ACP adapter
+- Merge-conflict UI
+- Stash
+- Tree-sitter symbol extraction
+- Vector embeddings
+- File-writer history → session timeline
 
 ---
 

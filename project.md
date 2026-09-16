@@ -17,6 +17,13 @@ Frontend: React + Vite
 Language: TypeScript
 ```
 
+> **ZEUS status note:** this document is the inherited Limboo product vision.
+> Its UI assumptions (left Sessions, center Conversation/Agent Output, right
+> Activity/Files/Changes, and similar) describe the **current implementation**
+> and are a reference only — they are not an approved ZEUS design. ZEUS UI/UX
+> must be validated before approval, and any non-trivial ZEUS UI/UX decision
+> requires the `impeccable` skill (see `AGENTS.md`).
+
 ---
 
 # Table of Contents

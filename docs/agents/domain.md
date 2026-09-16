@@ -6,7 +6,7 @@ ADR directory at the repo root.
 | Artifact     | Location    | Status                                  |
 | ------------ | ----------- | --------------------------------------- |
 | `CONTEXT.md` | repo root   | Exists — ZEUS glossary (living).        |
-| ADRs         | `docs/adr/` | Exists — `0001`–`0004` accepted.        |
+| ADRs         | `docs/adr/` | Exists — `0001`–`0007` accepted.        |
 
 ## What lives where
 

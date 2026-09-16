@@ -9,6 +9,31 @@ Agent entry point for this repository — applicable to any AI coding agent
 > and what is and isn't built yet. When this file and `CLAUDE.md` disagree about
 > current reality, `CLAUDE.md` wins.
 
+## Documentation authority
+
+- **Current implementation reality:** `CLAUDE.md` is the detailed code-level
+  contract describing the inherited/current implementation of the codebase.
+- **ZEUS architectural decisions:** `CONTEXT.md` + accepted ADRs
+  (`docs/adr/0001`–`0007`) are authoritative for ZEUS architectural decisions.
+- **Architecture narrative:** `docs/architecture/` explains the existing
+  architecture and implementation rationale.
+- **Product/specification decisions:** the ZEUS specification/handoff
+  documents under `docs/superpowers/specs/` define the approved ZEUS scope for
+  the specification phase.
+
+**Critical rule:** a closed ZEUS ADR must not be silently overridden by an
+inherited Limboo statement in `CLAUDE.md`, `project.md`, or older architecture
+documentation. If an inherited document conflicts with an accepted ZEUS ADR,
+treat the conflict as documentation drift to be resolved explicitly — not as
+permission to reopen the ADR.
+
+**Inherited UI content:** UI layout/content described in `project.md` and
+other Limboo-era documentation (left Sessions, center Conversation/Agent
+Output, right Activity/Files/Changes, and similar) is a reference for the
+current implementation only. It must be validated for ZEUS before being
+treated as an approved ZEUS design; the `## UI/UX Design` rule below remains
+authoritative for any ZEUS UI/UX decision.
+
 ## Agent skills
 
 ### Issue tracker

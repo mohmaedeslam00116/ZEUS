@@ -7,14 +7,18 @@ change. The user-facing summary is [SECURITY.md](../../SECURITY.md).
 
 ## Threat model in one paragraph
 
-There is no backend, no telemetry, and no stored credentials, so there is no server
-to attack and little secret material to steal. The realistic threats are: a
+There is no backend, no server-side application telemetry, and no stored
+credentials, so there is no server to attack and little secret material to
+steal. **Runtime Telemetry** is a local-only platform service: it measures
+ZEUS's own agent runs (context usage, cost estimates, quota windows) into the
+local SQLite database, is displayed only in the app, and never leaves the
+machine — the privacy/local-first model is unchanged. The realistic threats are: a
 compromised or buggy renderer trying to reach the OS; malicious input crossing IPC;
 path traversal escaping the workspace; injection through SQL or a spawned shell;
 prototype pollution through merged objects; and secrets leaking into logs. Each has a
 specific, implemented defense.
 
-## The ten hardening patterns
+## The eleven hardening patterns
 
 1. **Process isolation** — `contextIsolation: true`, `nodeIntegration: false`,
    `sandbox: true`. The renderer has no Node access; a single typed preload bridge is

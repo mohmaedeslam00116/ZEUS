@@ -1,8 +1,8 @@
 # Issue tracker — GitHub Issues
 
-Issues for this repository live in **GitHub Issues** on `limboo-ai/limboo`:
+Issues for this repository live in **GitHub Issues** on `mohmaedeslam00116/ZEUS`:
 
-> https://github.com/limboo-ai/limboo/issues
+> https://github.com/mohmaedeslam00116/ZEUS/issues
 
 All issue reads and writes go through the [`gh`](https://cli.github.com/) CLI.
 
