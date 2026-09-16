@@ -131,7 +131,7 @@ jobs:
           ref: ${{ needs.wait-for-release.outputs.tag }}
 
       - name: Download packaged artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           path: artifacts
           # One directory per runner label — see the merge step for why these are
