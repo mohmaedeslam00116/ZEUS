@@ -172,7 +172,10 @@ function emit(file, contents) {
       console.error(`gen-release-notes --check: ${rel} is missing. Run \`npm run gen:notes\`.`);
       return false;
     }
-    if (existing !== contents) {
+    // Compare EOL-normalized: git autocrlf checks these LF-authored files out
+    // as CRLF on Windows (runner or dev box), which must not false-fail the gate.
+    const norm = (t) => t.replace(/\r\n/g, '\n');
+    if (norm(existing) !== norm(contents)) {
       console.error(
         `gen-release-notes --check: ${rel} is out of sync with CHANGELOG.md. ` +
           'Run `npm run gen:notes` and commit the result.',

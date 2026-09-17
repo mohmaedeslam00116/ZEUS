@@ -93,6 +93,13 @@ jobs:
           node ci/scripts/check-tag-unique.mjs "$TAG"
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
 
+      - name: Create local release tag
+        # The tag exists only in this runner's checkout for now: build-metadata
+        # stamping (embed-release-manifest) requires it, and `gh release create`
+        # materializes it on the remote at the same SHA when the draft is made.
+        # No manual tag push happens anywhere (ADR-0008: dispatch-only).
+        run: git tag "${{ inputs.tag }}" "$GITHUB_SHA"
+
       # ---------------------------------------------------------------------
       # 3. Validation gates — the SAME gates ci.yml's Validate job runs,
       #    re-run here so packaging never starts from an unverified tree.
@@ -130,6 +137,12 @@ jobs:
       # ---------------------------------------------------------------------
       - name: Stamp version from tag
         run: node ci/scripts/apply-tag-version.mjs "${{ inputs.tag }}"
+
+      - name: Stamp git-derived release metadata into the bundled manifest
+        # Fills commit/buildNumber/contributors/stats in
+        # releaseManifest.generated.ts before the renderer bundle bakes it in,
+        # so the in-app What's-New shows real provenance (release-process.md step 3).
+        run: node ci/scripts/embed-release-manifest.mjs "${{ inputs.tag }}"
 
       - name: Package app (Forge fuses + asar)
         run: npm run package
