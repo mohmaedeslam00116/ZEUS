@@ -159,6 +159,11 @@ jobs:
         run: |
           set -e
           TAG='${{ inputs.tag }}'
+          # electron-builder debug side-files must never reach the publish set
+          # (verify-artifacts --publish-set fails on them by design — run 3 of
+          # the alpha.1 release proved it). Remove before checksumming so the
+          # SHA256SUMS describes exactly what will be uploaded.
+          rm -f dist/builder-debug.yml dist/builder-effective-config.yaml
           node ci/scripts/make-checksums.mjs dist
           node ci/scripts/merge-update-metadata.mjs dist dist
           node ci/scripts/generate-release-manifest.mjs dist "$TAG"
