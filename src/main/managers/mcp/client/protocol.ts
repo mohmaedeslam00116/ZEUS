@@ -1,6 +1,6 @@
 /**
  * Minimal MCP (Model Context Protocol) JSON-RPC 2.0 helpers shared by the stdio
- * and HTTP health-probe clients. Limboo speaks just enough of the protocol to
+ * and HTTP health-probe clients. Zeus speaks just enough of the protocol to
  * establish a connection and enumerate tools (initialize → tools/list) — actual
  * tool EXECUTION at run time happens inside the provider (Claude Agent SDK /
  * cursor-agent), never here. The probe client exists only to power the UI's
@@ -11,8 +11,8 @@ import type { McpToolInfo } from '@shared/types';
 /** MCP protocol revision we advertise on initialize. */
 export const MCP_PROTOCOL_VERSION = '2025-06-18';
 
-/** Identifies Limboo's probe client to the server. */
-export const CLIENT_INFO = { name: 'limboo', version: '1.0.0' } as const;
+/** Identifies Zeus's probe client to the server. */
+export const CLIENT_INFO = { name: 'zeus', version: '1.0.0' } as const;
 
 export interface JsonRpcResponse {
   jsonrpc: '2.0';

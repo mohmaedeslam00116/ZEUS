@@ -1,6 +1,6 @@
-# Reference: limboo.json
+# Reference: zeus.json
 
-A repo may ship a `limboo.json` at its root declaring commands Limboo can run
+A repo may ship a `zeus.json` at its root declaring commands Zeus can run
 for a session: **setup/teardown hooks**, **named scripts**, and **supervised
 services**. The source of truth is
 [`src/main/managers/worktree/config.ts`](../../src/main/managers/worktree/config.ts)
@@ -43,7 +43,7 @@ silently dropped; an unparseable file is treated as absent.
 
 ## Trust model (acknowledgment gate)
 
-`limboo.json` is **repo-authored and therefore untrusted** until the user
+`zeus.json` is **repo-authored and therefore untrusted** until the user
 approves it. The approval dialog shows every executable command verbatim; a
 SHA-256 hash over the executable portions (setup + teardown + scripts +
 services, canonicalized) is what gets acknowledged and persisted per workspace
@@ -67,19 +67,19 @@ Setup/teardown hooks (run inside the worktree):
 
 | Variable | Value |
 | -------- | ----- |
-| `LIMBOO_WORKTREE` | `1` |
-| `LIMBOO_SOURCE_ROOT` | the workspace's main checkout (copy ignored files from here) |
-| `LIMBOO_BRANCH` | the worktree branch |
-| `LIMBOO_SESSION_ID` | owning session id |
+| `ZEUS_WORKTREE` | `1` |
+| `ZEUS_SOURCE_ROOT` | the workspace's main checkout (copy ignored files from here) |
+| `ZEUS_BRANCH` | the worktree branch |
+| `ZEUS_SESSION_ID` | owning session id |
 
 Services (run in the session's effective root):
 
 | Variable | Value |
 | -------- | ----- |
-| `PORT` / `LIMBOO_PORT` | the auto-assigned loopback port |
-| `LIMBOO_SERVICE_NAME` | this service's name |
-| `LIMBOO_SESSION_ID` | owning session id |
-| `LIMBOO_SERVICE_<NAME>_PORT` / `_URL` | each already-running sibling service of the same session (loopback only) |
+| `PORT` / `ZEUS_PORT` | the auto-assigned loopback port |
+| `ZEUS_SERVICE_NAME` | this service's name |
+| `ZEUS_SESSION_ID` | owning session id |
+| `ZEUS_SERVICE_<NAME>_PORT` / `_URL` | each already-running sibling service of the same session (loopback only) |
 
 With the proxy enabled (`git.services.proxyEnabled`), each running service is
 also reachable at `http://<service>--<slug>.localhost:<proxyPort>` — see

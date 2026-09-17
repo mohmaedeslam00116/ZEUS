@@ -18,7 +18,7 @@
  *    recording must never look like a quiet session.
  *  - Bounded everywhere: coalesced pushes, ringed tool rows, bucketed samples,
  *    ring-capped rollups, swept history.
- *  - No network. The rolling-quota numbers ride the SDK stream Limboo already
+ *  - No network. The rolling-quota numbers ride the SDK stream Zeus already
  *    consumes; nothing here fetches anything.
  */
 import { BrowserWindow, dialog, type WebContents } from 'electron';
@@ -55,7 +55,7 @@ export interface TelemetryAgentSource {
 }
 
 /**
- * Optional collaborators supplying the Limboo-owned half of the snapshot.
+ * Optional collaborators supplying the Zeus-owned half of the snapshot.
  *
  * Deliberately plain closures rather than manager interfaces: this manager
  * needs one fact from each of five subsystems, and importing five manager types
@@ -91,7 +91,7 @@ export class RuntimeTelemetryManager {
   private readonly timers = new Map<string, NodeJS.Timeout>();
   private readonly seq = new Map<string, number>();
 
-  /** Character tallies Limboo measured itself, per session. */
+  /** Character tallies Zeus measured itself, per session. */
   private readonly hostChars = new Map<
     string,
     { conversation: number; tools: number; mcp: number }
@@ -130,7 +130,7 @@ export class RuntimeTelemetryManager {
   /* Wiring                                                            */
   /* ---------------------------------------------------------------- */
 
-  /** Inject the Limboo-owned fact getters (see {@link RuntimeHostSources}). */
+  /** Inject the Zeus-owned fact getters (see {@link RuntimeHostSources}). */
   setHostSources(sources: RuntimeHostSources): void {
     this.host = { ...this.host, ...sources };
   }
@@ -253,7 +253,7 @@ export class RuntimeTelemetryManager {
       }
 
       if (signal.kind === 'compaction') {
-        // Everything Limboo attributed is stale after a compaction.
+        // Everything Zeus attributed is stale after a compaction.
         this.hostChars.set(signal.sessionId, { conversation: 0, tools: 0, mcp: 0 });
         if (signal.trigger === 'auto') {
           const run = this.accumulator.runOf(signal.sessionId);
@@ -327,7 +327,7 @@ export class RuntimeTelemetryManager {
   }
 
   /**
-   * Character tallies Limboo measured itself, folded in as they are observed.
+   * Character tallies Zeus measured itself, folded in as they are observed.
    * These are the ONLY basis for the per-contributor context split — the API
    * reports one aggregate input-token count and no breakdown at all.
    */
@@ -510,7 +510,7 @@ export class RuntimeTelemetryManager {
    * appearing halfway through a session: an indeterminate ring plus a card that
    * says what has not been measured is a real answer, and an absent control is
    * not. Nothing here is invented — there is no `context` and no `run`, only the
-   * capability table and the Limboo-owned environment facts.
+   * capability table and the Zeus-owned environment facts.
    *
    * The provider is read from the SELECTED model, which is the one place in
    * this subsystem that does so. The Work Graph's "provider is captured per

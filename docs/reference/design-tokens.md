@@ -1,6 +1,6 @@
 # Reference: design tokens
 
-Limboo is dark mode only, on a true `#000000` background. There is no light mode and
+Zeus is dark mode only, on a true `#000000` background. There is no light mode and
 no theme toggle. Tokens are defined in the Tailwind v4 `@theme` block of
 [`src/renderer/styles/index.css`](../../src/renderer/styles/index.css) and become
 utilities automatically (for example `bg-base`, `text-fg`, `border-line`,
@@ -29,7 +29,7 @@ utilities automatically (for example `bg-base`, `text-fg`, `border-line`,
 
 - `--font-sans` — Inter, then system sans-serif fallbacks.
 - `--font-mono` — `ui-monospace`, SF Mono, JetBrains Mono, Fira Code, and fallbacks.
-- Root font size is `calc(16px * var(--limboo-font-scale, 1))`; the font scale is
+- Root font size is `calc(16px * var(--zeus-font-scale, 1))`; the font scale is
   driven by `appearance.fontScale`.
 
 ## Enforcement (defense in depth)

@@ -30,7 +30,7 @@ export function MemoryPanel() {
     <div className="flex flex-col gap-5">
       <Section
         title="Resume"
-        hint="When you reopen a session, Limboo revalidates the repository against the state it last saw and surfaces what changed — commits, files, symbols, and dependency manifests — so the agent continues against current reality, not remembered assumptions. Fully local, bounded git; never blocks switching."
+        hint="When you reopen a session, Zeus revalidates the repository against the state it last saw and surfaces what changed — commits, files, symbols, and dependency manifests — so the agent continues against current reality, not remembered assumptions. Fully local, bounded git; never blocks switching."
       >
         <Field
           id="resumeEnabled"

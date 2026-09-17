@@ -484,8 +484,8 @@ export class TerminalManager {
     }
     env.TERM = 'xterm-256color';
     env.COLORTERM = 'truecolor';
-    // Signal to spawned tooling that it runs inside Limboo's integrated terminal.
-    env.LIMBOO_TERMINAL = '1';
+    // Signal to spawned tooling that it runs inside Zeus's integrated terminal.
+    env.ZEUS_TERMINAL = '1';
     return env;
   }
 

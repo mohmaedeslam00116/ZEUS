@@ -1,8 +1,8 @@
 /**
- * Contributor avatars — the ONE outbound network path Limboo has besides the
+ * Contributor avatars — the ONE outbound network path Zeus has besides the
  * coding agent itself.
  *
- * CLAUDE.md §1's "no backend" rule is about Limboo not phoning home; it is not
+ * CLAUDE.md §1's "no backend" rule is about Zeus not phoning home; it is not
  * a claim that no byte ever leaves. This module is the single, narrow, explicitly
  * documented exception, and it is gated by `settings.git.avatars.enabled` so a
  * user (or an enterprise) can switch it off entirely.
@@ -257,7 +257,7 @@ async function getBytes(url: string): Promise<Buffer | null> {
     let response: Response;
     try {
       response = await fetch(target, {
-        headers: { accept: 'image/*', 'user-agent': 'limboo' },
+        headers: { accept: 'image/*', 'user-agent': 'zeus' },
         redirect: 'manual',
         signal: AbortSignal.timeout(AVATAR_LIMITS.timeoutMs),
       });

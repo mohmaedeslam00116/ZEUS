@@ -3,7 +3,7 @@
 ## Purpose
 
 The Git Engine is the deep git integration: every git operation for the active
-workspace, plus Limboo's lightweight per-session checkpoints. It is designed around a
+workspace, plus Zeus's lightweight per-session checkpoints. It is designed around a
 timeline (a checkout timeline, not a bag of commands) and runs entirely in the main
 process, argv-only, with no shell. See the
 [Git workflow guide](../../guides/git-workflow.md).
@@ -42,7 +42,7 @@ Reached via the `git:*` channels.
 
 ## Checkpoints
 
-Checkpoints are stored as refs under `refs/limboo/checkpoints/<sessionId>/<ts>` — off
+Checkpoints are stored as refs under `refs/zeus/checkpoints/<sessionId>/<ts>` — off
 any branch, never pushed. They are created using a temporary index
 (`GIT_INDEX_FILE`) so the user's index and working tree are untouched: build a tree,
 create a commit, write the ref. Restoring auto-checkpoints the current state first;
@@ -53,7 +53,7 @@ older checkpoints beyond the configured maximum are pruned. Metadata is stored i
 
 Push uses `--force-with-lease`, never a bare `--force`, and can require confirmation.
 Errors are classified into structured outcomes (no upstream, rejected / needs pull,
-not fast-forward, conflicts, auth failed) so the UI can guide the next step. Limboo
+not fast-forward, conflicts, auth failed) so the UI can guide the next step. Zeus
 stores no remote credentials — it uses the user's credential helper / SSH agent — and
 embedded-credential remote URLs are redacted from results and logs.
 

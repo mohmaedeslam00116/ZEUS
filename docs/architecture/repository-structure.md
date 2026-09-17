@@ -7,7 +7,7 @@ inferring it from names. This page is the map. It complements
 ## Top level
 
 ```
-limboo/
+zeus/
 |-- CLAUDE.md                 code-level working contract for agents/contributors
 |-- project.md                full product / architecture vision
 |-- README.md                 landing page
@@ -34,7 +34,7 @@ basename collision on `index.js` (see [`CLAUDE.md`](../../CLAUDE.md) §6).
 
 ```
 src/
-|-- global.d.ts          ambient types for window.limboo (from preload)
+|-- global.d.ts          ambient types for window.zeus (from preload)
 |-- shared/              code shared across ALL processes
 |   |-- ipc-channels.ts    channel name constants (the contract)
 |   |-- types.ts           domain models (Session, Workspace, AgentEvent, Memory, ...)
@@ -49,13 +49,13 @@ src/
 |   |-- db/                database.ts (SQLite schema + migrations)
 |   |-- managers/          one manager per responsibility (+ git/, fs/, memory/,
 |   |                      search/, workspace/, worktree/ (worktree
-|   |                      lifecycle + limboo.json), services/ (Scripts &
+|   |                      lifecycle + zeus.json), services/ (Scripts &
 |   |                      Services supervisor + localhost proxy) submodules;
 |   |                      git/refs.ts sanitizes user-supplied refs)
 |   `-- ipc/               registry.ts (handle wrapper) + *Handlers (incl.
 |                          worktreeHandlers, serviceHandlers) + registerAllIpc
 |-- preload/
-|   `-- index.ts           the ONLY bridge — exposes window.limboo.*
+|   `-- index.ts           the ONLY bridge — exposes window.zeus.*
 `-- renderer/            React UI (presentation only)
     |-- main.tsx           entry: ErrorBoundary + hydration gate
     |-- App.tsx            composes the shell + overlays + hooks

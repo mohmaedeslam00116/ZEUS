@@ -351,13 +351,13 @@ export function McpServerForm({
         )}
         {planAccess === 'all' && (
           <p className="mt-1.5 text-[11px] leading-relaxed text-warning">
-            You are asserting every tool on this server is read-only. Limboo cannot verify that.
+            You are asserting every tool on this server is read-only. Zeus cannot verify that.
             App-data, workspace-secret and workspace-boundary guards still apply.
           </p>
         )}
         {planAccess === 'annotated' && trust !== 'trusted' && (
           <p className="mt-1.5 text-[11px] leading-relaxed text-faint">
-            Because this server is not Trusted, Limboo treats its read-only claims as unverified, so
+            Because this server is not Trusted, Zeus treats its read-only claims as unverified, so
             Plan and Ask ask you about those tools too.
           </p>
         )}

@@ -20,13 +20,13 @@ import type { HarnessStreamPart, HarnessUsage } from './types';
  * A built-in or custom tool call the adapter is waiting on a decision for.
  *
  * Returned by {@link translatePart} rather than resolved inside it: answering
- * requires `await`ing Limboo's permission gate, and this module is pure by
+ * requires `await`ing Zeus's permission gate, and this module is pure by
  * contract (no DB, no IPC, no clock — the `graph/builder.ts` rule). The runtime
  * collects these, drains them after the stream closes, and resumes.
  */
 export interface HarnessApprovalRequest {
   approvalId: string;
-  /** Limboo-shaped identity (native-cased), for the gate and the chip. */
+  /** Zeus-shaped identity (native-cased), for the gate and the chip. */
   toolName: string;
   /** Re-absolutised input, for the guards and the dialog. */
   input: Record<string, unknown>;

@@ -11,7 +11,7 @@
  *
  * Security (CLAUDE.md §6): the renderer never touches the filesystem; every
  * source path is realpath-resolved (symlink-safe) and must be a regular file
- * outside Limboo's own data dir; sizes/counts/lengths are capped; stored names
+ * outside Zeus's own data dir; sizes/counts/lengths are capped; stored names
  * are generated main-side; elevated-risk extensions are blocked by policy;
  * archives are never extracted; SQL uses bound parameters only; staging writes
  * are atomic (temp sibling + rename). Attaching NEVER executes anything.
@@ -249,7 +249,7 @@ export class AttachmentManager {
     const dir = this.ensureDir(sessionId);
     const storedName = `${sha256.slice(0, 12)}-${safeName}`;
     const finalPath = path.join(dir, storedName);
-    const tmp = path.join(dir, `.limboo-tmp-${crypto.randomBytes(6).toString('hex')}`);
+    const tmp = path.join(dir, `.zeus-tmp-${crypto.randomBytes(6).toString('hex')}`);
     fs.writeFileSync(tmp, buf);
     fs.renameSync(tmp, finalPath);
 
@@ -563,7 +563,7 @@ export class AttachmentManager {
     }
     const rel = path.relative(userData, real);
     if (rel === '' || (!rel.startsWith('..') && !path.isAbsolute(rel))) {
-      throw new AttachmentError("Cannot attach files from Limboo's own data directory.");
+      throw new AttachmentError("Cannot attach files from Zeus's own data directory.");
     }
     let stat: fs.Stats;
     try {
@@ -631,7 +631,7 @@ export class AttachmentManager {
     this.broadcast(sessionId);
 
     const dir = this.ensureDir(sessionId);
-    const tmp = path.join(dir, `.limboo-tmp-${crypto.randomBytes(6).toString('hex')}`);
+    const tmp = path.join(dir, `.zeus-tmp-${crypto.randomBytes(6).toString('hex')}`);
     try {
       const sha256 = await this.hashCopy(sessionId, id, real, tmp, stat.size);
 

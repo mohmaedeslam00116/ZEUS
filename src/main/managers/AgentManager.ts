@@ -1,6 +1,6 @@
 /**
  * AgentManager — the Coding Agent Manager. Orchestrates the local, already-
- * authenticated Claude Code through `@anthropic-ai/claude-agent-sdk`. Limboo is
+ * authenticated Claude Code through `@anthropic-ai/claude-agent-sdk`. Zeus is
  * NOT the agent; it is the operating environment around it (like a Git GUI shells
  * out to `git`). Claude Code owns authentication — this manager never stores or
  * forwards Anthropic credentials.
@@ -242,10 +242,10 @@ const READ_TOOLS = new Set([
 const WRITE_TOOLS = new Set(['Write', 'Edit', 'MultiEdit', 'NotebookEdit', 'Delete']);
 
 /**
- * Limboo's own MCP tools that may run without a permission prompt.
+ * Zeus's own MCP tools that may run without a permission prompt.
  *
  * An ALLOW-LIST, deliberately, and the only correct shape for this: the
- * `limboo_search` server also carries `comment_on_pull_request` /
+ * `zeus_search` server also carries `comment_on_pull_request` /
  * `comment_on_issue`, which publish under the user's GitHub account. A prefix
  * match with a deny-list would mean any tool added to that server later is
  * allowed by default — the failure mode where a write ships pre-approved and
@@ -255,25 +255,25 @@ const WRITE_TOOLS = new Set(['Write', 'Edit', 'MultiEdit', 'NotebookEdit', 'Dele
  * decision, not a convenience one.
  */
 const AUTO_ALLOWED_INTERNAL_TOOLS = new Set([
-  // limboo_memory
+  // zeus_memory
   'list_memories',
   'search_memories',
   'list_memory_proposals',
-  // limboo_search — retrieval
+  // zeus_search — retrieval
   'search_project',
   'find_files',
   'find_symbols',
-  // limboo_search — release notes
+  // zeus_search — release notes
   'list_releases',
   'release_notes',
-  // limboo_search — GitHub reads (the comment tools are POINTEDLY absent)
+  // zeus_search — GitHub reads (the comment tools are POINTEDLY absent)
   'list_pull_requests',
   'view_pull_request',
   'list_issues',
   'view_issue',
 ]);
 
-/** `mcp__limboo_search__find_files` → `find_files`. */
+/** `mcp__zeus_search__find_files` → `find_files`. */
 function bareMcpToolName(toolName: string): string {
   const parts = toolName.split('__');
   return parts.length >= 3 ? parts.slice(2).join('__') : toolName;
@@ -368,7 +368,7 @@ function classifyTool(name: string): ToolRisk {
  * Without this, `classifyTool`'s conservative 'command' default means plan/ask
  * hard-denies the SDK's subagent tool — so the agent cannot delegate exploration
  * while planning, in any project. Claude Code's own Plan Mode permits `Task`
- * (forbidding only Edit/Write/Bash), so denying it made Limboo diverge from the
+ * (forbidding only Edit/Write/Bash), so denying it made Zeus diverge from the
  * provider it wraps. Names verified against the pinned CLI binary, which defines
  * BOTH `Agent` and `Task` as wire names for the subagent tool.
  *
@@ -384,7 +384,7 @@ function classifyTool(name: string): ToolRisk {
  * To add a future provider tool: append it here and state why it cannot mutate.
  * Deliberately EXCLUDED — `SlashCommand` (arbitrary command expansion),
  * `RefreshMcpTools` (re-probes servers: real spawns/network), `Skill` (injects
- * instructions that steer later tools, and Limboo has no Skill surface), and
+ * instructions that steer later tools, and Zeus has no Skill surface), and
  * `ReadMcpResource`, which names a server and so is gated on that server's own
  * `planAccess` instead (see decideToolUseCore).
  */
@@ -398,7 +398,7 @@ const PLAN_SAFE_BUILTINS = new Set([
 ]);
 
 /** Memory tools whose use inside a worker counts as a memory lookup. */
-const MEMORY_LOOKUP_RE = /^mcp__limboo_memory__/;
+const MEMORY_LOOKUP_RE = /^mcp__zeus_memory__/;
 
 /**
  * Parse a persisted {@link ChatMessage.display}. Defensive: the column is JSON
@@ -418,9 +418,9 @@ function parseDisplay(raw: string | null): ChatMessage['display'] | undefined {
   }
 }
 
-/** Limboo's own in-process retrieval bridges — never a user-facing MCP server. */
+/** Zeus's own in-process retrieval bridges — never a user-facing MCP server. */
 function isInternalMcpTool(name: string): boolean {
-  return name.startsWith('mcp__limboo_memory__') || name.startsWith('mcp__limboo_search__');
+  return name.startsWith('mcp__zeus_memory__') || name.startsWith('mcp__zeus_search__');
 }
 
 /**
@@ -557,7 +557,7 @@ function redact(text: string): string {
 /**
  * Caller-supplied context for the permission gate. These are HINTS from the
  * adapter that translated the call — never authorization. They may only relax
- * risk classification for a tool identity Limboo could not recognise; every
+ * risk classification for a tool identity Zeus could not recognise; every
  * guard in {@link AgentManager.decideToolUseCore} (crown jewels, workspace
  * containment, plan read-only, remembered scoping) runs regardless.
  */
@@ -830,7 +830,7 @@ interface ActiveRun {
   mcpScopeWorkspaceId?: string | null;
   /**
    * Cursor runs only: absolute path of the per-run in-workspace attachment
-   * staging dir (`<root>/.limboo/attachments`). The read-flip hook and the
+   * staging dir (`<root>/.zeus/attachments`). The read-flip hook and the
    * decideToolUse attachment carve-out honor it alongside the userData dir.
    */
   stagedAttachmentsDir?: string;
@@ -1062,7 +1062,7 @@ export class AgentManager {
   }
 
   /**
-   * Resolves whether a session's repo config is trusted (Limboo's limboo.json
+   * Resolves whether a session's repo config is trusted (Zeus's zeus.json
    * ack-hash gate). Decides `--trust` for Cursor runs — never passed blindly.
    */
   private repoTrustResolver: ((sessionId: string) => boolean) | null = null;
@@ -1082,7 +1082,7 @@ export class AgentManager {
 
   /**
    * GitHub CLI, wired after construction. Optional by design: when `gh` is
-   * absent the PR/issue tools simply do not appear on the `limboo_search`
+   * absent the PR/issue tools simply do not appear on the `zeus_search`
    * server, which is the same thing the UI does.
    */
   private gh: GhManager | null = null;
@@ -1450,7 +1450,7 @@ export class AgentManager {
       : {
           installed: false,
           error:
-            'Claude Code is not authenticated. Open a terminal, run `claude`, and sign in — Limboo reuses that login.',
+            'Claude Code is not authenticated. Open a terminal, run `claude`, and sign in — Zeus reuses that login.',
         };
 
     // When the active model is a Cursor model, `install` stays the Claude
@@ -1755,7 +1755,7 @@ export class AgentManager {
     // wrong. Forget the id here, while we still know a tool was in flight:
     // recovering after the fact costs the user a failed turn, and detecting it
     // after the fact depends on which of two provider error paths wins a race.
-    // Only the PROVIDER's conversation memory resets — Limboo's transcript,
+    // Only the PROVIDER's conversation memory resets — Zeus's transcript,
     // activity and checkpoints are untouched and keep rendering.
     if (this.hasRunningToolCalls(sessionId)) {
       const provider = providerForModel(this.settings.getAll().agent.model);
@@ -2453,7 +2453,7 @@ export class AgentManager {
     attachmentIds?: string[],
     /**
      * Render this turn as something other than the prompt itself. Used only by
-     * the orchestration prompts Limboo composes on the user's behalf (plan
+     * the orchestration prompts Zeus composes on the user's behalf (plan
      * approve / regenerate), whose raw text is a document plus XML tags rather
      * than anything a person typed. See {@link ChatMessage.display}.
      */
@@ -2465,7 +2465,7 @@ export class AgentManager {
     }
     // THE EXECUTION BARRIER. A plan awaiting a decision blocks every new run —
     // and main is the authority, not the composer: the renderer's mirror can be
-    // stale, and `window.limboo.agent.send` is reachable from devtools.
+    // stale, and `window.zeus.agent.send` is reachable from devtools.
     //
     // No bypass flag is needed. Every legitimate release (approve, keep
     // planning, reject, archive) moves the plan OUT of a blocking status inside
@@ -2530,7 +2530,7 @@ export class AgentManager {
     );
     // Name an untitled session after its first prompt (a no-op once renamed).
     // Never after an orchestration prompt: "Approved the plan — …" describes
-    // Limboo's own action, not what the user set out to do.
+    // Zeus's own action, not what the user set out to do.
     if (!display) this.sessions?.autoTitle(sessionId, prompt);
     // Remember the mode so the composer restores it when this session reopens.
     this.sessions?.setMode(sessionId, permMode);
@@ -2711,7 +2711,7 @@ export class AgentManager {
         // identically every time. Retry FRESH — and do so whether or not a
         // stored id exists, since the failure is a turn-level artifact that a
         // clean conversation clears (anthropics/claude-agent-sdk-typescript#366:
-        // the next well-formed prompt is answered normally). Limboo's own
+        // the next well-formed prompt is answered normally). Zeus's own
         // transcript, activity and checkpoints are untouched.
         if (retryFresh && !freshRetried) {
           freshRetried = true;
@@ -2914,7 +2914,7 @@ export class AgentManager {
         this.diag(category as DiagnosticCategory, severity, label, detail, sessionId),
     };
 
-    // MCP reuse: point limboo_memory / limboo_search at the SAME bundled stdio
+    // MCP reuse: point zeus_memory / zeus_search at the SAME bundled stdio
     // bridge Cursor uses, over the same token-authed local pipe, dispatching
     // into the same transport-neutral plain tools. Both agents therefore query
     // one memory and one index, and better-sqlite3 stays in a single process —
@@ -2938,12 +2938,12 @@ export class AgentManager {
           env: {
             ELECTRON_RUN_AS_NODE: '1',
             ...(pipe as RunBridgeServer).env,
-            LIMBOO_BRIDGE_SERVER: kind,
+            ZEUS_BRIDGE_SERVER: kind,
           },
         });
         mcpServers = {
-          ...(this.memory ? { limboo_memory: entry('memory') } : {}),
-          ...(this.search ? { limboo_search: entry('search') } : {}),
+          ...(this.memory ? { zeus_memory: entry('memory') } : {}),
+          ...(this.search ? { zeus_search: entry('search') } : {}),
         };
       } catch (err) {
         // Best-effort, exactly as on the Cursor path: losing the index is a
@@ -2951,7 +2951,7 @@ export class AgentManager {
         this.diag(
           'lifecycle',
           'warning',
-          'Harness bridge pipe failed to start — running without Limboo MCP tools',
+          'Harness bridge pipe failed to start — running without Zeus MCP tools',
           err instanceof Error ? err.message.slice(0, 300) : undefined,
           sessionId,
         );
@@ -2992,7 +2992,7 @@ export class AgentManager {
         bootstrapAck: agent.harness.bootstrapAck,
         // Built-in tools are gated by `permissionMode` (set inside the runtime),
         // NOT by this map — the framework looks the map up by tool name and only
-        // consults it for tools Limboo supplies itself. With no host tools it is
+        // consults it for tools Zeus supplies itself. With no host tools it is
         // empty, which is honest: there is nothing to route.
         toolApproval: buildToolApprovalMap([]),
         // How a permission request is answered. This is the delegation into
@@ -3184,7 +3184,7 @@ export class AgentManager {
           return;
         }
         break; // falls into the Claude Agent SDK path below
-      // Harness-only providers: there is no Limboo-owned runtime for these, so
+      // Harness-only providers: there is no Zeus-owned runtime for these, so
       // there is nothing to fall back to and no legacy switch to consult.
       case 'openai':
       case 'pi':
@@ -3219,7 +3219,7 @@ export class AgentManager {
       // search retrieved for it, the delta computed since this session last
       // ran. Release notes are a fixed document that matters only when someone
       // asks about it, so they are exposed as a TOOL the agent pulls
-      // (`list_releases` / `release_notes` on the `limboo_search` server) rather
+      // (`list_releases` / `release_notes` on the `zeus_search` server) rather
       // than a block pushed into every request. Claude Code shipped a fix for
       // exactly the other choice, where its release-notes view leaked the whole
       // changelog into every subsequent request.
@@ -3240,7 +3240,7 @@ export class AgentManager {
         });
       }
       const options = this.buildOptions(sessionId, cwd, abort, agent, permMode, injectedContext);
-      // Limboo's own in-process servers. They carry no registry row, so they are
+      // Zeus's own in-process servers. They carry no registry row, so they are
       // invisible to McpManager and have to be tracked here for the plan-mode
       // allowlist below.
       const ownMcpServers: string[] = [];
@@ -3250,18 +3250,18 @@ export class AgentManager {
       if (this.memory && this.settings.getAll().memory.enabled) {
         options.mcpServers = {
           ...(options.mcpServers ?? {}),
-          limboo_memory: createMemoryMcpServer(sdk, this.memory, this.workspace),
+          zeus_memory: createMemoryMcpServer(sdk, this.memory, this.workspace),
         };
-        ownMcpServers.push('limboo_memory');
+        ownMcpServers.push('zeus_memory');
       }
       // Expose read-only Search Engine tools so the agent can query the local index
       // on demand to decide what to explore before its own Read/Grep/Glob run.
       if (this.search && this.settings.getAll().search.enabled) {
         options.mcpServers = {
           ...(options.mcpServers ?? {}),
-          limboo_search: createSearchMcpServer(sdk, this.search, this.workspace, this.gh),
+          zeus_search: createSearchMcpServer(sdk, this.search, this.workspace, this.gh),
         };
-        ownMcpServers.push('limboo_search');
+        ownMcpServers.push('zeus_search');
       }
       // User-configured MCP servers from the provider-independent registry. Both
       // providers consume the SAME registry; for Claude they ride
@@ -3289,7 +3289,7 @@ export class AgentManager {
       // those two cases differ. Nothing else is listed, so a run never skips an
       // approval the user has not already given.
       //
-      // Limboo's own memory/search servers lead the list, and NOT inside the
+      // Zeus's own memory/search servers lead the list, and NOT inside the
       // `if (this.mcp)` above — they have no registry row, so planAllowedToolsFor
       // cannot see them, and gating them on an unrelated manager being wired left
       // the app's own retrieval tools unusable in every planning run. They are
@@ -3314,7 +3314,7 @@ export class AgentManager {
           : undefined;
       const effectivePrompt = manifest ? `${prompt}\n\n${manifest}` : prompt;
       // Runtime Telemetry opens the run HERE, not earlier, because this is the
-      // first point at which every block Limboo composed for this prompt exists
+      // first point at which every block Zeus composed for this prompt exists
       // as a string — the three context blocks AND the attachment manifest. The
       // provider reports one aggregate input-token count and no breakdown at
       // all, so these measured lengths are the only honest basis for the
@@ -3374,7 +3374,7 @@ export class AgentManager {
       };
 
       // Plan runs get a generated `.claude/settings.local.json` pointing the
-      // CLI's plan files at a directory Limboo owns, so the approval gate can
+      // CLI's plan files at a directory Zeus owns, so the approval gate can
       // read the plan instead of guessing at it. Snapshot/restore is handled by
       // `withSessionFile`, so the working tree ends the run as it started.
       //
@@ -3477,7 +3477,7 @@ export class AgentManager {
         // The Agent SDK's task lifecycle. These are the provider's OWN
         // measurements of a delegation — duration, tool count, tokens, and an
         // AI-written progress line — joined to the spawning call by
-        // `tool_use_id`. Limboo used to derive all of this by hand from the
+        // `tool_use_id`. Zeus used to derive all of this by hand from the
         // worker's child calls and drop these messages on the floor.
         this.onTaskMessage(sessionId, msg as unknown as Record<string, unknown>);
         break;
@@ -3510,7 +3510,7 @@ export class AgentManager {
       }
 
       case 'rate_limit_event': {
-        // The provider's own rolling quota windows. Until now Limboo learned
+        // The provider's own rolling quota windows. Until now Zeus learned
         // about a quota only by regex-matching an error string — which by
         // definition fired after the user had already been cut off.
         const signal = signalFromRateLimit(msg as unknown as Record<string, unknown>);
@@ -3575,7 +3575,7 @@ export class AgentManager {
             const status = block.is_error ? 'error' : 'done';
             const text = toolResultText(block.content);
             this.onToolResult(sessionId, id, status, text);
-            // Tool results are the largest thing Limboo can attribute in the
+            // Tool results are the largest thing Zeus can attribute in the
             // context window that it did not compose itself.
             const call = this.runtimes.get(sessionId)?.toolCalls.find((c) => c.id === id);
             this.observeResultChars(sessionId, call?.name ?? '', text);
@@ -3659,7 +3659,7 @@ export class AgentManager {
 
     // Same context producers as the Claude path. Cursor has no system-prompt
     // preset append; the composed block is injected via a session-scoped
-    // generated rule (.cursor/rules/limboo-context.mdc — the CLI auto-loads
+    // generated rule (.cursor/rules/zeus-context.mdc — the CLI auto-loads
     // it), with prompt prepending kept as the fallback when the rule write
     // fails. NOTE the resume delta is marked injected at build time — both
     // vehicles deliver it, so that stays correct on the fallback path too.
@@ -3676,7 +3676,7 @@ export class AgentManager {
     //
     // The userData staging dir is deny-ruled in the session cli.json (deny
     // beats allow), so this turn's files are MIRRORED into the workspace at
-    // `<root>/.limboo/attachments` (crash-leftover-cleared, symlink-guarded,
+    // `<root>/.zeus/attachments` (crash-leftover-cleared, symlink-guarded,
     // removed in the finally below) and the manifest points there. Fail-soft:
     // a copy failure falls back to the userData manifest — those paths may be
     // unreadable by the CLI, but the run itself proceeds.
@@ -3684,7 +3684,7 @@ export class AgentManager {
     let attachmentStaging: { dir: string; cleanup: () => Promise<void> } | null = null;
     if (attachIds.length > 0 && this.attachments) {
       try {
-        attachmentStaging = await createSessionDir(cwd, path.join('.limboo', 'attachments'));
+        attachmentStaging = await createSessionDir(cwd, path.join('.zeus', 'attachments'));
         for (const f of this.attachments.stagedFilesFor(sessionId, attachIds)) {
           const dest = path.join(attachmentStaging.dir, f.storedName);
           try {
@@ -3716,7 +3716,7 @@ export class AgentManager {
     const basePrompt = manifest ? `${prompt}\n\n${manifest}` : prompt;
 
     // Runtime Telemetry, same call and same position as the Claude path: after
-    // every block Limboo composed exists as a string. Cursor's capability set
+    // every block Zeus composed exists as a string. Cursor's capability set
     // hides every token-derived section, so these lengths go unused today — but
     // they are measured identically, so the day Cursor reports a token count
     // the split works with no change here.
@@ -3872,7 +3872,7 @@ export class AgentManager {
               );
               return Promise.resolve<HookDecision>({
                 permission: 'deny',
-                agentMessage: `Limboo could not interpret this hook: ${result.reason}.`,
+                agentMessage: `Zeus could not interpret this hook: ${result.reason}.`,
               });
             }
             const mapped = result.value;
@@ -3960,7 +3960,7 @@ export class AgentManager {
     // User-configured MCP servers from the app-owned registry (git-clean per-run
     // injection): secret values ride the cursor-agent child env and are
     // referenced as ${env:NAME} in the generated .cursor/mcp.json (never the
-    // file). Independent of the limboo bridge pipe — external servers don't need
+    // file). Independent of the zeus bridge pipe — external servers don't need
     // it — so a server is registered even when the bridge failed to start.
     // Every field of CursorMcpInjection must be present here: the allow-rule
     // array below spreads `planAllowRules`, and spreading `undefined` throws.
@@ -3968,15 +3968,15 @@ export class AgentManager {
       ? this.mcp.cursorSpecFor(sessionId, this.mcpScopeFor(sessionId))
       : { userServers: {}, allowRules: [], planAllowRules: [], secretEnv: {} };
     const hasUserServers = Object.keys(cursorMcp.userServers).length > 0;
-    const limbooBridge = !!(pipe && mcpBridgePath);
+    const zeusBridge = !!(pipe && mcpBridgePath);
     const mcpSpec: McpBridgeSpec | null =
-      limbooBridge || hasUserServers
+      zeusBridge || hasUserServers
         ? {
-            nodeCommand: limbooBridge ? bridgeNodeCommand() : '',
+            nodeCommand: zeusBridge ? bridgeNodeCommand() : '',
             bridgePath: mcpBridgePath ?? '',
             bridgeEnv: pipe ? pipe.env : {},
-            memory: limbooBridge && !!this.memory,
-            search: limbooBridge && !!this.search,
+            memory: zeusBridge && !!this.memory,
+            search: zeusBridge && !!this.search,
             userServers: cursorMcp.userServers,
           }
         : null;
@@ -4020,7 +4020,7 @@ export class AgentManager {
       this.diag(
         'lifecycle',
         'debug',
-        'This cursor-agent version has no --approve-mcps — the limboo MCP servers may need a one-time approval',
+        'This cursor-agent version has no --approve-mcps — the zeus MCP servers may need a one-time approval',
         undefined,
         sessionId,
       );
@@ -4038,7 +4038,7 @@ export class AgentManager {
         // Withdrawing the read-only shell floor under "prompt me for everything"
         // left a hookless run with no way to prompt and no way to read.
         readOnlyShell: agent.autoApproveReads,
-        limbooMcp: limbooBridge,
+        zeusMcp: zeusBridge,
         attachmentsStaged: attachmentStaging != null,
       }),
       // Trusted user MCP servers auto-approve declaratively too (Mcp(<name>:*)),
@@ -4058,7 +4058,7 @@ export class AgentManager {
     ];
     // Workspace secrets (.env / SSH keys / key-cert material) are ask-for-approval,
     // not hard-denied: on a hook-verified run the beforeReadFile hook drives the
-    // Limboo prompt (touchesSensitiveFile); `ask` (unlike `deny`) never poisons
+    // Zeus prompt (touchesSensitiveFile); `ask` (unlike `deny`) never poisons
     // other tools on non-hook runs.
     const askRules = sessionAskRules();
 
@@ -4112,7 +4112,7 @@ export class AgentManager {
       // The jail must grant the bridge its socket + binaries, or it starves the
       // permission mechanism itself: the hook child cannot connect, fails
       // closed, and every tool call is denied "bridge unreachable".
-      const pipePath = pipe?.env.LIMBOO_BRIDGE_PIPE;
+      const pipePath = pipe?.env.ZEUS_BRIDGE_PIPE;
       return withSessionSandboxJson(cwd, sandbox, withCli, {
         socketDir:
           pipePath && process.platform !== 'win32' ? path.dirname(pipePath) : undefined,
@@ -4356,11 +4356,11 @@ export class AgentManager {
     // Governance bus: an MCP tool call is executing (both providers route MCP
     // through an `mcp__<server>__<tool>` name). Distinct from the pre-tool-use
     // gate — this is the execution notification the manifesto's `beforeMCPExecution`
-    // maps to. The internal limboo_* read tools are excluded (retrieval noise).
+    // maps to. The internal zeus_* read tools are excluded (retrieval noise).
     if (
       name.startsWith('mcp__') &&
-      !name.startsWith('mcp__limboo_memory__') &&
-      !name.startsWith('mcp__limboo_search__')
+      !name.startsWith('mcp__zeus_memory__') &&
+      !name.startsWith('mcp__zeus_search__')
     ) {
       this.emitHook(sessionId, 'mcp-exec', { tool: name, summary: call.summary });
     }
@@ -4441,7 +4441,7 @@ export class AgentManager {
 
       // The provider's own measurements outrank anything derived from child
       // calls: `tool_uses` counts what the worker actually invoked, including
-      // tools whose events Limboo never saw.
+      // tools whose events Zeus never saw.
       const usage = msg.usage as { duration_ms?: number; tool_uses?: number; total_tokens?: number } | undefined;
       if (usage && typeof usage === 'object') {
         if (Number.isFinite(usage.duration_ms)) info.durationMs = Number(usage.duration_ms);
@@ -4482,7 +4482,7 @@ export class AgentManager {
   /**
    * Append a chunk of a worker's forwarded narration to its record.
    *
-   * This is UNTRUSTED CONTENT — model output Limboo stores and renders verbatim
+   * This is UNTRUSTED CONTENT — model output Zeus stores and renders verbatim
    * — so it is bounded by `settings.agent.subagents.transcriptMax` and never
    * reaches a system prompt or a context provider. It is also not the worker's
    * reasoning: thinking blocks are filtered out upstream, and nothing here may
@@ -4642,7 +4642,7 @@ export class AgentManager {
 
       push(info.tools ?? (info.tools = []), child.name);
 
-      // Limboo's OWN retrieval bridges are not "MCP servers the worker reached"
+      // Zeus's OWN retrieval bridges are not "MCP servers the worker reached"
       // — they are the app's internal memory/search plumbing, and every other
       // site in this file excludes them. Counting them here made a plain memory
       // lookup report a phantom server alongside its memoryLookups increment.
@@ -4801,7 +4801,7 @@ export class AgentManager {
       // it is not overwritten: the harness's own report beats scraped text. An
       // ERRORED result is never stored as a summary at all — an interrupt
       // message ("Interrupted before it finished.") presented under "returned
-      // summary" would be Limboo's words in the worker's mouth.
+      // summary" would be Zeus's words in the worker's mouth.
       const text = typeof output === 'string' ? output.trim() : '';
       if (text && status === 'done' && !call.subagent.summary) {
         call.subagent.summary = truncate(text, this.subagentSettings().summaryMax);
@@ -5174,7 +5174,7 @@ export class AgentManager {
    * Where the plan text comes from, in descending order of fidelity.
    *
    * `ExitPlanMode`'s input carries no `plan` field on current SDKs — the plan is
-   * written to a file — so the file Limboo pointed the CLI at is the primary
+   * written to a file — so the file Zeus pointed the CLI at is the primary
    * source. The rest are fallbacks for older CLIs, for a run whose settings file
    * could not be written, and finally for "we genuinely could not read it",
    * which is stated rather than rendered as an empty plan.
@@ -5212,7 +5212,7 @@ export class AgentManager {
     //    nothing to decide on; this at least says what happened and what to do.
     return {
       markdown:
-        'The agent presented a plan, but Limboo could not read its text.\n\n' +
+        'The agent presented a plan, but Zeus could not read its text.\n\n' +
         'Choose **Keep planning** to ask for the plan in writing, or **Approve** to ' +
         'let the agent proceed with the plan it holds.',
       source: 'placeholder',
@@ -6140,7 +6140,7 @@ export class AgentManager {
       permissionMode: permMode === 'ask' ? 'default' : permMode,
       // Plan-mode steering. This REPLACES the CLI's default workflow body (it
       // still wraps the read-only preamble and the ExitPlanMode footer), so it
-      // stays short and says only what Limboo needs that the default does not
+      // stays short and says only what Zeus needs that the default does not
       // guarantee: that the plan is written down before it is presented, since
       // the file is how the approval gate obtains the text to show.
       ...(permMode === 'plan' && agent.plan.restateInMessage
@@ -6202,7 +6202,7 @@ export class AgentManager {
     const attachmentsDir = this.attachmentsDirFor(sessionId);
     if (attachmentsDir) options.additionalDirectories = [attachmentsDir];
 
-    // OS-level Sandbox (defense-in-depth Layer 3). Limboo's one sandbox policy
+    // OS-level Sandbox (defense-in-depth Layer 3). Zeus's one sandbox policy
     // becomes the SDK's `Options.sandbox` — a Seatbelt/bubblewrap jail fencing
     // Bash + its children to the worktree and the configured network, beneath
     // (never replacing) the canUseTool permission gate. Graceful by default:
@@ -6414,14 +6414,14 @@ export class AgentManager {
         this.pushActivity(
           sessionId,
           'permission',
-          `Blocked ${toolName} on Limboo's database/settings`,
+          `Blocked ${toolName} on Zeus's database/settings`,
           undefined,
           'danger',
         );
         return {
           behavior: 'deny',
           message:
-            "Limboo's own database, settings, and stored secrets are off limits — use the memory tools instead.",
+            "Zeus's own database, settings, and stored secrets are off limits — use the memory tools instead.",
         };
       }
 
@@ -6453,18 +6453,18 @@ export class AgentManager {
         return this.promptForApproval(sessionId, input, request, signal, 'sensitive');
       }
 
-      // Limboo's own internal tools. Most are strictly read-only and are always
+      // Zeus's own internal tools. Most are strictly read-only and are always
       // allowed (even during a plan run) so retrieval never prompts.
       //
       // This is an ALLOW-LIST keyed by the bare tool name, NOT a prefix match
-      // with exceptions. The `limboo_search` server also carries the two GitHub
+      // with exceptions. The `zeus_search` server also carries the two GitHub
       // comment tools, which WRITE — publicly, under the user's own account —
       // and a deny-list would mean the next tool anyone adds to that server
       // ships silently pre-approved. Falling through to the normal gate is the
       // correct default for anything unrecognised.
       if (
-        toolName.startsWith('mcp__limboo_memory__') ||
-        toolName.startsWith('mcp__limboo_search__')
+        toolName.startsWith('mcp__zeus_memory__') ||
+        toolName.startsWith('mcp__zeus_search__')
       ) {
         if (AUTO_ALLOWED_INTERNAL_TOOLS.has(bareMcpToolName(toolName))) {
           return { behavior: 'allow', updatedInput: input };
@@ -6631,7 +6631,7 @@ export class AgentManager {
           detail:
             `${permissionDetail(toolName, input)}\n\n` +
             `${permMode === 'plan' ? 'Planning' : 'Ask'} is a read-only mode, and the ` +
-            `"${planPromptableMcpServer}" server has not declared this tool read-only, so Limboo ` +
+            `"${planPromptableMcpServer}" server has not declared this tool read-only, so Zeus ` +
             `cannot confirm it only reads. Allow it if you know it is safe here. To stop being ` +
             `asked, set this server's Plan & Ask access under Settings › MCP.`,
           createdAt: Date.now(),
@@ -6984,7 +6984,7 @@ export class AgentManager {
    * A harness's resume state rides the SAME `agent_provider_sessions` table
    * under its own key, `harness:<harnessId>`.
    *
-   * The key must not be a bare `AgentProvider`. `claude-code` and Limboo's
+   * The key must not be a bare `AgentProvider`. `claude-code` and Zeus's
    * direct Claude Agent SDK path are both `anthropic`, and they store entirely
    * different things — the SDK path stores a session id string, the harness
    * path a structured lifecycle object. Sharing the `anthropic` row would have
@@ -7402,7 +7402,7 @@ export class AgentManager {
 
   /**
    * Open a telemetry run, carrying the measured character lengths of the blocks
-   * Limboo composed for this prompt. Shared by both provider paths so the
+   * Zeus composed for this prompt. Shared by both provider paths so the
    * accumulator never learns which adapter is running.
    */
   private emitRunStart(
@@ -7446,7 +7446,7 @@ export class AgentManager {
   }
 
   /**
-   * Character tallies Limboo measured of content it OBSERVED rather than
+   * Character tallies Zeus measured of content it OBSERVED rather than
    * composed — tool results, split by MCP vs built-in. These feed the
    * per-contributor context split, which has no other honest source: the API
    * reports one aggregate input-token count and no breakdown at all.
@@ -7599,10 +7599,10 @@ function shortPath(p: string): string {
 }
 
 /**
- * Limboo's **crown jewels** — the safeStorage `secrets/` store, the SQLite DB (and
+ * Zeus's **crown jewels** — the safeStorage `secrets/` store, the SQLite DB (and
  * its WAL/SHM siblings), and the `settings.json` / `window-state.json` config
  * files. These are the only parts of `userData` the agent must never reach: the
- * Local Memory System (the `mcp__limboo_memory__*` tools) is the sole sanctioned
+ * Local Memory System (the `mcp__zeus_memory__*` tools) is the sole sanctioned
  * read path into the DB, and a direct write to the live store would corrupt the
  * running app.
  *

@@ -1,6 +1,6 @@
 # CI/CD
 
-This page is the operations-level overview of the repository automation. Limboo runs
+This page is the operations-level overview of the repository automation. Zeus runs
 a **provider-agnostic CI/CD platform** — one logical pipeline whose logic lives in
 provider-neutral scripts — but **GitLab is the single source of truth and primary
 release publisher** ([`.gitlab-ci.yml`](../../.gitlab-ci.yml)); GitHub Actions under

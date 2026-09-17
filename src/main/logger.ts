@@ -19,7 +19,7 @@ function resolveLogFile(): string | null {
   try {
     const dir = app.getPath('logs');
     fs.mkdirSync(dir, { recursive: true });
-    logFile = path.join(dir, 'limboo-main.log');
+    logFile = path.join(dir, 'zeus-main.log');
     return logFile;
   } catch {
     return null;

@@ -1,6 +1,6 @@
 /**
  * IPC handlers for persistent settings. The renderer reaches these through
- * `window.limboo.settings.*`. Input is validated to be a plain object before it
+ * `window.zeus.settings.*`. Input is validated to be a plain object before it
  * reaches the manager.
  */
 import { IpcChannels } from '@shared/ipc-channels';

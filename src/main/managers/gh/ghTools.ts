@@ -1,6 +1,6 @@
 /**
  * GitHub tools for the agent — pull requests and issues, on the EXISTING
- * `limboo_search` MCP server.
+ * `zeus_search` MCP server.
  *
  * Deliberately not a third server: `searchTools.ts` already argues that one
  * would need its own permission rule, its own generated Cursor `mcp.json` entry

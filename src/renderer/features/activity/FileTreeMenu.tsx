@@ -153,7 +153,7 @@ export function FileTreeMenu({ workspaceId, node, point, onClose }: FileTreeMenu
             icon={Copy}
             label="Copy path"
             onClick={() => {
-              void window.limboo?.system.clipboardWrite(node.path);
+              void window.zeus?.system.clipboardWrite(node.path);
               onClose();
             }}
           />
@@ -163,7 +163,7 @@ export function FileTreeMenu({ workspaceId, node, point, onClose }: FileTreeMenu
         icon={FolderOpen}
         label="Reveal in Explorer"
         onClick={() => {
-          void window.limboo?.fs.reveal(workspaceId, node?.path);
+          void window.zeus?.fs.reveal(workspaceId, node?.path);
           onClose();
         }}
       />

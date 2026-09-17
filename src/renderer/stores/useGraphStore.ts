@@ -81,7 +81,7 @@ interface GraphState {
 }
 
 function api() {
-  return window.limboo?.graph;
+  return window.zeus?.graph;
 }
 
 function clampZoom(z: number): number {

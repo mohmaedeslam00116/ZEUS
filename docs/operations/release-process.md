@@ -5,7 +5,7 @@ Forge; releases are driven from the `main` branch.
 
 ## Fresh ZEUS history
 
-ZEUS releases start at `v0.1.0-alpha.1` (#30). No Limboo tag or release is part
+ZEUS releases start at `v0.1.0-alpha.1` (#30). No Zeus tag or release is part
 of ZEUS history — see [versioning](versioning.md) for the heritage boundary.
 
 ## Prerequisites
@@ -24,10 +24,10 @@ of ZEUS history — see [versioning](versioning.md) for the heritage boundary.
    verifies the stamped value matches the tag.
 2. **Update the changelog.** Move the `Unreleased` items in
    [CHANGELOG.md](../../CHANGELOG.md) into a new `## [<version>]` section with
-   the date. ZEUS release sections always live **below** the `## Limboo heritage
+   the date. ZEUS release sections always live **below** the `## Zeus heritage
    (archived)` block and the `[Unreleased]` staging area; never add release
    sections above them, and never touch the heritage headings (see
-   [versioning](versioning.md)). The Limboo compare links at the file's foot
+   [versioning](versioning.md)). The Zeus compare links at the file's foot
    belong to the heritage archive and stay as-is.
 
    This file is the **single source of the release notes**. The section you write
@@ -118,4 +118,4 @@ of ZEUS history — see [versioning](versioning.md) for the heritage boundary.
   a structurally broken update artifact — v1.5.1 shipped macOS downloads that
   verified perfectly and could never install. See
   [auto-update](auto-update.md).
-- There is no separate backend or cloud component to deploy — Limboo is local-first.
+- There is no separate backend or cloud component to deploy — Zeus is local-first.

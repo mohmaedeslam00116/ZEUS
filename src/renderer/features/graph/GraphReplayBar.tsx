@@ -71,7 +71,7 @@ export function GraphReplayBar({ stamps, cutoff, onChange }: GraphReplayBarProps
       </IconButton>
 
       {/*
-        The house Slider, not a raw range input. `.limboo-slider` is the WRAPPER
+        The house Slider, not a raw range input. `.zeus-slider` is the WRAPPER
         class — it expects the track/fill/thumb children this component provides
         — so putting it on a bare `<input type="range">` produced an unstyled
         native control with none of the token palette, ticks, focus ring, or

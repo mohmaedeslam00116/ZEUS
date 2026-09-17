@@ -5,7 +5,7 @@
  * gate the shell behind a startup hydration step (so persisted settings/layout
  * are restored before first paint), and wrap everything in an error boundary.
  * No Node/OS access happens here — that lives in the main process and is reached
- * through the `window.limboo` preload bridge.
+ * through the `window.zeus` preload bridge.
  */
 import { StrictMode, useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';

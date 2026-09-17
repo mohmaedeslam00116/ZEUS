@@ -20,7 +20,7 @@
  *
  * 3. The measured total is the authority; estimates fill in beneath it. The
  *    provider reports ONE aggregate input-token count and no breakdown, so the
- *    per-contributor split can only come from Limboo measuring the characters
+ *    per-contributor split can only come from Zeus measuring the characters
  *    of the blocks it composed itself. Those are estimates and are labelled as
  *    such. When they sum ABOVE the measured total, the split is DROPPED rather
  *    than scaled to fit: a bar that always adds up is worth nothing if it
@@ -46,7 +46,7 @@ export interface LimitLookup {
   (model: string): (ModelLimits & { autoCompactTokens?: number }) | undefined;
 }
 
-/** Limboo-owned facts the manager supplies; the accumulator never fetches. */
+/** Zeus-owned facts the manager supplies; the accumulator never fetches. */
 export interface HostFacts {
   providerSessionId?: string;
   worktree?: { branch: string; path: string };
@@ -269,7 +269,7 @@ export class TelemetryAccumulator {
           lastPostTokens: signal.postTokens,
           at: now,
         };
-        // The blocks Limboo composed are no longer in the window, and neither
+        // The blocks Zeus composed are no longer in the window, and neither
         // is most of the conversation. Every estimate is stale; clear them
         // rather than keep attributing tokens that were summarized away.
         state.injected = { ...EMPTY_INJECTED };
@@ -365,7 +365,7 @@ export class TelemetryAccumulator {
   /**
    * Build the snapshot. `limits` resolves the provider-reported context window
    * for a model (persisted, so it survives a restart); `host` supplies the
-   * Limboo-owned facts. Both are injected so this stays pure.
+   * Zeus-owned facts. Both are injected so this stays pure.
    */
   snapshot(
     sessionId: string,
@@ -454,7 +454,7 @@ export class TelemetryAccumulator {
     context.pctUsed = Math.min(100, (context.usedTokens / context.windowTokens) * 100);
 
     // The estimated contributors: every one of these is a character count
-    // Limboo measured of a block it composed itself, divided by a constant.
+    // Zeus measured of a block it composed itself, divided by a constant.
     const estimated: Array<{ id: ContextSegmentId; chars: number }> = [
       { id: 'conversation', chars: host.conversationChars },
       { id: 'tools', chars: host.toolResultChars },
@@ -472,7 +472,7 @@ export class TelemetryAccumulator {
 
     if (estSum > context.usedTokens) {
       // RULE 3. The estimates exceed what the provider measured — a compaction,
-      // a cache read, or a resumed transcript Limboo never observed. Drop the
+      // a cache read, or a resumed transcript Zeus never observed. Drop the
       // split rather than scale it to fit, and say so.
       context.attributionDegraded = true;
       context.segments = reserved > 0
@@ -481,7 +481,7 @@ export class TelemetryAccumulator {
     } else {
       const segments: ContextSegment[] = [
         // The residual is what keeps this honest: the measured total is the
-        // authority, and everything Limboo could not attribute lands here
+        // authority, and everything Zeus could not attribute lands here
         // rather than being guessed at.
         { id: 'system', tokens: context.usedTokens - estSum, origin: 'measured' },
         ...parts.map(

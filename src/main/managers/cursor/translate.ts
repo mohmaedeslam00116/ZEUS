@@ -1,5 +1,5 @@
 /**
- * Pure translators: Cursor stream-json events → Limboo's existing tool/message
+ * Pure translators: Cursor stream-json events → Zeus's existing tool/message
  * identities. Cursor tool payloads are reshaped to the Claude-shaped input
  * keys (`file_path`, `command`, `content`, …) so every existing AgentManager
  * helper — summarizeTool, changeFromInput, editFromInput, terminal mirroring,
@@ -35,7 +35,7 @@ export function assistantText(ev: CursorAssistantEvent): string {
     .join('');
 }
 
-/** Cursor union key → Limboo tool name. Unknown keys fall through generically. */
+/** Cursor union key → Zeus tool name. Unknown keys fall through generically. */
 const TOOL_NAME_MAP: Record<string, string> = {
   readToolCall: 'Read',
   writeToolCall: 'Write',
@@ -293,7 +293,7 @@ function strField(obj: Record<string, unknown>, key: string): string | undefined
   return typeof v === 'string' ? v : undefined;
 }
 
-/** Hook `tool_name` values → Limboo tool names (same identities as the map above). */
+/** Hook `tool_name` values → Zeus tool names (same identities as the map above). */
 const HOOK_TOOL_NAME_MAP: Record<string, string> = {
   read: 'Read',
   read_file: 'Read',
@@ -380,7 +380,7 @@ function keyNames(payload: Record<string, unknown>): string {
 }
 
 export interface MappedHookEvent {
-  /** Limboo tool identity (feeds classifyTool / summarizeTool unchanged). */
+  /** Zeus tool identity (feeds classifyTool / summarizeTool unchanged). */
   name: string;
   /** Claude-shaped input keys (file_path / command / …). */
   input: Record<string, unknown>;
@@ -411,7 +411,7 @@ function hookFilePath(payload: Record<string, unknown>): string | undefined {
 }
 
 /**
- * Translate a Cursor hook payload into the Limboo tool identity the existing
+ * Translate a Cursor hook payload into the Zeus tool identity the existing
  * permission machinery understands. Failure carries a NAMED reason so the
  * caller's deny message says which key was missing instead of "unknown"; the
  * fail posture itself is the caller's (for gate events, DENY).

@@ -6,7 +6,7 @@
 import { Logo } from '@/renderer/components/brand/Logo';
 import { Spinner } from '@/renderer/components/ui/Spinner';
 
-export function LoadingScreen({ message = 'Starting Limboo…' }: { message?: string }) {
+export function LoadingScreen({ message = 'Starting Zeus…' }: { message?: string }) {
   return (
     <div className="flex h-full w-full flex-col items-center justify-center gap-6 bg-base text-fg">
       <Logo size={48} className="animate-pulse" />

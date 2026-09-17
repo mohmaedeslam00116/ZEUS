@@ -103,7 +103,7 @@ function bodyFromChangelog(prev) {
   const section = sectionFor(toRef);
   if (!section) return null;
   const version = normalizeVersion(toRef);
-  const out = [`## Limboo ${version}${section.date ? ` (${section.date})` : ''}`, ''];
+  const out = [`## Zeus ${version}${section.date ? ` (${section.date})` : ''}`, ''];
   if (prev) out.push(`Changes since **${prev}**.`, '');
   out.push(section.body, '');
   return { out, commitCount: countCommits(prev) };
@@ -141,7 +141,7 @@ function bodyFromHistory(prev) {
 
   const version = toRef.replace(/^v/, '');
   const date = new Date().toISOString().slice(0, 10);
-  const out = [`## Limboo ${version} (${date})`, ''];
+  const out = [`## Zeus ${version} (${date})`, ''];
 
   if (prev) out.push(`Changes since **${prev}**.`, '');
   else out.push('Initial release.', '');
@@ -188,15 +188,15 @@ function main() {
   out.push(
     '| Platform | File | Notes |',
     '| --- | --- | --- |',
-    '| Windows x64 / arm64 | `Limboo-Setup-*-<arch>.exe` | If SmartScreen warns, choose **More info → Run anyway**. |',
-    '| macOS Apple silicon / Intel | `Limboo-*-arm64.dmg` / `Limboo-*-x64.dmg` | If Gatekeeper blocks it, right-click → **Open**, or `xattr -dr com.apple.quarantine /Applications/Limboo.app`. |',
-    '| Debian / Ubuntu | `limboo-*-<arch>.deb` | |',
-    '| Fedora / RHEL / openSUSE | `limboo-*-<arch>.rpm` | |',
-    '| Arch / Manjaro | `limboo-*-<arch>.pacman` | `sudo pacman -U <file>` |',
-    '| Any Linux | `limboo-*-<arch>.AppImage` | `chmod +x` first. On Ubuntu 24.04+ install `libfuse2t64`, or it fails with `error loading libfuse.so.2`. |',
-    '| Any Linux (no installer) | `limboo-*-<arch>.tar.gz` | Extract and run `./Limboo`. |',
+    '| Windows x64 / arm64 | `Zeus-Setup-*-<arch>.exe` | If SmartScreen warns, choose **More info → Run anyway**. |',
+    '| macOS Apple silicon / Intel | `Zeus-*-arm64.dmg` / `Zeus-*-x64.dmg` | If Gatekeeper blocks it, right-click → **Open**, or `xattr -dr com.apple.quarantine /Applications/Zeus.app`. |',
+    '| Debian / Ubuntu | `zeus-*-<arch>.deb` | |',
+    '| Fedora / RHEL / openSUSE | `zeus-*-<arch>.rpm` | |',
+    '| Arch / Manjaro | `zeus-*-<arch>.pacman` | `sudo pacman -U <file>` |',
+    '| Any Linux | `zeus-*-<arch>.AppImage` | `chmod +x` first. On Ubuntu 24.04+ install `libfuse2t64`, or it fails with `error loading libfuse.so.2`. |',
+    '| Any Linux (no installer) | `zeus-*-<arch>.tar.gz` | Extract and run `./Zeus`. |',
     '',
-    'Once installed, Limboo updates itself from this feed — including the deb, rpm',
+    'Once installed, Zeus updates itself from this feed — including the deb, rpm',
     'and pacman builds, which apply updates through your package manager.',
     '',
   );
@@ -204,7 +204,7 @@ function main() {
   out.push('### Verifying this release', '');
   out.push(
     'Each artifact is listed in `SHA256SUMS`. Verify with `sha256sum -c SHA256SUMS`,',
-    'and verify build provenance with `gh attestation verify <file> --repo limboo-ai/limboo`.',
+    'and verify build provenance with `gh attestation verify <file> --repo mohmaedeslam00116/ZEUS`.',
     '',
     `_${commitCount} commit(s) in this release._`,
   );

@@ -11,7 +11,7 @@ export function AppearancePanel() {
   return (
     <Section
       title="Appearance"
-      hint="Limboo is pure-black, dark only — there is intentionally no light theme or color toggle."
+      hint="Zeus is pure-black, dark only — there is intentionally no light theme or color toggle."
     >
       <Field id="density" label="Density" hint="Spacing of rows and controls across the app.">
         <SegmentedControl<UiDensity>

@@ -4,7 +4,7 @@
  * runs argv-only and confined to the workspace repo, and no token is ever stored.
  *
  * One setting here is NOT local-only: "Contributor photos" is the switch for
- * Limboo's single outbound network path besides the coding agent (CLAUDE.md §1).
+ * Zeus's single outbound network path besides the coding agent (CLAUDE.md §1).
  * Its hint text has to keep saying so.
  */
 import { GIT_LIMITS, clamp } from '@shared/constants';
@@ -22,7 +22,7 @@ export function GitPanel() {
     <div className="flex flex-col gap-5">
       <Section
         title="Commit identity"
-        hint="Used as the author of commits made from Limboo. Leave blank to inherit your global git config."
+        hint="Used as the author of commits made from Zeus. Leave blank to inherit your global git config."
       >
         <StackedField id="gitUserName" label="Author name" hint="git config user.name override.">
           <TextInput
@@ -90,7 +90,7 @@ export function GitPanel() {
 
       <Section
         title="Sync (push & pull)"
-        hint="Limboo never stores remote credentials — push and pull use your existing git credential helper or SSH agent. If none is configured, the operation fails fast with a clear message."
+        hint="Zeus never stores remote credentials — push and pull use your existing git credential helper or SSH agent. If none is configured, the operation fails fast with a clear message."
       >
         <Field
           id="gitAutoSetUpstream"
@@ -129,7 +129,7 @@ export function GitPanel() {
         <Field
           id="gitAvatars"
           label="Contributor photos"
-          hint="Show real profile photos in commit history and the GitHub tab. This is the only thing in Limboo besides the coding agent that reaches the network. Most commit addresses can only be matched to an account by GitHub, so Limboo asks the GitHub CLI once per repository which accounts authored its commits, then downloads their pictures — which means GitHub learns you are browsing this repository. No token is stored and nothing about your code is sent. Off means initials everywhere and no requests at all."
+          hint="Show real profile photos in commit history and the GitHub tab. This is the only thing in Zeus besides the coding agent that reaches the network. Most commit addresses can only be matched to an account by GitHub, so Zeus asks the GitHub CLI once per repository which accounts authored its commits, then downloads their pictures — which means GitHub learns you are browsing this repository. No token is stored and nothing about your code is sent. Off means initials everywhere and no requests at all."
         >
           <Toggle
             checked={git.avatars.enabled}
@@ -171,14 +171,14 @@ export function GitPanel() {
         >
           <TextInput
             value={git.worktrees.branchPrefix}
-            placeholder="limboo"
+            placeholder="zeus"
             onChange={(v) => void update({ git: { worktrees: { branchPrefix: v } } })}
           />
         </StackedField>
         <Field
           id="gitWtAutoSetup"
           label="Run setup hooks after create"
-          hint="Run the repo's limboo.json setup commands (install deps, copy .env, …) in a visible terminal when a worktree is created."
+          hint="Run the repo's zeus.json setup commands (install deps, copy .env, …) in a visible terminal when a worktree is created."
         >
           <Toggle
             checked={git.worktrees.autoSetup}
@@ -209,7 +209,7 @@ export function GitPanel() {
 
       <Section
         title="Scripts & Services"
-        hint="Supervised long-running processes (dev servers, workers) defined in the repo's limboo.json. Each service gets a loopback port from the range below; everything binds to 127.0.0.1 only."
+        hint="Supervised long-running processes (dev servers, workers) defined in the repo's zeus.json. Each service gets a loopback port from the range below; everything binds to 127.0.0.1 only."
       >
         <Field
           id="gitSvcPortRange"

@@ -45,7 +45,7 @@ scope (for example, personal preferences that apply everywhere).
 
 ## Retrieval and injection
 
-When you send a prompt (and memory injection is enabled), Limboo builds a search
+When you send a prompt (and memory injection is enabled), Zeus builds a search
 query from the prompt plus context (active files, branch), scores candidate memories
 by BM25 relevance fused with recency, confidence, usage, tier weight, and pin /
 workspace boosts, and selects the top entries within a character budget. Those are

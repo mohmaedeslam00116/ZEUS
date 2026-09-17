@@ -34,9 +34,9 @@ interface TerminalState {
 }
 
 function termApi() {
-  const api = window.limboo?.terminal;
+  const api = window.zeus?.terminal;
   if (!api && typeof console !== 'undefined') {
-    console.warn('[limboo] window.limboo.terminal is unavailable — preload did not load.');
+    console.warn('[zeus] window.zeus.terminal is unavailable — preload did not load.');
   }
   return api;
 }
@@ -56,7 +56,7 @@ export const useTerminalStore = create<TerminalState>((set, get) => ({
 
   hydrate: () => {
     if (get().hydrated) return;
-    const api = window.limboo?.terminal;
+    const api = window.zeus?.terminal;
     if (!api) {
       set({ hydrated: true });
       return;

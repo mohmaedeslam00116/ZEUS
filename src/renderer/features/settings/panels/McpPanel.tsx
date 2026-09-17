@@ -78,7 +78,7 @@ export function McpPanel() {
     <div className="flex flex-col gap-5">
       <Section
         title="Servers"
-        hint="Model Context Protocol servers Limboo makes available to every coding agent. One registry — Claude and Cursor both connect to the same servers, secrets, and permissions."
+        hint="Model Context Protocol servers Zeus makes available to every coding agent. One registry — Claude and Cursor both connect to the same servers, secrets, and permissions."
       >
         <div className="flex items-center gap-2 px-2 py-1">
           <button

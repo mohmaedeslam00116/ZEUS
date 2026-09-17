@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 /**
- * Limboo hook runner — the tiny process Cursor spawns for every registered
+ * Zeus hook runner — the tiny process Cursor spawns for every registered
  * hook (preToolUse / beforeShellExecution / beforeReadFile / afterFileEdit /
  * subagentStart / subagentStop). It reads the hook payload from stdin,
- * forwards it over Limboo's per-run bridge pipe, and writes the decision JSON
+ * forwards it over Zeus's per-run bridge pipe, and writes the decision JSON
  * to stdout.
  *
  * MUST stay self-contained (node:net / node:process only — no imports from
@@ -18,15 +18,15 @@
  * treats exit 2 as a hard block; hooks.json additionally sets failClosed).
  * Fail-closed is correct, but it must fire only on a REAL failure: a runner
  * that cannot identify the event denies everything the agent tries to do, so
- * the event is resolved from argv first (which Limboo writes) and only then
+ * the event is resolved from argv first (which Zeus writes) and only then
  * from the payload, across every spelling the CLI might use.
  */
 'use strict';
 
 const net = require('node:net');
 
-const PIPE = process.env.LIMBOO_BRIDGE_PIPE || '';
-const TOKEN = process.env.LIMBOO_BRIDGE_TOKEN || '';
+const PIPE = process.env.ZEUS_BRIDGE_PIPE || '';
+const TOKEN = process.env.ZEUS_BRIDGE_TOKEN || '';
 const TIMEOUT_MS = 10 * 60 * 1000; // interactive approval can take a while
 const STDIN_TIMEOUT_MS = 30 * 1000; // the CLI writes the payload immediately
 const MAX_INPUT = 2 * 1024 * 1024;
@@ -71,7 +71,7 @@ function finish(permission, extra) {
 }
 
 function denyAndExit(message) {
-  finish('deny', { agentMessage: message || 'Limboo bridge unavailable.' });
+  finish('deny', { agentMessage: message || 'ZEUS bridge unavailable.' });
 }
 
 // Booting as a GUI Electron app instead of as node means ELECTRON_RUN_AS_NODE
@@ -79,10 +79,10 @@ function denyAndExit(message) {
 // and hanging would cost the agent a full hook timeout on EVERY tool call —
 // so fail fast and name the cause.
 if (process.versions && process.versions.electron && !process.env.ELECTRON_RUN_AS_NODE) {
-  denyAndExit('Limboo bridge runner started without ELECTRON_RUN_AS_NODE.');
+  denyAndExit('Zeus bridge runner started without ELECTRON_RUN_AS_NODE.');
 }
 
-if (!PIPE || !TOKEN) denyAndExit('Limboo bridge environment missing.');
+if (!PIPE || !TOKEN) denyAndExit('Zeus bridge environment missing.');
 
 /** The event name from our own argv (`--event <name>`), validated. */
 function eventFromArgv() {
@@ -146,14 +146,14 @@ process.stdin.on('end', () => {
   const socket = net.connect(PIPE);
   const timer = setTimeout(() => {
     socket.destroy();
-    denyAndExit('Limboo did not answer in time.');
+    denyAndExit('Zeus did not answer in time.');
   }, TIMEOUT_MS);
 
   let buffer = '';
   socket.setEncoding('utf8');
   socket.on('error', () => {
     clearTimeout(timer);
-    denyAndExit('Limboo bridge unreachable.');
+    denyAndExit('Zeus bridge unreachable.');
   });
   socket.on('connect', () => {
     socket.write(JSON.stringify({ token: TOKEN, role: 'hook' }) + '\n');

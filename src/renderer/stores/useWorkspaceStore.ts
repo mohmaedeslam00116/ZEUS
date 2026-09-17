@@ -3,7 +3,7 @@
  *
  * `hydrate()` loads the registered workspaces + the active one through the preload
  * bridge and subscribes to live changes. All mutations go through
- * `window.limboo.workspace.*`; the broadcast keeps every surface in sync. In a
+ * `window.zeus.workspace.*`; the broadcast keeps every surface in sync. In a
  * plain browser preview (no preload) it degrades to an empty, read-only list so
  * the UI still renders.
  */
@@ -43,9 +43,9 @@ interface WorkspaceState {
 /** Resolve the workspace bridge, warning (dev) when it is unexpectedly absent so a
  *  missing preload surfaces in the console instead of silently no-op-ing. */
 function workspaceApi() {
-  const api = window.limboo?.workspace;
+  const api = window.zeus?.workspace;
   if (!api && typeof console !== 'undefined') {
-    console.warn('[limboo] window.limboo.workspace is unavailable — the preload bridge did not load.');
+    console.warn('[zeus] window.zeus.workspace is unavailable — the preload bridge did not load.');
   }
   return api;
 }
@@ -66,7 +66,7 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
 
   hydrate: async () => {
     if (get().hydrated) return;
-    const api = window.limboo?.workspace;
+    const api = window.zeus?.workspace;
     if (!api) {
       set({ hydrated: true });
       return;

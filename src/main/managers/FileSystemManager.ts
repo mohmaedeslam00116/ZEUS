@@ -97,7 +97,7 @@ export class FileSystemManager {
    *
    * This is also what finally gives File Writer mutations a durable home: until
    * now they landed only in the in-memory File History ring and were lost on
-   * quit. `source` distinguishes a change Limboo made itself (`writer`) from
+   * quit. `source` distinguishes a change Zeus made itself (`writer`) from
    * one the watcher observed (`watcher`, i.e. an external edit).
    */
   private graph?: {

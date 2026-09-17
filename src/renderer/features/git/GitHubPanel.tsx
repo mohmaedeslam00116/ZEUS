@@ -185,7 +185,7 @@ function Row({
     <li>
       <button
         type="button"
-        onClick={() => void window.limboo?.system.openExternal(url)}
+        onClick={() => void window.zeus?.system.openExternal(url)}
         className="flex w-full items-start gap-2 rounded-md px-2 py-1.5 text-left transition-colors hover:bg-surface-2"
       >
         {author && <Avatar src={avatar} name={author} size={20} shape="square" className="mt-px" />}
@@ -277,8 +277,8 @@ function GhMissing() {
     <div className="flex flex-col gap-3">
       <div className="flex items-start gap-2 rounded-md border border-line bg-surface-2 px-2.5 py-2">
         <p className="min-w-0 flex-1 text-[11px] text-muted">
-          Install the GitHub CLI to browse pull requests and issues without leaving Limboo. It is
-          optional — everything else in the Git workspace works without it, and Limboo never stores
+          Install the GitHub CLI to browse pull requests and issues without leaving Zeus. It is
+          optional — everything else in the Git workspace works without it, and Zeus never stores
           your GitHub credentials.
         </p>
         <IconButton label="Dismiss" size="sm" onClick={dismiss}>
@@ -287,7 +287,7 @@ function GhMissing() {
       </div>
       <div className="flex items-center gap-2">
         <SecondaryButton onClick={() => void refresh(true)}>Check again</SecondaryButton>
-        <SecondaryButton onClick={() => void window.limboo?.system.openExternal(INSTALL_URL)}>
+        <SecondaryButton onClick={() => void window.zeus?.system.openExternal(INSTALL_URL)}>
           Installation guide
         </SecondaryButton>
       </div>
@@ -296,16 +296,16 @@ function GhMissing() {
 }
 
 /**
- * gh is installed but logged out. Limboo does NOT run the login itself — it is
+ * gh is installed but logged out. Zeus does NOT run the login itself — it is
  * an interactive browser flow the CLI owns, and shelling into it would mean
- * Limboo standing between the user and their credentials.
+ * Zeus standing between the user and their credentials.
  */
 function GhSignedOut() {
   const refresh = useGhStore((s) => s.refresh);
   return (
     <div className="flex flex-col gap-3 py-4">
       <p className="text-[11px] text-muted">
-        The GitHub CLI is installed but not signed in. Run this in a terminal — Limboo never handles
+        The GitHub CLI is installed but not signed in. Run this in a terminal — Zeus never handles
         your credentials, so the CLI owns the sign-in flow.
       </p>
       <div className="flex items-center gap-2 rounded-md border border-line bg-surface-2 px-2.5 py-1.5">

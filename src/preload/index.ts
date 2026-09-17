@@ -1,7 +1,7 @@
 /**
  * Preload script: the ONLY bridge between the privileged main process and the
  * sandboxed renderer. Runs with `contextIsolation` ON and `nodeIntegration` OFF,
- * exposing a tightly-scoped, typed API on `window.limboo` via `contextBridge`.
+ * exposing a tightly-scoped, typed API on `window.zeus` via `contextBridge`.
  *
  * Channel names are imported from the shared module so they can never drift from
  * the main-process handlers.
@@ -243,7 +243,7 @@ const worktreeApi = {
   /** Detach a `missing` worktree association (revert to a plain session). */
   detach: (sessionId: string): Promise<Session> =>
     ipcRenderer.invoke(IpcChannels.worktreeDetach, sessionId),
-  /** The repo's limboo.json (hooks / scripts / services) + acknowledgment state. */
+  /** The repo's zeus.json (hooks / scripts / services) + acknowledgment state. */
   getRepoConfig: (sessionId: string): Promise<RepoConfigState> =>
     ipcRenderer.invoke(IpcChannels.worktreeGetRepoConfig, sessionId),
   /**
@@ -268,7 +268,7 @@ const servicesApi = {
     ipcRenderer.invoke(IpcChannels.serviceStop, sessionId, name),
   restart: (sessionId: string, name: string): Promise<ServiceInfo> =>
     ipcRenderer.invoke(IpcChannels.serviceRestart, sessionId, name),
-  /** Run a named on-demand script from limboo.json (visible terminal). */
+  /** Run a named on-demand script from zeus.json (visible terminal). */
   runScript: (sessionId: string, name: string): Promise<void> =>
     ipcRenderer.invoke(IpcChannels.scriptRun, sessionId, name),
   onUpdated: (
@@ -799,7 +799,7 @@ const runtimeApi = {
 /**
  * The OPTIONAL GitHub CLI surface. Read-only by construction: there is no
  * method here that can write to GitHub, and none that could return a token —
- * Limboo stores no GitHub credential (auth belongs to the CLI itself).
+ * Zeus stores no GitHub credential (auth belongs to the CLI itself).
  */
 const ghApi = {
   /** Classify the local CLI (installed / authenticated / repo remote). */
@@ -885,7 +885,7 @@ const mcpApi = {
     subscribe<{ id: string; runtime: McpServerRuntime }>(IpcEvents.mcpServerStatus, cb),
 };
 
-const limbooApi = {
+const zeusApi = {
   window: windowApi,
   settings: settingsApi,
   system: systemApi,
@@ -911,6 +911,6 @@ const limbooApi = {
   runtime: runtimeApi,
 };
 
-contextBridge.exposeInMainWorld('limboo', limbooApi);
+contextBridge.exposeInMainWorld('zeus', zeusApi);
 
-export type LimbooApi = typeof limbooApi;
+export type ZeusApi = typeof zeusApi;

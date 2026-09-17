@@ -14,7 +14,7 @@ Provider/runtime boundary               start(spec, bridge) + ProviderRunBridge
         ↓
 Normalized application state            AgentEvent / AgentState / RuntimeSnapshot (src/shared/types.ts)
         ↓
-IPC / preload boundary                  agent:* channels → window.limboo.agent (contextIsolated)
+IPC / preload boundary                  agent:* channels → window.zeus.agent (contextIsolated)
         ↓
 Renderer                                useAgentStore + Composer / permission / plan / timeline UI
 ```
@@ -35,7 +35,7 @@ existing UI.
 | `PermissionRequest` (approval flow) | `src/shared/types.ts` |
 | `SessionPermissionMode` | `src/shared/types.ts` |
 | Agent IPC channels (`agent:*`, plan + diagnostics included) | `src/shared/ipc-channels.ts` |
-| Preload agent namespace (`window.limboo.agent`) | `src/preload/index.ts` |
+| Preload agent namespace (`window.zeus.agent`) | `src/preload/index.ts` |
 | `useAgentStore` (normalized renderer agent state) | `src/renderer/stores/useAgentStore.ts` |
 | Composer, permission dialog, plan, timeline UI | `src/renderer/features/**` |
 

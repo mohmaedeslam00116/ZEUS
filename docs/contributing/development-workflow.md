@@ -1,6 +1,6 @@
 # Development workflow
 
-This page describes the day-to-day loop for working in Limboo. The high-level
+This page describes the day-to-day loop for working in Zeus. The high-level
 contract is in the root [CONTRIBUTING.md](../../CONTRIBUTING.md); this expands it.
 
 ## Setup

@@ -26,7 +26,7 @@ interface ResumeStoreState {
 }
 
 function resumeApi() {
-  return window.limboo?.resume;
+  return window.zeus?.resume;
 }
 
 export const useResumeStore = create<ResumeStoreState>((set, get) => ({

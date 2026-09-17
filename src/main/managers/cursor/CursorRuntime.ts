@@ -268,7 +268,7 @@ function argvLabel(spec: CursorRunSpec): string {
     flags.push(`sandbox=${spec.sandbox.mode},net=${spec.sandbox.network.policy}`);
   }
   if (spec.approveMcps) flags.push('approve-mcps');
-  if (spec.extraEnv?.LIMBOO_BRIDGE_PIPE) flags.push('bridge');
+  if (spec.extraEnv?.ZEUS_BRIDGE_PIPE) flags.push('bridge');
   return `model=${spec.model} (${flags.join(', ')})`;
 }
 

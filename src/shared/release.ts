@@ -11,7 +11,7 @@
  * WHY THE MANIFEST IS COMPILED IN RATHER THAN FETCHED. The production CSP is
  * `connect-src 'self'; img-src 'self' data:` (see `hardenSession` in
  * `src/main/index.ts`) — the renderer cannot reach github.com at all, by design.
- * Limboo is local-first and the only network traffic in the product is the
+ * Zeus is local-first and the only network traffic in the product is the
  * connected coding agent talking to its provider. A release document that needed
  * the network would be blank offline, blank in development, and would be the
  * first feature to widen the CSP. So the notes ship inside the build that they

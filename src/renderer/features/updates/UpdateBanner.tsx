@@ -66,7 +66,7 @@ export function UpdateBanner() {
   const failed = status.stage === 'error';
   const installing = status.stage === 'installing';
   const percent = status.percent ?? 0;
-  const versionLabel = status.version ? `Limboo ${status.version}` : 'A new version';
+  const versionLabel = status.version ? `Zeus ${status.version}` : 'A new version';
   // A failure that left an update staged (the Linux package path) is worth
   // retrying directly; anything else restarts from the check, since we cannot
   // assume the download itself is sound.
@@ -85,7 +85,7 @@ export function UpdateBanner() {
 
   const copyCommand = (): void => {
     if (!status.manualCommand) return;
-    void window.limboo?.system.clipboardWrite(status.manualCommand);
+    void window.zeus?.system.clipboardWrite(status.manualCommand);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };

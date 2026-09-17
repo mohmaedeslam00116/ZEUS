@@ -12,7 +12,7 @@ import { RELEASE_CATEGORY_LABEL, type ReleaseManifestEntry } from '@shared/relea
 export function releaseToMarkdown(manifest: ReleaseManifestEntry): string {
   const out: string[] = [];
 
-  out.push(`# Limboo ${manifest.version}${manifest.codename ? ` — ${manifest.codename}` : ''}`);
+  out.push(`# Zeus ${manifest.version}${manifest.codename ? ` — ${manifest.codename}` : ''}`);
   out.push('');
 
   const facts = [

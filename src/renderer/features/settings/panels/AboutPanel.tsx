@@ -7,11 +7,11 @@ export function AboutPanel() {
   const [info, setInfo] = useState<AppInfo | null>(null);
 
   useEffect(() => {
-    void window.limboo?.app.getInfo().then(setInfo);
+    void window.zeus?.app.getInfo().then(setInfo);
   }, []);
 
   return (
-    <Section title="About Limboo" hint="The operating environment for AI software development.">
+    <Section title="About Zeus" hint="The operating environment for AI software development.">
       {info ? (
         <dl className="flex flex-col">
           <Meta label="Version" value={info.version} />

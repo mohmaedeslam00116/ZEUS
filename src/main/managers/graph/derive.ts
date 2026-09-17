@@ -4,7 +4,7 @@
  * Everything in this file is a HEURISTIC, and every edge it produces carries
  * `derived: true` so the UI can dash it and queries can exclude it. That flag is
  * the whole contract: a heuristic must never be able to present itself with the
- * same authority as an event Limboo actually observed.
+ * same authority as an event Zeus actually observed.
  *
  * WHAT IS AND IS NOT HERE. `verified-by` has no provider signal at all — neither
  * Claude nor Cursor tells a host "this command validated that edit". So it is
@@ -34,7 +34,7 @@ const VERIFY_PATTERNS: RegExp[] = [
 /** Does this command text look like a verification step? */
 export function looksLikeVerification(command: string, repoScripts: string[]): boolean {
   const text = command.toLowerCase();
-  // A script the repo's own limboo.json declares is a stronger signal than any
+  // A script the repo's own zeus.json declares is a stronger signal than any
   // builtin pattern — it is the project telling us what verification means.
   for (const script of repoScripts) {
     if (script && text.includes(script.toLowerCase())) return true;

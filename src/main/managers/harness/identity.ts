@@ -1,5 +1,5 @@
 /**
- * Reconcile the harness's tool identities and inputs with Limboo's.
+ * Reconcile the harness's tool identities and inputs with Zeus's.
  *
  * Two independent mappings, both required before a tool call can be gated or
  * displayed correctly. Kept in one small pure module because both are
@@ -9,10 +9,10 @@
 import path from 'node:path';
 
 /**
- * Common tool names → the native Claude identities Limboo classifies on.
+ * Common tool names → the native Claude identities Zeus classifies on.
  *
  * The adapter exposes seven built-ins under lowercase "common" names and the
- * rest under their native Claude names. Limboo's `classifyTool`,
+ * rest under their native Claude names. Zeus's `classifyTool`,
  * `summarizeTool`, `permissionDetail`, `filePathOf`, `READ_TOOLS`/`WRITE_TOOLS`
  * and the risk chips all key on the native form, so an unmapped `write` would
  * classify as unknown → `'command'` risk. The consequences are not cosmetic:
@@ -35,7 +35,7 @@ const COMMON_TO_NATIVE: Record<string, string> = {
 };
 
 /**
- * The Limboo tool identity for a harness tool call.
+ * The Zeus tool identity for a harness tool call.
  *
  * Prefers the adapter's own `nativeName` when the part carries one — it is
  * authoritative — and falls back to the common-name table.
@@ -54,7 +54,7 @@ const PATH_KEYS = ['file_path', 'path', 'notebook_path'] as const;
  * The harness rewrites every tool input before it reaches the stream, replacing
  * the session's work dir with `''` or `'.'` — so `Write` on
  * `/…/worktrees/ab/slug/src/x.ts` arrives as `src/x.ts`. That is fine for
- * display inside the agent's own transcript and wrong everywhere Limboo needs a
+ * display inside the agent's own transcript and wrong everywhere Zeus needs a
  * real path: the crown-jewel guard resolves a relative path against
  * `process.cwd()` (the app's directory, not the worktree), and a permission
  * dialog should show the user a path they recognise.

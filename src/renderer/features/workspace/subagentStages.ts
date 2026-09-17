@@ -36,7 +36,7 @@ const STAGES: ReadonlyArray<{ id: string; label: string; match: (name: string) =
   {
     id: 'context',
     label: 'Loading context',
-    match: (n) => n.startsWith('mcp__limboo_memory__') || n.startsWith('mcp__limboo_search__'),
+    match: (n) => n.startsWith('mcp__zeus_memory__') || n.startsWith('mcp__zeus_search__'),
   },
   {
     id: 'read',
@@ -56,11 +56,11 @@ const STAGES: ReadonlyArray<{ id: string; label: string; match: (name: string) =
   {
     id: 'mcp',
     label: 'Calling connected tools',
-    // Limboo's own retrieval servers are the `context` stage, not a tool call.
+    // Zeus's own retrieval servers are the `context` stage, not a tool call.
     match: (n) =>
       n.startsWith('mcp__') &&
-      !n.startsWith('mcp__limboo_memory__') &&
-      !n.startsWith('mcp__limboo_search__'),
+      !n.startsWith('mcp__zeus_memory__') &&
+      !n.startsWith('mcp__zeus_search__'),
   },
   {
     id: 'run',

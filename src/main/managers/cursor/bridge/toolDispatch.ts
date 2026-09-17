@@ -1,7 +1,7 @@
 /**
  * MCP request dispatcher for the per-run bridge pipe — the main-process half
  * of {@link file://./mcpBridge.cjs}. Serves `tools/list` / `tools/call` for
- * the `limboo_memory` and `limboo_search` servers from the SAME plain-tool
+ * the `zeus_memory` and `zeus_search` servers from the SAME plain-tool
  * handlers the Claude in-process servers use, so both agents query one memory
  * and one repository index.
  *

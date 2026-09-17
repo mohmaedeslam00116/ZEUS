@@ -3,7 +3,7 @@
  *
  * On `hydrate()` it loads persisted settings through the preload bridge, applies
  * appearance side-effects to the document, seeds the layout store, and
- * subscribes to live changes. All writes go through `window.limboo.settings.set`
+ * subscribes to live changes. All writes go through `window.zeus.settings.set`
  * (write-through); the broadcast keeps every surface in sync.
  */
 import { create } from 'zustand';
@@ -29,7 +29,7 @@ let layoutSeeded = false;
 
 function applyAppearance(appearance: AppSettings['appearance']): void {
   const root = document.documentElement;
-  root.style.setProperty('--limboo-font-scale', String(appearance.fontScale));
+  root.style.setProperty('--zeus-font-scale', String(appearance.fontScale));
   root.dataset.reducedMotion = String(appearance.reducedMotion);
   root.dataset.density = appearance.density;
   // Chat/LLM-stream typeface (see the `chat-font` utility in styles/index.css).
@@ -37,7 +37,7 @@ function applyAppearance(appearance: AppSettings['appearance']): void {
   // but the optimistic local update must never apply an off-list value either.
   const font = CHAT_FONTS.find((f) => f.id === appearance.chatFont) ?? CHAT_FONTS[0];
   root.style.setProperty(
-    '--limboo-chat-font',
+    '--zeus-chat-font',
     font.family ? `${font.family}, ${CHAT_FONT_FALLBACK}` : CHAT_FONT_FALLBACK,
   );
   ensureGoogleFontLink(font);
@@ -52,7 +52,7 @@ function applyAppearance(appearance: AppSettings['appearance']): void {
  */
 function ensureGoogleFontLink(font: { id: string; google?: string }): void {
   if (!font.google || font.id === 'roboto') return;
-  const id = `limboo-chat-font-${font.id}`;
+  const id = `zeus-chat-font-${font.id}`;
   if (document.getElementById(id)) return;
   const link = document.createElement('link');
   link.id = id;
@@ -67,7 +67,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
 
   hydrate: async () => {
     if (get().hydrated) return;
-    const api = window.limboo?.settings;
+    const api = window.zeus?.settings;
 
     // Browser preview (no preload): fall back to defaults so the UI still runs.
     if (!api) {
@@ -105,7 +105,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
   },
 
   update: async (patch) => {
-    const api = window.limboo?.settings;
+    const api = window.zeus?.settings;
 
     // Optimistically apply the patch locally so the control flips instantly —
     // toggles/segments reflect the new state on the same frame as the click,
@@ -131,7 +131,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
   },
 
   reset: async () => {
-    const api = window.limboo?.settings;
+    const api = window.zeus?.settings;
     if (!api) {
       set({ settings: DEFAULT_SETTINGS });
       applyAppearance(DEFAULT_SETTINGS.appearance);

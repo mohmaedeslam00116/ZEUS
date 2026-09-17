@@ -1,5 +1,5 @@
 /**
- * Safe-delete confirmation for removing a workspace from Limboo. Removing a
+ * Safe-delete confirmation for removing a workspace from Zeus. Removing a
  * workspace only detaches it from the app (registration + cached metadata,
  * statistics, index, and workspace-scoped sessions/memories/checkpoints). The
  * project directory on disk is NEVER touched — permanently deleting project
@@ -91,7 +91,7 @@ export function WorkspaceRemoveDialog({
           </div>
 
           <p className="text-[12px] leading-relaxed text-muted">
-            This removes the workspace from Limboo only — its registration, cached metadata,
+            This removes the workspace from Zeus only — its registration, cached metadata,
             statistics, index, and any sessions, memories, and checkpoints scoped to it.
           </p>
           <p className="rounded-md border border-line bg-surface-2 px-3 py-2 text-[12px] leading-relaxed text-fg">
@@ -115,7 +115,7 @@ export function WorkspaceRemoveDialog({
             disabled={removing}
             className="rounded-md bg-danger px-3 py-1.5 text-[12px] font-semibold text-base transition-opacity hover:opacity-90 disabled:opacity-60"
           >
-            {removing ? 'Removing…' : 'Remove from Limboo'}
+            {removing ? 'Removing…' : 'Remove from Zeus'}
           </button>
         </div>
       </div>

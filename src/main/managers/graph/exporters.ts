@@ -132,7 +132,7 @@ export function exportJson(
 ): string {
   return JSON.stringify(
     {
-      format: 'limboo.workgraph.v1',
+      format: 'zeus.workgraph.v1',
       sessionId,
       exportedAt: Date.now(),
       /** True when retention or the read window cut history from this export. */
@@ -165,7 +165,7 @@ export function exportNdjson(
   lines.push(
     JSON.stringify({
       type: 'meta',
-      format: 'limboo.workgraph.ndjson.v1',
+      format: 'zeus.workgraph.ndjson.v1',
       sessionId,
       exportedAt: Date.now(),
       truncated,
@@ -224,7 +224,7 @@ export function exportGraphml(nodes: WorkGraphNode[], edges: WorkGraphEdge[]): s
     '<?xml version="1.0" encoding="UTF-8"?>',
     '<graphml xmlns="http://graphml.graphdrawing.org/xmlns">',
     ...keys.map((k) => `  ${k}`),
-    '  <graph id="limboo" edgedefault="directed">',
+    '  <graph id="zeus" edgedefault="directed">',
     ...body,
     '  </graph>',
     '</graphml>',
@@ -366,7 +366,7 @@ export function exportDot(
   edges: WorkGraphEdge[],
 ): string {
   const lines: string[] = [];
-  lines.push(`digraph "limboo_work_graph_${dotText(sessionId)}" {`);
+  lines.push(`digraph "zeus_work_graph_${dotText(sessionId)}" {`);
   lines.push('  rankdir=TB;');
   lines.push('  bgcolor="#000000";');
   lines.push('  node [style=filled fillcolor="#0a0a0a" fontcolor="#ededed" color="#2a2a2a"];');
@@ -458,7 +458,7 @@ export function exportCsv(
 
 /**
  * A self-contained HTML report: no scripts, no external assets, no network.
- * It is the "send this to someone who does not have Limboo" format, so it must
+ * It is the "send this to someone who does not have Zeus" format, so it must
  * open correctly from a file:// URL with a strict browser, forever.
  */
 export function exportHtml(
@@ -502,7 +502,7 @@ export function exportHtml(
     .filter(Boolean)
     .join('\n');
 
-  // The palette is Limboo's own tokens, resolved to literals: a detached
+  // The palette is Zeus's own tokens, resolved to literals: a detached
   // document has no stylesheet to resolve `var(--color-*)` against.
   return `<!doctype html>
 <html lang="en"><head><meta charset="utf-8">

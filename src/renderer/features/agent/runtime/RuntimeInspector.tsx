@@ -104,7 +104,7 @@ function ContextSection({
 
       {ctx.attributionDegraded && (
         <EstimateNote>
-          The breakdown is unavailable for this turn — Limboo’s estimates exceeded the total the
+          The breakdown is unavailable for this turn — Zeus’s estimates exceeded the total the
           provider measured, which happens after a compaction or on a resumed conversation. The
           total above is still measured.
         </EstimateNote>
@@ -176,7 +176,7 @@ function ContextSection({
 
       {cfg.showEstimates && !ctx.attributionDegraded && (
         <EstimateNote>
-          Segments marked <span className="font-mono">~</span> are estimated: Limboo counted the
+          Segments marked <span className="font-mono">~</span> are estimated: Zeus counted the
           characters of the blocks it composed and divided by an approximate characters-per-token
           ratio. The total, the window and the reservation are measured by the provider.
         </EstimateNote>

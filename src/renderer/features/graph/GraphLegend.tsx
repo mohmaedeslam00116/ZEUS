@@ -93,7 +93,7 @@ export function GraphLegend({
 
       <p className="rounded-md border border-line bg-surface-2/40 px-2 py-1.5 text-[10px] leading-relaxed text-muted">
         <span className="text-fg">Dashed means inferred.</span> Solid relationships were read
-        directly from the agent&apos;s own execution events. Dashed ones were derived by Limboo
+        directly from the agent&apos;s own execution events. Dashed ones were derived by Zeus
         from ordering and command names, so treat them as a strong hint rather than a fact.
       </p>
 

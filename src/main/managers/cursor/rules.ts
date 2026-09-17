@@ -1,10 +1,10 @@
 /**
  * Session-scoped generated context rule
- * (`<root>/.cursor/rules/limboo-context.mdc`).
+ * (`<root>/.cursor/rules/zeus-context.mdc`).
  *
  * Cursor has no system-prompt preset-append switch, but the CLI auto-loads
  * rule files under `.cursor/rules` (and AGENTS.md / CLAUDE.md) as standing
- * instructions — the documented injection vehicle for Limboo's three context
+ * instructions — the documented injection vehicle for Zeus's three context
  * producers (<project-memory> / <project-context> / <repository-delta>).
  * The rule is written fresh immediately before each run and removed/restored
  * in `finally`, so it never goes stale, never pollutes `git status` after the
@@ -37,18 +37,18 @@ export function executionPostureNote(mode: SessionPermissionMode, force: boolean
       'File edits and mutating shell commands are recorded as proposals and presented to the user for one-click approval — attempt them normally and describe what you changed; never claim that plan mode or a sandbox is blocking you.',
     ].join(' ');
   }
-  return 'Execution posture for this run: apply. Your file edits and shell commands run directly against the working tree; destructive commands and Limboo’s own data are denied by policy.';
+  return 'Execution posture for this run: apply. Your file edits and shell commands run directly against the working tree; destructive commands and Zeus’s own data are denied by policy.';
 }
 
 /** Render the MDC body: frontmatter + the composed context block. */
 export function buildContextRule(contextBlock: string): string {
   return [
     '---',
-    'description: Limboo session context (generated per run — do not edit)',
+    'description: Zeus session context (generated per run — do not edit)',
     'alwaysApply: true',
     '---',
     '',
-    'The following project context is provided by Limboo, the orchestration',
+    'The following project context is provided by Zeus, the orchestration',
     'platform running this agent. Treat it as background knowledge about the',
     'repository and prior sessions; verify against the working tree when acting.',
     '',
@@ -68,7 +68,7 @@ export async function withSessionContextRule<T>(
 ): Promise<T> {
   return withSessionFile(
     root,
-    '.cursor/rules/limboo-context.mdc',
+    '.cursor/rules/zeus-context.mdc',
     () => (contextBlock ? buildContextRule(contextBlock) : null),
     fn,
   );

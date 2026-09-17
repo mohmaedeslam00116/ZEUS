@@ -67,7 +67,7 @@ export function usePlanActions(
   const setPlanPinned = useAgentStore((s) => s.setPlanPinned);
   return {
     copy: () => {
-      void window.limboo?.system?.clipboardWrite(plan.markdown);
+      void window.zeus?.system?.clipboardWrite(plan.markdown);
       addToast({ title: 'Plan copied', tone: 'success' });
     },
     exportMarkdown: () => downloadText(`${slugify(plan.title)}.md`, plan.markdown),

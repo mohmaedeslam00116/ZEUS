@@ -24,7 +24,7 @@ configs and `tsconfig.json`. ESLint's `import/no-unresolved` ignores `^@/` and
   stores under `src/renderer/stores/`; do not put data fetching or IPC calls directly
   in components when a store is the right home.
 - New domains get their own store and `features/<domain>/` folder.
-- Guard bridge calls with optional chaining (`window.limboo?.…`) so the UI still
+- Guard bridge calls with optional chaining (`window.zeus?.…`) so the UI still
   renders without the preload.
 
 ## Tailwind v4 (CSS-first)

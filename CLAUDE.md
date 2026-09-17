@@ -1,7 +1,7 @@
 # CLAUDE.md
 
 Operational guide and deep context for any AI coding agent (Claude, etc.) working
-in this repository. Read this first. It explains **what Limboo is**, **how the
+in this repository. Read this first. It explains **what Zeus is**, **how the
 code is organized**, **the rules you must follow**, and **what is and is not built
 yet**.
 
@@ -11,9 +11,9 @@ yet**.
 
 ---
 
-## 1. What is Limboo?
+## 1. What is Zeus?
 
-Limboo is a **local-first desktop application** that acts as the *operating system
+Zeus is a **local-first desktop application** that acts as the *operating system
 for AI software development*. It is **not an AI model**. Instead, it provides the
 environment around a connected coding agent: project management, sessions, file
 watching, repository indexing, git operations, terminal execution, memory,
@@ -24,7 +24,7 @@ repository, branch, chat history, agent, terminal history, checkpoints,
 permissions, context, memory, tasks, and generated files into one workspace.
 
 Guiding principles (from `project.md` §4): Fast, Local, Private, Modular, Secure,
-Responsive, Observable, Predictable, Recoverable. There is **no backend**. Limboo
+Responsive, Observable, Predictable, Recoverable. There is **no backend**. Zeus
 itself makes exactly **three** kinds of outbound request, and no others may be
 added without amending this paragraph:
 
@@ -45,9 +45,9 @@ added without amending this paragraph:
      `isEmbeddedAvatar` before it can reach an `<img src>`.
 
    `gh api` is reachable **only** from `commitAuthors`, with a fixed endpoint
-   built from a remote Limboo parsed itself. It has no IPC channel and no agent
+   built from a remote Zeus parsed itself. It has no IPC channel and no agent
    tool — it can POST, which is also why it stays out of the agent's read-only
-   allowlist. Authentication remains the CLI's; Limboo still reads and stores no
+   allowlist. Authentication remains the CLI's; Zeus still reads and stores no
    token. `git`, `gh`, and the update checker are separate processes/subsystems
    with their own rules.
 3. **Agent-harness setup** — the npm registry, once per harness, to install the
@@ -60,10 +60,10 @@ added without amending this paragraph:
    plus `./node_modules/.bin/claude --version` **in that directory**. The
    adapter hardcodes this; there is no offline mode. The directory resolves
    under the sandbox's `defaultWorkingDirectory`, which
-   `LocalWorktreeSandbox` reports as a Limboo-owned state root —
+   `LocalWorktreeSandbox` reports as a Zeus-owned state root —
    `{userData}/harness-state/<bucket>/`, holding a link to the execution root
    — so the runtime lands **inside userData, never in the repository and never
-   beside it**. (It used to be the worktree's plain PARENT. That is Limboo-owned
+   beside it**. (It used to be the worktree's plain PARENT. That is Zeus-owned
    for a worktree-backed session, but `resolveSessionRoot` falls back to the
    workspace path for a plain one, and the parent is then the user's own
    projects directory. See `harness/sandbox/stateRoot.ts`.)
@@ -71,7 +71,7 @@ added without amending this paragraph:
    **Where the commands run is part of what the consent surface must say.** They
    only work in that directory — it is where the adapter just wrote the lockfile
    they install from — so a user who copies them into a shell gets
-   `ERR_PNPM_NO_LOCKFILE` and reads it as a Limboo bug. `BootstrapPlan.dir`
+   `ERR_PNPM_NO_LOCKFILE` and reads it as a Zeus bug. `BootstrapPlan.dir`
    carries it through to the panel; it is deliberately **not** part of the
    consent fingerprint, which covers what executes.
 
@@ -81,7 +81,7 @@ added without amending this paragraph:
      adapter itself (`getBootstrap()`), never hardcoded in the consent surface,
      and the approval is keyed to a **hash of those exact commands**
      (`agent.harness.bootstrapAck`), so an adapter upgrade that changes what
-     runs asks again. Same posture as the `limboo.json` ack-hash gate. No ack,
+     runs asks again. Same posture as the `zeus.json` ack-hash gate. No ack,
      no run — `assertBootstrapConsent` refuses.
    - **It is refused, with a reason, when it cannot succeed.** A sandbox network
      policy of `off` (or an allowlist without the registry), or a missing
@@ -158,7 +158,7 @@ Notes / gotchas:
 ## 3. Project structure
 
 ```
-limboo/
+zeus/
 ├── CLAUDE.md                  # you are here
 ├── project.md                 # full product/architecture vision
 ├── index.html                 # renderer HTML entry (script → src/renderer/main.tsx)
@@ -174,7 +174,7 @@ limboo/
 │   └── tray.png               # 32px tray icon
 ├── package.json
 └── src/
-    ├── global.d.ts            # ambient types for window.limboo (from preload)
+    ├── global.d.ts            # ambient types for window.zeus (from preload)
     ├── shared/                # code shared across ALL processes
     │   ├── ipc-channels.ts    #   IpcChannels (invoke) + IpcEvents (push) name constants
     │   ├── types.ts           #   AppSettings, WindowStateData, Session, FileChange, CommandId, …
@@ -190,7 +190,7 @@ limboo/
     │   ├── secrets/           #   SecretStore.ts — safeStorage-encrypted secrets under userData/secrets/
     │   └── ipc/               #   registry.ts (handle wrapper) + *Handlers + registerAllIpc()
     ├── preload/
-    │   └── index.ts           # the ONLY bridge — exposes window.limboo.{window,settings,system,app,events}
+    │   └── index.ts           # the ONLY bridge — exposes window.zeus.{window,settings,system,app,events}
     └── renderer/              # React UI (presentation only)
         ├── main.tsx           #   entry: ErrorBoundary + LoadingScreen hydration gate
         ├── App.tsx            #   composes AppShell + palette + settings modal + toaster + shortcut hooks
@@ -213,7 +213,7 @@ limboo/
 
 ```
  Renderer (Chromium + React)   <-- src/renderer/** (entry: main.tsx)
-        │  window.limboo.*
+        │  window.zeus.*
         ▼
  Preload (contextBridge)        <-- src/preload/index.ts  (the ONLY bridge)
         │  ipcRenderer <-> ipcMain
@@ -357,29 +357,29 @@ cross-platform: sharp + resvg rasterize, `opentype.js` outlines the wordmarks fr
 the vendored Inter TTFs in `assets/installer/fonts/`, and a built-in 24-bit writer
 emits the BMP3 files NSIS needs (no rsvg-convert / ImageMagick anywhere).
 
-### Frameless window + the `window.limboo` bridge
+### Frameless window + the `window.zeus` bridge
 
 The window is **frameless** (`frame: false` in
 [`createWindow.ts`](src/main/window/createWindow.ts)); we draw our own title bar.
 Dragging uses Tailwind utilities in `styles/index.css`: `drag-region`
 (`-webkit-app-region: drag`) on the bar, `no-drag` on every interactive child.
 
-The preload exposes a typed, namespaced API on `window.limboo`:
+The preload exposes a typed, namespaced API on `window.zeus`:
 
 ```ts
-window.limboo.window.{minimize,maximize,close,isMaximized,onMaximizedChange}
-window.limboo.settings.{getAll,set,reset,onChange}      // persisted prefs
-window.limboo.system.{notify,openExternal,clipboardWrite,clipboardRead}
-window.limboo.app.getInfo()                             // version/electron/…
-window.limboo.events.onCommand(cb)                      // native menu/tray → command
+window.zeus.window.{minimize,maximize,close,isMaximized,onMaximizedChange}
+window.zeus.settings.{getAll,set,reset,onChange}      // persisted prefs
+window.zeus.system.{notify,openExternal,clipboardWrite,clipboardRead}
+window.zeus.app.getInfo()                             // version/electron/…
+window.zeus.events.onCommand(cb)                      // native menu/tray → command
 // …plus one namespace per platform service: workspace, session, agent, fs,
 // terminal, git, worktree, services, memory, search, resume, updates, voice
-// (full surface: docs/reference/window-limboo-api.md)
+// (full surface: docs/reference/window-zeus-api.md)
 ```
 
-Types flow from `src/preload/index.ts` (`LimbooApi`) into the renderer via
+Types flow from `src/preload/index.ts` (`ZeusApi`) into the renderer via
 [`src/global.d.ts`](src/global.d.ts). Renderer calls guard with optional chaining
-(`window.limboo?.…`) so the UI still renders in a plain browser preview where the
+(`window.zeus?.…`) so the UI still renders in a plain browser preview where the
 preload is absent.
 
 ### State (Zustand) + persistence
@@ -389,7 +389,7 @@ Renderer state is split into slice stores under `src/renderer/stores/`:
 - `useSettingsStore` — mirrors the main `SettingsManager`; `hydrate()` loads on
   boot, applies appearance (font-scale CSS var, density/reduced-motion attrs),
   seeds the layout store, and subscribes to `settings:changed`. Writes go through
-  `window.limboo.settings.set` (write-through).
+  `window.zeus.settings.set` (write-through).
 - `useLayoutStore` — live sidebar widths + open drawer tab; persisted (debounced)
   into `settings.layout`.
 - `useSessionStore` — in-memory session list (empty in Phase 1) + selection.
@@ -436,7 +436,7 @@ npm run make           # alias for `npm run dist` (Forge has no makers; builds t
 ```
 
 There is **no `npm run dev`** — use `npm start` (Electron Forge drives Vite).
-Releases: **ZEUS publishes nothing (yet).** The inherited Limboo publishing
+Releases: **ZEUS publishes nothing (yet).** The inherited Zeus publishing
 machinery — `.gitlab-ci.yml`, `bitbucket-pipelines.yml`, and the GitHub
 `release.yml` / `release-supplement.yml` / `_package.yml` / `cd.yml` workflows —
 was removed in #13 per ADR-0006, along with the `publish` / `dist:publish`
@@ -452,7 +452,7 @@ learned from shipped bugs — see `docs/operations/auto-update.md`):
 `--prepackaged` is the **`.app` bundle** on darwin and the **directory** elsewhere;
 no target may declare an explicit `arch:` (it overrides the CLI flag and re-wraps
 one build under several arch names); the macOS update zip must be rooted at
-`Limboo.app/`; and `win.publisherName` must stay unset with
+`Zeus.app/`; and `win.publisherName` must stay unset with
 `win.verifyUpdateCodeSignature: false` while Windows signing is self-signed, or
 every Windows auto-update fails. Signing lives in Forge, not electron-builder —
 `--prepackaged` skips the pack step where electron-builder would sign
@@ -590,7 +590,7 @@ Codex-style shell.
 operational in the **main process**, reached from the renderer via IPC and backing
 the real (no-mock) UI. Each owns one responsibility:
 
-- **Local Database** (`db/database.ts`) — `better-sqlite3` at `{userData}/limboo.db`,
+- **Local Database** (`db/database.ts`) — `better-sqlite3` at `{userData}/zeus.db`,
   WAL, versioned schema (`WORKSPACE_SCHEMA_VERSION`), idempotent migrations. Bound
   parameters only.
 - **Session Manager** (`managers/SessionManager.ts`) — create/list/switch/trash
@@ -603,7 +603,7 @@ the real (no-mock) UI. Each owns one responsibility:
   commit/log/branches/tags/blame/fetch/init, lightweight **checkpoints**, and now
   **push / pull** (`git:push` / `git:pull`). Git runs argv-only via `runGit`
   (no shell). Push uses `--force-with-lease` (never bare `--force`) and the user's
-  own credential helper / SSH agent — Limboo stores **no** remote credentials, and
+  own credential helper / SSH agent — Zeus stores **no** remote credentials, and
   embedded-credential remote URLs are redacted from results/logs. The UI shows an
   ahead/behind pill, an unpushed badge on the Git rail tab, and "publish branch"
   for an untracked branch. Push/pull preferences live under `settings.git.push` /
@@ -618,7 +618,7 @@ the real (no-mock) UI. Each owns one responsibility:
   removal order (services → acked teardown hooks → PTYs → watcher release →
   `git worktree remove` → guarded `fs.rm` fallback), boot-time recovery
   (`repair`+`prune`, `missing` status → Recreate/Detach banner), archive
-  teardown/restore, and the **limboo.json ack-hash trust gate** (repo-authored
+  teardown/restore, and the **zeus.json ack-hash trust gate** (repo-authored
   commands never run before the workspace acknowledges the exact config hash;
   `worktree:ackConfig` acks without hooks — works for scripts/services-only
   repos and plain sessions). UI: `WorktreeTabs` (editor-style tab strip,
@@ -632,9 +632,9 @@ the real (no-mock) UI. Each owns one responsibility:
   Resolver behavior is unchanged: `resolveSessionRoot` falls back to the
   workspace path for a plain session.
 - **Service Manager** (`managers/services/ServiceManager.ts` + `ProxyServer.ts`)
-  — **Scripts & Services** from the repo's `limboo.json`
-  (see `docs/reference/limboo-json.md`): on-demand scripts + supervised
-  services (auto-assigned 127.0.0.1 port, `PORT`/`LIMBOO_*` + peer-discovery
+  — **Scripts & Services** from the repo's `zeus.json`
+  (see `docs/reference/zeus-json.md`): on-demand scripts + supervised
+  services (auto-assigned 127.0.0.1 port, `PORT`/`ZEUS_*` + peer-discovery
   env, on-failure restart with backoff capped at `maxRestarts`, stale-exit
   guarded restarts) running as PTYs via the Terminal Engine — the scrollback IS
   the log. Optional loopback reverse proxy maps
@@ -694,7 +694,7 @@ A provider-independent **platform service owned by the app**, not the agent. It
 preserves durable project knowledge across sessions/providers and injects the most
 relevant entries into the agent prompt *before* it reaches the harness.
 
-- **Storage** — three tables in `limboo.db`: `memories` (tiered knowledge with
+- **Storage** — three tables in `zeus.db`: `memories` (tiered knowledge with
   confidence/usage/status/expiry), `memories_fts` (FTS5 over title+body, kept in
   sync by triggers, for **BM25** keyword retrieval — fully offline, no embeddings
   API), and `memory_links` (back-links to source). `workspace_id` is NULL for
@@ -727,7 +727,7 @@ lookup. Fully local: no network, no embeddings. It **indexes** the large/expensi
 sources itself (files, content, symbols) and **federates** the already-queryable
 ones at query time (memory, git, sessions, commands).
 
-- **Storage** — in `limboo.db`: `search_files`(+`search_files_fts`, FTS5 BM25 over
+- **Storage** — in `zeus.db`: `search_files`(+`search_files_fts`, FTS5 BM25 over
   path+content) and `search_symbols`(+`search_symbols_fts`, FTS5 **trigram** for
   substring/fuzzy on names), plus `search_history` and `saved_searches`. All access
   is parameterized; kept in sync by triggers (mirrors the memory FTS pattern).
@@ -744,7 +744,7 @@ ones at query time (memory, git, sessions, commands).
 - **Agent context provider** — `retrieveContext` + `buildContextBlock` render a
   `<project-context>` block of ranked files/symbols that `AgentManager` appends to
   the Claude Code preset **alongside** the memory block (single `systemPrompt.append`).
-  A read-only `limboo_search` MCP server (`search/searchTools.ts`:
+  A read-only `zeus_search` MCP server (`search/searchTools.ts`:
   `search_project` / `find_files` / `find_symbols`) lets the agent query the index
   on demand; auto-allowed in `canUseTool`. Search **retrieves/ranks**; the SDK's
   Read/Grep/Glob remain authoritative.
@@ -778,7 +778,7 @@ boot revalidation chains after `worktrees.recover().finally(retarget)`).
   regex-validated) — `cat-file -e`/`merge-base --is-ancestor` (rebase/gc →
   `historyRewritten`), `rev-list --count` both ways, capped `git log`, `git diff
   --name-status -z` (reuses `parseNameStatus`) merged with the dirty set,
-  categorized (manifest/lockfiles/**limboo.json**/migrations flagged). Persisted
+  categorized (manifest/lockfiles/**zeus.json**/migrations flagged). Persisted
   in `resume_deltas` so the one-shot injection survives a restart.
 - **Code-intelligence enrichment** — reuses the Search index: `search_files.content_hash`
   (schema v11) skips unchanged files in incremental indexing; per-file symbol
@@ -811,7 +811,7 @@ queryable **Directed Acyclic Work Graph**, so every future adapter contributes
 nodes for free. Full doc: `docs/architecture/subsystems/work-graph.md`.
 
 - **Storage** — `work_graph_nodes` / `work_graph_edges` (+ `work_graph_nodes_fts`,
-  FTS5 BM25 over title+detail) in `limboo.db`, schema v15. Unique `(src,dst,kind)`
+  FTS5 BM25 over title+detail) in `zeus.db`, schema v15. Unique `(src,dst,kind)`
   makes re-emitting an edge idempotent; `ON DELETE CASCADE` + a ring cap per
   session bound growth. Bound parameters only.
 - **Vocabulary** — 15 node kinds (objective, planning, task, subagent,
@@ -879,7 +879,7 @@ Memory, Search, Resume and the Work Graph. Full doc:
 - **Measured vs estimated is visible.** The total, the window
   (`modelUsage[model].contextWindow` — so there is **no hardcoded model table**,
   and none may be added) and the reservation are measured; the per-contributor
-  split is Limboo counting characters of blocks IT composed, divided by a
+  split is Zeus counting characters of blocks IT composed, divided by a
   constant, and is labelled `~` everywhere. When the estimates exceed the
   measured total the split is **dropped, not scaled** (`attributionDegraded`).
 - **No denominator → INDETERMINATE, never 0%.** `contextWindow` arrives only on
@@ -1032,7 +1032,7 @@ message.
     generating row, the planning placeholder, the plan header, the per-task
     marks. Do not reintroduce `Spinner`/`Loader2` in a plan surface, and there is
     no large "Execution complete" checkmark banner.
-  - **A prompt Limboo composes is not a prompt the user typed.** `send()`
+  - **A prompt Zeus composes is not a prompt the user typed.** `send()`
     persists and broadcasts EVERY prompt as a visible user turn, and `UserBubble`
     renders text verbatim — so approving a plan echoed the whole document plus
     its `<approved-plan>` tags into the transcript as raw Markdown. Orchestration
@@ -1040,7 +1040,7 @@ message.
     show and an optional rendered body. It is a **renderer hint only** — it never
     changes what reaches the provider, the raw toggle still reveals the true sent
     text, and `autoTitle` skips these turns so a session is never named after
-    Limboo's own action. Persisted in `agent_messages.display`
+    Zeus's own action. Persisted in `agent_messages.display`
     (`addColumnIfMissing`; NULL for every ordinary prompt).
 
 ### Subagents: the stream is the only orchestration surface
@@ -1233,7 +1233,7 @@ Full lifecycle: `docs/operations/auto-update.md`.
 - **Display-only, but agent-reachable.** The document never feeds a context
   provider (`AgentManager.buildOptions` still has exactly three producers). The
   agent answers version questions through `list_releases` / `release_notes`,
-  read-only plain tools on the existing `limboo_search` server — so both
+  read-only plain tools on the existing `zeus_search` server — so both
   providers get them, and nothing is pushed into a system prompt. Release notes
   also federate into `SearchManager.globalSearch` as the `release` kind (no
   index: the corpus cannot change while the process runs).
@@ -1283,7 +1283,7 @@ an active coding agent". Full research/design doc:
     --output-format stream-json --stream-partial-output --workspace <sessionRoot>`
     (argv-only; prompt rides **stdin**, never argv; env composed at spawn time
     from `getSpawnEnv()`); `--trust` only via the injected repo-trust resolver
-    (limboo.json absent or ack-hash acked); never Cursor's `-w`. Stop =
+    (zeus.json absent or ack-hash acked); never Cursor's `-w`. Stop =
     process-tree kill (win32 `taskkill /T /F`, posix TERM→KILL) off the same
     AbortController; `dispose()` on quit. Runtime refuses `.cmd` shims
     (`CursorShimError` in `exec.ts` — the ComSpec whitelist stays literal-only).
@@ -1375,7 +1375,7 @@ an active coding agent". Full research/design doc:
     and shared by every provider.
 - **BUILT — build-order items (3) Permissions, (4) Context injection, (5) MCP
   reuse.** All three ride a shared **per-run bridge**: `bridge/pipeServer.ts`
-  opens one token-authenticated local pipe per run (`\\.\pipe\limboo-bridge-*`
+  opens one token-authenticated local pipe per run (`\\.\pipe\zeus-bridge-*`
   win32 / 0700-dir unix socket; pipe+token ride the child ENV only, never
   argv; bounded lines/connections/timeouts; closed in the run's `finally`),
   and every generated session file (`cli.json`, `hooks.json`, `mcp.json`, the
@@ -1385,11 +1385,11 @@ an active coding agent". Full research/design doc:
   - **(3) Permissions** — two layers. *Declarative (the enforced baseline)*:
     the deny-first `.cursor/cli.json` now wraps **every** run (not just
     `--force`), with `sessionAllowRules()` translating the standing posture
-    (`Read(**)` under autoApproveReads, `Mcp(limboo_*:*)`) and extra
+    (`Read(**)` under autoApproveReads, `Mcp(zeus_*:*)`) and extra
     self-denies for `hooks.json`/`mcp.json`. *Interactive (capability-gated)*:
     a session `hooks.json` (`cursor/hooks.ts` — **replaces**, never merges, a
     repo-authored one: repo hooks are arbitrary commands outside the
-    limboo.json ack gate) registers the bundled `bridge/hookRunner.cjs`
+    zeus.json ack gate) registers the bundled `bridge/hookRunner.cjs`
     (self-contained CJS, fail-closed: deny + exit 2 on any bridge failure,
     plus `failClosed: true`) for `preToolUse`/`beforeShellExecution`/
     `beforeReadFile`/`afterFileEdit`; payloads map via
@@ -1405,14 +1405,14 @@ an active coding agent". Full research/design doc:
     Toggle: `agent.cursor.hooks` (`auto`/`off`).
   - **(4) Context injection** — the memory/search/resume blocks move off the
     prompt into a per-run generated rule
-    `.cursor/rules/limboo-context.mdc` (`cursor/rules.ts`, MDC frontmatter
+    `.cursor/rules/zeus-context.mdc` (`cursor/rules.ts`, MDC frontmatter
     `alwaysApply: true`; the CLI auto-loads `.cursor/rules` + `CLAUDE.md`),
     deleted/restored after the run; prompt prepending stays as the automatic
     fallback when the rule write fails pre-spawn. The attachment manifest
     stays on the prompt (per-turn, not standing context).
   - **(5) MCP reuse** — a session `.cursor/mcp.json` (`cursor/mcpConfig.ts`,
     merged defensively — repo-authored servers preserved, never overwritten)
-    points `limboo_memory`/`limboo_search` at the bundled
+    points `zeus_memory`/`zeus_search` at the bundled
     `bridge/mcpBridge.cjs` (hand-rolled MCP stdio JSON-RPC; Electron-as-node
     via `ELECTRON_RUN_AS_NODE`), which forwards `tools/list`/`tools/call`
     over the pipe to `bridge/toolDispatch.ts`. The tool handlers were
@@ -1429,7 +1429,7 @@ an active coding agent". Full research/design doc:
     `SETTINGS_VERSION` 15; new bounds in `CURSOR_LIMITS` (`bridge*`,
     `hookTimeoutSecs`).
 - **(6) ~~Worktrees~~** (BUILT — runs always pass
-  `--workspace <resolveSessionRoot(...)>`, never Cursor's `-w`; Limboo's
+  `--workspace <resolveSessionRoot(...)>`, never Cursor's `-w`; Zeus's
   WorktreeManager stays the single root resolver).
 - **Config surface (BUILT):** `AGENT_MODELS` carries `composer-2`/`composer-2.5`
   (`provider: 'cursor'`) — the model picker IS the provider selector; the
@@ -1461,7 +1461,7 @@ an active coding agent". Full research/design doc:
   fetch per §6) and an **ACP adapter** (`agent acp`, JSON-RPC over stdio) as the
   universal route to any ACP-speaking agent.
 
-**Unified OS-level Sandbox (defense-in-depth Layer 3) — BUILT.** Limboo's three
+**Unified OS-level Sandbox (defense-in-depth Layer 3) — BUILT.** Zeus's three
 security layers are: (1) the orchestration authority (`decideToolUse` — the one
 gate both providers share), (2) provider permission translation (Cursor
 `.cursor/cli.json`, Claude `canUseTool` + `settingSources`), and now (3) an
@@ -1474,7 +1474,7 @@ jail is the kernel-enforced net beneath it.
   [`src/main/managers/sandbox/policy.ts`](src/main/managers/sandbox/policy.ts)
   produces one `EffectiveSandbox` both adapters translate, so they never drift.
   Non-configurable floor: the writable root is always the session worktree, and
-  the **crown jewels** — `secrets/`, `limboo.db`, `settings.json`,
+  the **crown jewels** — `secrets/`, `zeus.db`, `settings.json`,
   `window-state.json` (`crownJewelPaths()`) — are always denied read+write. The
   floor is those SPECIFIC paths, NOT the whole `userData` root, because the
   worktree (`{userData}/worktrees`) and attachments (`{userData}/attachments`)

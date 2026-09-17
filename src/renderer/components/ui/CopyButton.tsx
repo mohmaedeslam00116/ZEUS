@@ -2,7 +2,7 @@
  * Copy-to-clipboard with a settled confirmation tick.
  *
  * Clipboard access goes through the preload bridge
- * (`window.limboo.system.clipboardWrite`) rather than `navigator.clipboard` —
+ * (`window.zeus.system.clipboardWrite`) rather than `navigator.clipboard` —
  * main owns the native integration and caps the payload. The timer is cleared on
  * unmount: a section can be collapsed, or a message re-rendered by a streaming
  * delta, while the tick is still showing.
@@ -43,7 +43,7 @@ export function CopyButton({
       aria-label={label}
       onClick={(e) => {
         e.stopPropagation();
-        void window.limboo?.system?.clipboardWrite(typeof value === 'function' ? value() : value);
+        void window.zeus?.system?.clipboardWrite(typeof value === 'function' ? value() : value);
         setDone(true);
         if (timer.current) clearTimeout(timer.current);
         timer.current = setTimeout(() => setDone(false), 1200);

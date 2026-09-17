@@ -49,7 +49,7 @@ import { McpServerForm } from './McpServerForm';
 /**
  * What each `planAccess` value means in the read-only modes, in the words the
  * permission prompt and the settings form use. "Blocked" is the only one that
- * refuses outright; the other two differ in whether Limboo has to ask first.
+ * refuses outright; the other two differ in whether Zeus has to ask first.
  */
 const PLAN_ACCESS_COPY: Record<McpPlanAccess, string> = {
   block: 'Blocked — refused in Plan and Ask, with no prompt.',

@@ -54,7 +54,7 @@ function fmt(m: Memory): string {
 }
 
 /**
- * The `limboo_memory` tool set as transport-neutral plain tools — the single
+ * The `zeus_memory` tool set as transport-neutral plain tools — the single
  * handler implementation behind both the SDK-shaped server (Claude runs) and
  * the stdio bridge dispatcher (Cursor runs). Read-only, workspace-scoped.
  */
@@ -66,7 +66,7 @@ export function memoryPlainTools(memory: MemoryManager, workspace: WorkspaceMana
     {
       name: 'list_memories',
       description:
-        "List the developer's stored Limboo memories — durable project knowledge " +
+        "List the developer's stored Zeus memories — durable project knowledge " +
         '(decisions, conventions, preferences, solutions, notes). Call this ' +
         'whenever the user asks what you remember or to read/show/list their ' +
         'memories, instead of describing the memory system.',
@@ -106,7 +106,7 @@ export function memoryPlainTools(memory: MemoryManager, workspace: WorkspaceMana
     {
       name: 'search_memories',
       description:
-        "Full-text search the developer's stored Limboo memories by keyword (BM25). " +
+        "Full-text search the developer's stored Zeus memories by keyword (BM25). " +
         'Use for questions like "what do you know about X".',
       inputSchema: {
         type: 'object',
@@ -142,7 +142,7 @@ export function memoryPlainTools(memory: MemoryManager, workspace: WorkspaceMana
         );
       },
     },
-  ], 'limboo_memory');
+  ], 'zeus_memory');
 }
 
 /** Zod arg shapes per memory tool (the SDK path keeps typed validation). */
@@ -160,7 +160,7 @@ const MEMORY_ZOD_ARGS: Record<string, Record<string, z.ZodTypeAny>> = {
 };
 
 /**
- * Build the `limboo_memory` MCP server exposing read-only memory tools to the
+ * Build the `zeus_memory` MCP server exposing read-only memory tools to the
  * agent. Returns a server instance ready to drop into `Options.mcpServers`.
  */
 export function createMemoryMcpServer(
@@ -170,7 +170,7 @@ export function createMemoryMcpServer(
 ): McpSdkServerConfigWithInstance {
   const { createSdkMcpServer, tool } = sdk;
   return createSdkMcpServer({
-    name: 'limboo_memory',
+    name: 'zeus_memory',
     version: '1.0.0',
     tools: memoryPlainTools(memory, workspace).map((t) =>
       tool(t.name, t.description, MEMORY_ZOD_ARGS[t.name] ?? {}, async (args) =>

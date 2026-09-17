@@ -1,6 +1,6 @@
 # Security audits
 
-This page is the maintainer's checklist for periodically auditing Limboo's security
+This page is the maintainer's checklist for periodically auditing Zeus's security
 posture. The model itself is documented in
 [the security model](../architecture/security-model.md); this is the operational
 routine that keeps it intact.

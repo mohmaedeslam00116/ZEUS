@@ -15,7 +15,7 @@ the graph is queryable by **structure** instead of by text.
 Source: [`src/main/managers/graph/`](../../../src/main/managers/graph/) and
 [`src/renderer/features/graph/`](../../../src/renderer/features/graph/).
 
-## Why Limboo owns this
+## Why Zeus owns this
 
 Neither coding agent exposes a work graph, and this is not an oversight — both
 are deliberately conversation-driven. Cursor's CLI emits an NDJSON event stream
@@ -95,7 +95,7 @@ heuristic from ever presenting itself with the authority of an observed fact.
 | `tool-start` `Bash` | `terminal` | `follows` |
 | `tool-start` `Agent`/`Task` | `subagent` | `follows` |
 | `tool-start` inside a subagent | its own kind | `contains` ← the parent subagent node |
-| `tool-start` `mcp__limboo_*` | `search` / `memory` | `follows` |
+| `tool-start` `mcp__zeus_*` | `search` / `memory` | `follows` |
 | `tool-start` other `mcp__*` | `mcp` | `follows` |
 | `tool-start` (write, with change) | `file` | `generated`, `implemented-in` |
 | `tool-end` | **patches** the node keyed by `callId` | — |
@@ -167,7 +167,7 @@ claim to implement the run's work.
 
 Stated plainly, so nobody builds a fake:
 
-- **External MCP result payloads.** `McpManager` has no `callTool` — Limboo
+- **External MCP result payloads.** `McpManager` has no `callTool` — Zeus
   registers servers with the providers but never proxies their traffic. The
   graph records server, tool, params, duration, and ok/error. Nothing more.
 - **Exit codes for agent commands.** The Agent SDK does not stream tool stdout,
@@ -178,7 +178,7 @@ Stated plainly, so nobody builds a fake:
   and the Search Engine's `search_refs` import table (real extraction).
 - **`verified-by`** has no provider signal at all. It is derived from three real
   facts — a command's actual text, its actual success, and its actual position
-  after a file change — plus the repo's own `limboo.json` script names. That is
+  after a file change — plus the repo's own `zeus.json` script names. That is
   inference, and it is marked as such.
 
 ## Storage (schema v17)
@@ -301,7 +301,7 @@ meant to expose.
 ## Export
 
 Six data formats are rendered in main from the stored graph — JSON
-(`limboo.workgraph.v1`), Markdown, Mermaid, Graphviz DOT, CSV, and a
+(`zeus.workgraph.v1`), Markdown, Mermaid, Graphviz DOT, CSV, and a
 self-contained HTML report — plus SVG and PNG, which are rendered in the
 renderer because they need a layout and the layout only exists there.
 

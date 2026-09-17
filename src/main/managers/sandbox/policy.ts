@@ -1,7 +1,7 @@
 /**
  * Provider-neutral OS-level Sandbox policy (defense-in-depth Layer 3).
  *
- * Limboo owns ONE sandbox policy and translates it into whichever coding agent
+ * Zeus owns ONE sandbox policy and translates it into whichever coding agent
  * runs — Claude's Agent-SDK `Options.sandbox` (Seatbelt on macOS, bubblewrap on
  * Linux/WSL2) and Cursor's `.cursor/sandbox.json` + `--sandbox` flag. This
  * module is the single source of the *effective* policy for a run, so the two
@@ -15,7 +15,7 @@
  *
  * Two things are ALWAYS enforced regardless of user settings (the floor):
  *  - the effective writable root is the session's execution root (the worktree);
- *  - Limboo's own crown jewels — the safeStorage `secrets/` store, `zeus.db`,
+ *  - Zeus's own crown jewels — the safeStorage `secrets/` store, `zeus.db`,
  *    and the `settings.json` / `window-state.json` config files — are denied for
  *    read and write.
  * We deny those SPECIFIC paths rather than the whole `userData` root because the
@@ -166,7 +166,7 @@ export function resolveSandboxConfig(
  * Translate the neutral policy into the Claude Agent SDK's `Options.sandbox`.
  * Returns `undefined` when the jail is off (caller omits the option entirely).
  *
- * `autoAllowBashIfSandboxed` is pinned OFF so Limboo's `canUseTool` bridge
+ * `autoAllowBashIfSandboxed` is pinned OFF so Zeus's `canUseTool` bridge
  * stays the decision authority (Layer 1) — the sandbox only *contains*, it never
  * auto-approves on our behalf.
  */

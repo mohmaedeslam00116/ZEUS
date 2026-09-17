@@ -1,7 +1,7 @@
 /**
  * Git availability detection.
  *
- * Limboo's whole engineering surface — history, branches, checkpoints,
+ * Zeus's whole engineering surface — history, branches, checkpoints,
  * worktrees, diffs, and every agent collaboration flow built on them — assumes
  * a working `git` binary. When it is missing, {@link GitManager.resolveRoot}
  * gets a failed `rev-parse` and reports `isRepo: false`, which is the SAME

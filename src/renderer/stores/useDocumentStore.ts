@@ -271,7 +271,7 @@ const persist = debounce((bySession: Record<string, SessionDocuments>) => {
       });
     }
   }
-  void window.limboo?.settings.set({ layout: { documents } });
+  void window.zeus?.settings.set({ layout: { documents } });
 }, 300);
 
 export const useDocumentStore = create<DocumentState>((set, get) => {

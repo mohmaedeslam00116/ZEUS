@@ -267,7 +267,7 @@ interface SessionState {
   /**
    * Node ids of in-flight search/memory/MCP calls, newest last. Internal-MCP
    * enrichment used to linearly scan every node ever built for the session on
-   * EVERY `limboo_*` call; this is the same lookup over a list that is bounded
+   * EVERY `zeus_*` call; this is the same lookup over a list that is bounded
    * by concurrency rather than by session length.
    */
   openMcp: string[];
@@ -318,8 +318,8 @@ export function nodeKindForTool(call: AgentToolCall): WorkGraphNodeKind {
   // the `subagent` node kind unreachable on every current release — subagent
   // work landed as `investigation`/`command` nodes on the main spine instead.
   if (isSubagentTool(name)) return 'subagent';
-  if (name.startsWith('mcp__limboo_search__')) return 'search';
-  if (name.startsWith('mcp__limboo_memory__')) return 'memory';
+  if (name.startsWith('mcp__zeus_search__')) return 'search';
+  if (name.startsWith('mcp__zeus_memory__')) return 'memory';
   if (name.startsWith('mcp__')) return 'mcp';
   if (name === 'Bash' || name === 'BashOutput' || name === 'KillShell') return 'terminal';
   if (call.change) return 'file';
@@ -371,8 +371,8 @@ export class WorkGraphBuilder {
 
   /* ---- platform-service ingestion ------------------------------------ */
   /*                                                                      */
-  /* These come from Limboo's own subsystems rather than an agent adapter, */
-  /* so their nodes carry `provider: 'limboo'`. They attach to the current */
+  /* These come from Zeus's own subsystems rather than an agent adapter, */
+  /* so their nodes carry `provider: 'zeus'`. They attach to the current */
   /* run when one is open, and stand alone when the user acted outside a   */
   /* run (committing from the Git panel, running a service by hand).       */
 
@@ -385,7 +385,7 @@ export class WorkGraphBuilder {
     const s = this.stateFor(sessionId);
     const out: BuildResult = { nodes: [], edges: [] };
     for (const c of commits) {
-      const node = this.mkLimbooNode(s, sessionId, 'git', c.subject, c.at, {
+      const node = this.mkZeusNode(s, sessionId, 'git', c.subject, c.at, {
         op: 'commit' as const,
         hash: c.hash,
         files: [],
@@ -423,7 +423,7 @@ export class WorkGraphBuilder {
   addGitOp(sessionId: string, op: GitOpKind, detail: GitOpDetail): BuildResult {
     const s = this.stateFor(sessionId);
     const at = Date.now();
-    const node = this.mkLimbooNode(s, sessionId, 'git', gitOpTitle(op, detail), at, {
+    const node = this.mkZeusNode(s, sessionId, 'git', gitOpTitle(op, detail), at, {
       op,
       branch: detail.branch,
       // The remote NAME only. A remote URL can carry embedded credentials, and
@@ -450,7 +450,7 @@ export class WorkGraphBuilder {
     const at = Date.now();
     const label = branch ? `${op === 'created' ? 'Created' : 'Removed'} worktree ${branch}` :
       `${op === 'created' ? 'Created' : 'Removed'} worktree`;
-    const node = this.mkLimbooNode(s, sessionId, 'git', label, at, {
+    const node = this.mkZeusNode(s, sessionId, 'git', label, at, {
       op: op === 'created' ? ('worktree-created' as const) : ('worktree-removed' as const),
       branch: branch ?? undefined,
       files: [],
@@ -473,7 +473,7 @@ export class WorkGraphBuilder {
   ): BuildResult {
     const s = this.stateFor(sessionId);
     const at = Date.now();
-    const node = this.mkLimbooNode(s, sessionId, 'artifact', summary, at, {
+    const node = this.mkZeusNode(s, sessionId, 'artifact', summary, at, {
       artifactKind: 'diff' as const,
       fileCount: files,
     }, { detail, endedAt: at });
@@ -488,7 +488,7 @@ export class WorkGraphBuilder {
   addAttachment(sessionId: string, name: string, bytes: number, mime?: string): BuildResult {
     const s = this.stateFor(sessionId);
     const at = Date.now();
-    const node = this.mkLimbooNode(s, sessionId, 'artifact', name, at, {
+    const node = this.mkZeusNode(s, sessionId, 'artifact', name, at, {
       artifactKind: 'attachment' as const,
       bytes,
       mime,
@@ -505,7 +505,7 @@ export class WorkGraphBuilder {
     const s = this.stateFor(sessionId);
     const out: BuildResult = { nodes: [], edges: [] };
     const at = op === 'create' ? cp.createdAt : Date.now();
-    const node = this.mkLimbooNode(s, sessionId, 'git', `${opLabel(op)}: ${cp.label}`, at, {
+    const node = this.mkZeusNode(s, sessionId, 'git', `${opLabel(op)}: ${cp.label}`, at, {
       // `delete` is its own op. Recording it as `checkpoint` made the queryable
       // field contradict the node's own title ("Deleted checkpoint…").
       op:
@@ -536,7 +536,7 @@ export class WorkGraphBuilder {
 
     if (ev.phase === 'created') {
       if (existingId) return EMPTY;
-      const node = this.mkLimbooNode(s, ev.sessionId, 'terminal', ev.title, ev.at, {
+      const node = this.mkZeusNode(s, ev.sessionId, 'terminal', ev.title, ev.at, {
         command: cleanRequired(ev.title, GRAPH_LIMITS.detailMax),
         origin: ev.origin,
         terminalId: ev.terminalId,
@@ -569,7 +569,7 @@ export class WorkGraphBuilder {
     const s = this.stateFor(sessionId);
     if (!s.runId) return EMPTY;
     const at = Date.now();
-    const node = this.mkLimbooNode(s, sessionId, 'memory', `Recalled ${hits.length} memory item(s)`, at, {
+    const node = this.mkZeusNode(s, sessionId, 'memory', `Recalled ${hits.length} memory item(s)`, at, {
       op: 'retrieve' as const,
       memoryIds: hits.map((h) => h.id),
       tiers: hits.map((h) => h.tier),
@@ -594,7 +594,7 @@ export class WorkGraphBuilder {
   ): BuildResult {
     const s = this.stateFor(sessionId);
     const at = Date.now();
-    const node = this.mkLimbooNode(s, sessionId, 'memory', memory.title, at, {
+    const node = this.mkZeusNode(s, sessionId, 'memory', memory.title, at, {
       op,
       memoryIds: [memory.id],
       tiers: [],
@@ -606,7 +606,7 @@ export class WorkGraphBuilder {
     return out;
   }
 
-  /** File writes Limboo made itself (the File Writer), not the agent's tools. */
+  /** File writes Zeus made itself (the File Writer), not the agent's tools. */
   addFileWrites(sessionId: string, paths: string[]): BuildResult {
     const s = this.stateFor(sessionId);
     if (!s.runId) return EMPTY;
@@ -667,7 +667,7 @@ export class WorkGraphBuilder {
         continue;
       }
 
-      const node = this.mkLimbooNode(s, sessionId, 'service', svc.name, at, {
+      const node = this.mkZeusNode(s, sessionId, 'service', svc.name, at, {
         name: svc.name,
         state: svc.status,
         port: svc.port ?? undefined,
@@ -685,7 +685,7 @@ export class WorkGraphBuilder {
   /**
    * Enrich an internal MCP node the primary event path already created with the
    * real duration the transport measured. Deliberately does NOT create a node:
-   * `mcp__limboo_*` calls already arrive as `tool-start`/`tool-end`, and adding
+   * `mcp__zeus_*` calls already arrive as `tool-start`/`tool-end`, and adding
    * one here would double-count every search and memory lookup.
    */
   enrichInternalMcp(sessionId: string, invocation: McpInvocationLike): BuildResult {
@@ -695,9 +695,9 @@ export class WorkGraphBuilder {
     // sharing a name suffix, and `memory` nodes carry no `tool` field at all,
     // so a memory call could never be enriched.
     const wantKind: WorkGraphNodeKind =
-      invocation.server === 'limboo_search'
+      invocation.server === 'zeus_search'
         ? 'search'
-        : invocation.server === 'limboo_memory'
+        : invocation.server === 'zeus_memory'
           ? 'memory'
           : 'mcp';
 
@@ -727,8 +727,8 @@ export class WorkGraphBuilder {
     return { nodes: [patched], edges: [] };
   }
 
-  /** A node originating from Limboo itself rather than an agent adapter. */
-  private mkLimbooNode(
+  /** A node originating from Zeus itself rather than an agent adapter. */
+  private mkZeusNode(
     s: SessionState,
     sessionId: string,
     kind: WorkGraphNodeKind,
@@ -738,7 +738,7 @@ export class WorkGraphBuilder {
     opts: NodeOpts = {},
   ): WorkGraphNode {
     const node = this.mkNode(s, sessionId, kind, title, at, meta, opts);
-    const tagged = { ...node, provider: 'limboo' as const };
+    const tagged = { ...node, provider: 'zeus' as const };
     s.nodes.set(tagged.id, tagged);
     return tagged;
   }

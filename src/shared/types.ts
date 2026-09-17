@@ -114,7 +114,7 @@ export interface PersistedDocument {
 
 /**
  * Persistent, user-facing preferences. NOTE: there is intentionally NO light
- * theme — Limboo is pure-black, dark-only by product rule. "Appearance" here is
+ * theme — Zeus is pure-black, dark-only by product rule. "Appearance" here is
  * limited to density / font scaling / motion, never a color scheme.
  */
 export interface AppSettings {
@@ -162,7 +162,7 @@ export interface AppSettings {
     notifications: boolean;
   };
   /**
-   * Coding-agent orchestration preferences. Limboo never stores Anthropic
+   * Coding-agent orchestration preferences. Zeus never stores Anthropic
    * credentials — Claude Code owns its own authentication. An optional Cursor
    * API key is held encrypted via Electron `safeStorage` in a main-process-only
    * file under `userData/secrets/` — never in this settings file, never sent to
@@ -354,7 +354,7 @@ export interface AppSettings {
       retainRuns: number;
     };
     /**
-     * Provider-neutral OS-level Sandbox (defense-in-depth Layer 3). Limboo owns
+     * Provider-neutral OS-level Sandbox (defense-in-depth Layer 3). Zeus owns
      * one sandbox policy and translates it into whichever agent runs: Claude's
      * Agent-SDK `Options.sandbox` (bubblewrap/Seatbelt) and Cursor's
      * `.cursor/sandbox.json` + `--sandbox` flag. The sandbox is *containment*,
@@ -400,7 +400,7 @@ export interface AppSettings {
      *
      * A harness is *how* a model runs; the provider is *who* serves it. They
      * are not the same axis: Anthropic models can run through either the AI
-     * SDK's `claude-code` harness or Limboo's direct Claude Agent SDK path,
+     * SDK's `claude-code` harness or Zeus's direct Claude Agent SDK path,
      * while Cursor has no AI SDK adapter at all and stays a native runtime.
      */
     harness: {
@@ -428,7 +428,7 @@ export interface AppSettings {
        *
        * A bridge-backed harness installs its agent CLI before the first
        * session, which reaches the npm registry from this machine (CLAUDE.md
-       * §1, third item). That is gated like repo-authored `limboo.json`
+       * §1, third item). That is gated like repo-authored `zeus.json`
        * commands: the verbatim commands are shown and approved once, and the
        * ack is keyed to a hash of those exact commands — so an adapter upgrade
        * that changes what runs re-prompts, because what was approved is no
@@ -462,7 +462,7 @@ export interface AppSettings {
     /** Which git operations require explicit confirmation in the UI. */
     commandApproval: 'destructive' | 'all' | 'none';
     /**
-     * Push preferences. Limboo never stores remote credentials — push relies on
+     * Push preferences. Zeus never stores remote credentials — push relies on
      * the user's existing git credential helper / SSH agent, so a missing
      * credential fails fast with a clear message rather than hanging.
      */
@@ -480,7 +480,7 @@ export interface AppSettings {
      * Contributor profile photos in commit history and the GitHub sub-tab.
      *
      * This is a NETWORK switch, not a cosmetic one: it is the only thing in
-     * Limboo besides the coding agent that makes an outbound request. When it
+     * Zeus besides the coding agent that makes an outbound request. When it
      * is off, nothing is fetched and every author renders as initials. See
      * `main/managers/gh/avatars.ts` for exactly what is and is not sent.
      */
@@ -497,9 +497,9 @@ export interface AppSettings {
       enabled: boolean;
       /** Absolute root for worktree checkouts ('' = {userData}/worktrees). */
       root: string;
-      /** Prefix for auto-generated worktree branches (e.g. limboo/<slug>). */
+      /** Prefix for auto-generated worktree branches (e.g. zeus/<slug>). */
       branchPrefix: string;
-      /** Run the repo's setup hooks (limboo.json) after a worktree is created. */
+      /** Run the repo's setup hooks (zeus.json) after a worktree is created. */
       autoSetup: boolean;
       /** Require explicit confirmation before running setup/teardown hooks. */
       confirmHooks: boolean;
@@ -706,7 +706,7 @@ export interface AppSettings {
   };
   /**
    * Runtime Telemetry — the Runtime Inspector's behaviour. Provider-neutral:
-   * every knob describes how Limboo DISPLAYS what a provider already reported,
+   * every knob describes how Zeus DISPLAYS what a provider already reported,
    * never what it fetches. Nothing here adds a network call, and no provider is
    * ever polled — the numbers ride the same event stream that drives the
    * conversation.
@@ -750,7 +750,7 @@ export interface AppSettings {
     /* --- the inspector --- */
     /** Compact narrows the card and folds the supporting disclosures away. */
     layout: 'compact' | 'expanded';
-    /** Show values Limboo estimated from character counts (always labelled). */
+    /** Show values Zeus estimated from character counts (always labelled). */
     showEstimates: boolean;
     tokenDisplay: 'absolute' | 'percent';
     /** Distinguish context segments by border and weight, not hue alone. */
@@ -798,7 +798,7 @@ export interface AppSettings {
   };
   /**
    * In-app auto-update (electron-updater + GitHub releases). Only ever active in
-   * a packaged build; a no-op in dev. Limboo downloads updates over HTTPS from
+   * a packaged build; a no-op in dev. Zeus downloads updates over HTTPS from
    * its own GitHub Releases and verifies the signed installer before applying.
    */
   updates: {
@@ -829,7 +829,7 @@ export interface AppSettings {
     channel: 'stable' | 'beta';
   };
   /**
-   * MCP (Model Context Protocol) platform — Limboo owns a provider-independent
+   * MCP (Model Context Protocol) platform — Zeus owns a provider-independent
    * MCP registry so Claude Code and Cursor consume the SAME servers, secrets,
    * and permissions instead of each maintaining its own config. Individual
    * server definitions live in the on-device database (not this file); these are
@@ -1242,7 +1242,7 @@ export type AgentMode = 'plan' | 'implement';
 export type SessionPermissionMode = 'plan' | 'ask' | 'default' | 'acceptEdits';
 
 /**
- * A development workspace — the primary unit of software engineering in Limboo.
+ * A development workspace — the primary unit of software engineering in Zeus.
  * Owned by the main-process SessionManager and persisted to SQLite. Every
  * session belongs to exactly one workspace (`workspaceId`) and bundles its
  * conversation, activity, and metadata so work can be paused and resumed.
@@ -1299,7 +1299,7 @@ export interface WorktreeInfo {
   detached: boolean;
   locked: boolean;
   prunable: boolean;
-  /** The Limboo session that owns this worktree, when one does. */
+  /** The Zeus session that owns this worktree, when one does. */
   sessionId?: string;
   sessionTitle?: string;
 }
@@ -1416,7 +1416,7 @@ export interface GhHost {
 }
 
 /**
- * The local GitHub CLI's state. Limboo stores NO GitHub credentials: this is a
+ * The local GitHub CLI's state. Zeus stores NO GitHub credentials: this is a
  * read-only view of what the CLI already has, and every field here is safe to
  * show. There is deliberately no token field of any kind.
  */
@@ -1740,7 +1740,7 @@ export interface GitCheckoutResult {
 /**
  * Result of `git push`. Known git stderr signatures are decoded into flags so
  * the UI can guide the user (publish a branch, pull first, configure creds)
- * instead of surfacing a raw error. Limboo stores no credentials.
+ * instead of surfacing a raw error. Zeus stores no credentials.
  */
 export interface GitPushResult {
   ok: boolean;
@@ -2112,7 +2112,7 @@ export interface WorkspaceConfig {
    */
   planDefaultMode?: SessionPermissionMode;
   /**
-   * SHA-256 of the repo's limboo.json hooks the user has acknowledged. Repo
+   * SHA-256 of the repo's zeus.json hooks the user has acknowledged. Repo
    * config is untrusted until acknowledged: setup/teardown hooks only run when
    * this matches the current config (or the user just confirmed the commands).
    */
@@ -2124,7 +2124,7 @@ export interface WorkspaceConfig {
 /* ------------------------------------------------------------------ */
 
 /**
- * The repo-authored `limboo.json` at the workspace/worktree root: worktree
+ * The repo-authored `zeus.json` at the workspace/worktree root: worktree
  * setup/teardown hooks, named scripts, and supervised services. Parsed and
  * strictly validated in the main process (size-capped, whitelisted names,
  * length-capped commands, prototype-pollution rejected) — see
@@ -2547,7 +2547,7 @@ export interface AgentState {
   error?: string;
   /**
    * Last Cursor run's bridge capability probe: did the session hooks / the
-   * limboo MCP servers actually connect over the per-run pipe? `null` =
+   * zeus MCP servers actually connect over the per-run pipe? `null` =
    * the layer wasn't registered for that run; absent = no Cursor run yet.
    */
   cursorBridge?: { hooksActive: boolean | null; mcpActive: boolean | null; at: number };
@@ -2819,7 +2819,7 @@ export interface SubagentInfo {
   /* NOTE: there is deliberately no `worktree` field. Claude Code's
    * `isolation: worktree` puts a subagent in a temporary worktree it manages
    * internally and never reports — not in the Agent tool input, not in the
-   * `task_*` stream. Limboo's WorktreeManager resolves the SESSION's root, which
+   * `task_*` stream. Zeus's WorktreeManager resolves the SESSION's root, which
    * is the parent's checkout, not the worker's isolated copy. Showing it would
    * be a confident wrong answer, so the field does not exist. */
   /** Distinct tool names the worker invoked, in first-use order. */
@@ -2874,7 +2874,7 @@ export interface SubagentInfo {
    * The worker's forwarded transcript — its own narration, available only when
    * `forwardSubagentText` is on.
    *
-   * **This is untrusted content.** It is model output that Limboo renders
+   * **This is untrusted content.** It is model output that Zeus renders
    * verbatim, so it is bounded, stored as data, and must never be merged into a
    * system prompt or fed to a context provider. It is NOT the worker's
    * reasoning: thinking blocks are excluded, and no affordance may imply the
@@ -3253,7 +3253,7 @@ export interface SessionPlan {
   capturedAt?: number;
   /** Epoch ms the user approved execution, if approved. */
   approvedAt?: number;
-  /** Basename of the plan file inside Limboo's plans directory, when one exists. */
+  /** Basename of the plan file inside Zeus's plans directory, when one exists. */
   planFile?: string;
   /** Pinned plans are preserved even after a new plan begins. */
   pinned?: boolean;
@@ -3349,7 +3349,7 @@ export type AgentEvent =
  * `measured`  — the provider reported it (`message_start.usage`, `modelUsage`,
  *               `rate_limit_info`), or it is a measured total minus measured
  *               parts.
- * `estimated` — Limboo counted the CHARACTERS of a block it composed itself
+ * `estimated` — Zeus counted the CHARACTERS of a block it composed itself
  *               and divided by {@link TELEMETRY_LIMITS.charsPerToken}. The
  *               content is measured; the tokenization is not. Always labelled
  *               as an estimate in the UI — never presented as precision.
@@ -3389,17 +3389,17 @@ export type RuntimeCapabilities = Record<RuntimeCapabilityKey, boolean>;
 export type ContextSegmentId =
   /** MEASURED RESIDUAL: provider preset + tool schemas + everything unattributed. */
   | 'system'
-  /** User + assistant turns Limboo persisted for this session. */
+  /** User + assistant turns Zeus persisted for this session. */
   | 'conversation'
-  /** Built-in tool_result payloads Limboo observed. */
+  /** Built-in tool_result payloads Zeus observed. */
   | 'tools'
   /** MCP tool_result payloads (`mcp__*` calls). */
   | 'mcp'
-  /** The `<project-memory>` block Limboo injected. */
+  /** The `<project-memory>` block Zeus injected. */
   | 'memory'
-  /** The `<project-context>` block Limboo injected. */
+  /** The `<project-context>` block Zeus injected. */
   | 'search'
-  /** The `<repository-delta>` block Limboo injected. */
+  /** The `<repository-delta>` block Zeus injected. */
   | 'resume'
   /** The per-turn `<attachments>` manifest. */
   | 'attachments'
@@ -3410,7 +3410,7 @@ export interface ContextSegment {
   id: ContextSegmentId;
   tokens: number;
   origin: MetricOrigin;
-  /** For `estimated` segments: the exact character count Limboo measured. */
+  /** For `estimated` segments: the exact character count Zeus measured. */
   chars?: number;
 }
 
@@ -3447,12 +3447,12 @@ export interface RuntimeContext {
   segments: ContextSegment[];
   /**
    * True when the estimated segments summed ABOVE the measured total (cache
-   * reads, a compaction, or a resumed transcript Limboo never saw). The UI then
+   * reads, a compaction, or a resumed transcript Zeus never saw). The UI then
    * drops the split and renders a single measured bar plus a note. This is the
    * fail-honest path: a split scaled to fit would be a fabrication.
    */
   attributionDegraded?: boolean;
-  /** Limboo's OWN retrieval budgets — fully measured, Limboo-owned numbers. */
+  /** Zeus's OWN retrieval budgets — fully measured, Zeus-owned numbers. */
   retrieval?: {
     memoryChars: number;
     memoryBudgetChars: number;
@@ -3539,7 +3539,7 @@ export interface RuntimeToolActivity {
   parentCallId?: string;
 }
 
-/** Limboo-owned environment facts. Every field traces to a Limboo manager. */
+/** Zeus-owned environment facts. Every field traces to a Zeus manager. */
 export interface RuntimeEnvironment {
   /** The `agent_provider_sessions` row for the active provider. */
   providerSessionId?: string;
@@ -3687,13 +3687,13 @@ export interface HookDecisionResult {
 /* ------------------------------------------------------------------ */
 /* Work Graph — the Directed Acyclic Work Graph (DAWG)                 */
 /*                                                                     */
-/* Limboo's own STRUCTURAL record of engineering work, and the third    */
+/* Zeus's own STRUCTURAL record of engineering work, and the third    */
 /* peer of {@link AgentEvent} (the render stream) and {@link HookEvent} */
 /* (the governance stream). Neither Claude nor Cursor exposes a work    */
 /* graph — both are conversation-driven — but both emit enough          */
 /* structure (tool calls, plans, file edits, shell runs, MCP calls,     */
 /* results) for the host to derive one. So the graph is owned entirely  */
-/* by Limboo and is provider-neutral by construction: every adapter,    */
+/* by Zeus and is provider-neutral by construction: every adapter,    */
 /* present and future, contributes nodes through the SAME normalized    */
 /* event layer. See docs/architecture/subsystems/work-graph.md.         */
 /* ------------------------------------------------------------------ */
@@ -3713,7 +3713,7 @@ export type WorkGraphNodeKind =
   | 'task' // one TodoWrite checklist item
   | 'subagent' // a Claude `Task` tool call — the lane-forking node
   | 'investigation' // a read-risk tool call (Read/Glob/Grep/WebFetch/…)
-  | 'search' // a limboo_search MCP tool call
+  | 'search' // a zeus_search MCP tool call
   | 'memory' // a memory retrieval / write
   | 'mcp' // any other `mcp__*` tool call
   | 'terminal' // a command execution (agent Bash, user PTY, service, script)
@@ -3795,8 +3795,8 @@ export interface WorkGraphNodeBase {
   /** The `objective` node id this belongs to (a run root refers to itself). */
   runId: string;
   kind: WorkGraphNodeKind;
-  /** Which adapter produced it; `limboo` = app-originated (git, services, FS). */
-  provider: 'anthropic' | 'cursor' | 'limboo';
+  /** Which adapter produced it; `zeus` = app-originated (git, services, FS). */
+  provider: 'anthropic' | 'cursor' | 'zeus';
   status: WorkGraphNodeStatus;
   /** Redacted, clamped to GRAPH_LIMITS.titleMax. */
   title: string;
@@ -3877,7 +3877,7 @@ export type WorkGraphNode =
       meta: {
         server: string;
         tool: string;
-        /** True for Limboo's own in-process servers (limboo_memory/limboo_search). */
+        /** True for Zeus's own in-process servers (zeus_memory/zeus_search). */
         internal: boolean;
         params?: string;
         durationMs?: number;

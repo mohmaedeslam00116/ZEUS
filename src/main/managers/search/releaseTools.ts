@@ -54,7 +54,7 @@ export function searchReleases(query: string, limit: number): SearchHit[] {
       hits.push({
         id: `release:${manifest.version}`,
         kind: 'release',
-        title: `Limboo ${manifest.version}`,
+        title: `Zeus ${manifest.version}`,
         subtitle: manifest.summary.replace(/\*\*/g, '').slice(0, 160) || manifest.gitTag,
         ref: manifest.version,
         score: 100,
@@ -88,7 +88,7 @@ export function searchReleases(query: string, limit: number): SearchHit[] {
 /** Render a manifest as plain text for a tool result. */
 function manifestToText(manifest: ReleaseManifestEntry): string {
   const out: string[] = [];
-  out.push(`Limboo ${manifest.version}${manifest.codename ? ` (${manifest.codename})` : ''}`);
+  out.push(`Zeus ${manifest.version}${manifest.codename ? ` (${manifest.codename})` : ''}`);
   out.push(
     [
       manifest.date && `released ${manifest.date}`,
@@ -129,7 +129,7 @@ const RELEASE_TOOLS: PlainTool[] = [
   {
     name: 'list_releases',
     description:
-      'List every Limboo version this build knows about, newest first, with its date, ' +
+      'List every Zeus version this build knows about, newest first, with its date, ' +
       'channel and one-line summary. Use before release_notes when the user names a ' +
       'version loosely ("the last one", "the update that added the graph").',
     inputSchema: { type: 'object', properties: {}, additionalProperties: false },
@@ -144,7 +144,7 @@ const RELEASE_TOOLS: PlainTool[] = [
   {
     name: 'release_notes',
     description:
-      'The full release notes for one Limboo version: summary, every changelog ' +
+      'The full release notes for one Zeus version: summary, every changelog ' +
       'section, and contributors. Pass the semantic version, with or without a ' +
       'leading "v". Only the most recent few releases carry full notes; use ' +
       'list_releases to see which.',

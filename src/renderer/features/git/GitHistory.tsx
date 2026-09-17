@@ -62,7 +62,7 @@ function CommitRow({ commit }: { commit: GitCommit }) {
 
   useEffect(() => {
     if (expanded && !detail && wsId) {
-      void window.limboo?.git.commitDetail(wsId, commit.hash).then(setDetail);
+      void window.zeus?.git.commitDetail(wsId, commit.hash).then(setDetail);
     }
   }, [expanded, detail, wsId, commit.hash]);
 

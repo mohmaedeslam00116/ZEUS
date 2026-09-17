@@ -1,5 +1,5 @@
 /**
- * Coding-agent settings. Limboo orchestrates the local, already-authenticated
+ * Coding-agent settings. Zeus orchestrates the local, already-authenticated
  * Claude Code (via the Claude Agent SDK) — it never stores Anthropic credentials.
  * This panel shows the live connection status (lifecycle-aware) and the knobs
  * that shape how the agent is driven: model, thinking, permissions, web search,
@@ -93,7 +93,7 @@ export function AgentPanel() {
     <div className="flex flex-col gap-5">
       <Section
         title="Harnesses"
-        hint="The coding agents Limboo can drive. A harness is HOW a model runs; picking a model in the composer selects its harness. Claude Code reuses its own local login; Cursor connects via CLI sign-in or an encrypted API key — no provider credentials are stored by this app."
+        hint="The coding agents Zeus can drive. A harness is HOW a model runs; picking a model in the composer selects its harness. Claude Code reuses its own local login; Cursor connects via CLI sign-in or an encrypted API key — no provider credentials are stored by this app."
       >
         {!activeHarnessId && (
           <p className="px-2 text-[11px] text-warning">
@@ -197,7 +197,7 @@ export function AgentPanel() {
 
       <Section
         title="Sandbox"
-        hint="OS-level containment applied to whichever agent runs (Claude via the Agent SDK, Cursor via its CLI). The filesystem is always jailed to the session worktree and Limboo's own data is always denied — these knobs only widen writes or tighten the network. Containment sits beneath the approval policy above; it never replaces it."
+        hint="OS-level containment applied to whichever agent runs (Claude via the Agent SDK, Cursor via its CLI). The filesystem is always jailed to the session worktree and Zeus's own data is always denied — these knobs only widen writes or tighten the network. Containment sits beneath the approval policy above; it never replaces it."
       >
         <Field
           id="sandboxMode"

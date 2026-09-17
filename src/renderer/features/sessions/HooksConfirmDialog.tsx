@@ -1,8 +1,8 @@
 /**
- * Confirmation for repo-authored commands (limboo.json): setup/teardown hooks,
+ * Confirmation for repo-authored commands (zeus.json): setup/teardown hooks,
  * named scripts, and supervised services. The exact commands are displayed
  * verbatim — approving acknowledges THEM specifically (the main process
- * re-verifies via the config hash, so an edited limboo.json between display
+ * re-verifies via the config hash, so an edited zeus.json between display
  * and run fails closed). Approval also runs setup hooks when the session has a
  * ready worktree to run them in. Matches the app modal idiom.
  */
@@ -57,8 +57,8 @@ export function HooksConfirmDialog() {
 
         <div className="flex min-h-0 flex-col gap-3 overflow-y-auto p-4">
           <p className="text-[12px] leading-relaxed text-muted">
-            This repository&apos;s <span className="font-medium text-fg">limboo.json</span> declares
-            commands Limboo can run for this session — setup/teardown hooks, on-demand scripts, and
+            This repository&apos;s <span className="font-medium text-fg">zeus.json</span> declares
+            commands Zeus can run for this session — setup/teardown hooks, on-demand scripts, and
             supervised services. They run in visible terminals inside the session&apos;s checkout.
           </p>
           {hasSetup && <CommandSection label="Setup hooks" rows={config.setup.map((c) => [null, c])} />}

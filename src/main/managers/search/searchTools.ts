@@ -48,7 +48,7 @@ function querySchema(queryHint: string, limitHint: string): Record<string, unkno
 }
 
 /**
- * The `limboo_search` tool set as transport-neutral plain tools — the single
+ * The `zeus_search` tool set as transport-neutral plain tools — the single
  * handler implementation behind both the SDK-shaped server (Claude runs) and
  * the stdio bridge dispatcher (Cursor runs). Read-only, workspace-scoped.
  */
@@ -59,7 +59,7 @@ export function searchPlainTools(
 ): PlainTool[] {
   const wsId = (): string | null => workspace.getActive()?.id ?? null;
   // Release notes join this server rather than getting one of their own: they
-  // are retrieval, `limboo_search` is the retrieval server, and a third server
+  // are retrieval, `zeus_search` is the retrieval server, and a third server
   // would need its own permission rule, its own generated Cursor `mcp.json`
   // entry and its own auto-allow branch — three places to forget.
   //
@@ -127,11 +127,11 @@ export function searchPlainTools(
         return hits.map(fmt).join('\n');
       },
     },
-  ], 'limboo_search')
+  ], 'zeus_search')
     .concat(releasePlainTools())
     // GitHub tools ride this server rather than a third one (see the module
     // note). `gh` is optional, so they simply do not appear when it is absent.
-    .concat(gh ? observePlainTools(ghPlainTools(gh, workspace), 'limboo_search') : []);
+    .concat(gh ? observePlainTools(ghPlainTools(gh, workspace), 'zeus_search') : []);
 }
 
 /**
@@ -167,7 +167,7 @@ const ZOD_ARGS: Record<string, z.ZodRawShape> = {
 };
 
 /**
- * Build the `limboo_search` MCP server exposing read-only retrieval tools to the
+ * Build the `zeus_search` MCP server exposing read-only retrieval tools to the
  * agent. Returns a server instance ready to drop into `Options.mcpServers`.
  */
 export function createSearchMcpServer(
@@ -179,7 +179,7 @@ export function createSearchMcpServer(
   const { createSdkMcpServer, tool } = sdk;
 
   return createSdkMcpServer({
-    name: 'limboo_search',
+    name: 'zeus_search',
     version: '1.0.0',
     tools: searchPlainTools(search, workspace, gh).map((t) =>
       tool(t.name, t.description, ZOD_ARGS[t.name] ?? QUERY_ARGS, async (args) =>

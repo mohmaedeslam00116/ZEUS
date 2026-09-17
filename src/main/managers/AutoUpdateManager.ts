@@ -5,7 +5,7 @@
  * publishes the per-platform `latest*.yml` metadata + installers; this manager
  * fetches that feed over HTTPS, surfaces every lifecycle transition to the
  * renderer as a single {@link UpdateStatus}, and applies the update on the
- * user's command. Limboo stores no update credentials — the feed is public.
+ * user's command. Zeus stores no update credentials — the feed is public.
  *
  * Hardening / boundaries:
  * - Active ONLY in a packaged build. In dev electron-updater has no
@@ -429,8 +429,8 @@ export class AutoUpdateManager {
       this.notifications.notify({
         title: prerelease ? 'Beta update available' : 'Update available',
         body: prerelease
-          ? `Limboo ${info.version} is available as a beta — open Limboo to review it.`
-          : `Limboo ${info.version} is available to download.`,
+          ? `Zeus ${info.version} is available as a beta — open Zeus to review it.`
+          : `Zeus ${info.version} is available to download.`,
       });
       // Auto-resume a partial even when the user has NOT enabled auto-start of
       // fresh downloads ("resume, not start"). When autoDownload is on,
@@ -473,7 +473,7 @@ export class AutoUpdateManager {
       });
       this.notifications.notify({
         title: 'Update ready',
-        body: `Limboo ${info.version} has been downloaded. Restart to install.`,
+        body: `Zeus ${info.version} has been downloaded. Restart to install.`,
       });
     });
     updater.on('error', (err: Error) => {
@@ -490,7 +490,7 @@ export class AutoUpdateManager {
       logger.info('[updater] AppImage installed at', path);
       this.notifications.notify({
         title: 'Update installed',
-        body: `Limboo now lives at ${path}. Update any shortcut that pointed at the old file.`,
+        body: `Zeus now lives at ${path}. Update any shortcut that pointed at the old file.`,
       });
     });
   }
@@ -566,7 +566,7 @@ function resolveUpdater(linuxFormat: LinuxPackageFormat | null): Enablement {
   if (!existsSync(join(process.resourcesPath, 'app-update.yml'))) {
     return {
       updater: null,
-      reason: 'This install is missing its update metadata. Reinstall Limboo to restore it.',
+      reason: 'This install is missing its update metadata. Reinstall Zeus to restore it.',
     };
   }
   return createUpdater(linuxFormat);

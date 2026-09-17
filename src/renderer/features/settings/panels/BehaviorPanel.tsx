@@ -21,7 +21,7 @@ export function BehaviorPanel() {
       <Field
         id="tray"
         label="Keep running in tray"
-        hint="Closing the window minimizes Limboo to the system tray instead of quitting."
+        hint="Closing the window minimizes Zeus to the system tray instead of quitting."
       >
         <Toggle
           checked={settings.behavior.minimizeToTray}

@@ -1,7 +1,7 @@
 /**
  * Internal-MCP instrumentation for the Work Graph.
  *
- * Limboo's own MCP tools (`limboo_memory`, `limboo_search`) are exposed over
+ * Zeus's own MCP tools (`zeus_memory`, `zeus_search`) are exposed over
  * TWO transports — the SDK's in-process servers for Claude runs, and the stdio
  * bridge dispatcher for Cursor runs — but both call the SAME `PlainTool.run`.
  * Wrapping `run` once therefore captures every internal MCP invocation on both
@@ -9,7 +9,7 @@
  * place.
  *
  * ENRICHMENT, NOT INGESTION. Internal MCP calls also arrive on the primary
- * `AgentManager.onEvent()` path as `tool-start`/`tool-end` on `mcp__limboo_*`
+ * `AgentManager.onEvent()` path as `tool-start`/`tool-end` on `mcp__zeus_*`
  * names, so this wrapper's job is to add what that path lacks — the real
  * execution duration and the result size — not to create duplicate nodes. If
  * the wrapper were removed entirely the graph would still show every call.
@@ -27,7 +27,7 @@ export interface McpInvocation {
   durationMs: number;
   resultChars: number;
   /**
-   * Items in the result, counted from the `- ` list convention every Limboo
+   * Items in the result, counted from the `- ` list convention every Zeus
    * plain tool uses for its hits (`searchTools.fmt`, `memoryTools`). 0 for a
    * tool whose output is not a list — which is why it is reported separately
    * from `resultChars` rather than inferred from it.

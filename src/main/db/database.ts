@@ -1,5 +1,5 @@
 /**
- * Local SQLite database — the on-device persistence layer for Limboo.
+ * Local SQLite database — the on-device persistence layer for Zeus.
  *
  * Owned entirely by the main process (never the renderer). Opened once as a
  * singleton under `userData`. Security contract (CLAUDE.md §6): callers use only
@@ -180,7 +180,7 @@ function migrate(database: Database.Database): void {
     CREATE INDEX IF NOT EXISTS idx_agent_subagent_runs_session
       ON agent_subagent_runs (session_id, started_at);
 
-    -- Maps a Limboo session to its Claude Code SDK session id so multi-turn
+    -- Maps a Zeus session to its Claude Code SDK session id so multi-turn
     -- conversations resume across prompts. Superseded by
     -- agent_provider_sessions (schema v12) — kept for backfill, no longer
     -- written.
@@ -191,7 +191,7 @@ function migrate(database: Database.Database): void {
     );
 
     -- Provider-keyed resume tokens (schema v12) — one row per (session,
-    -- provider) so a Limboo session can hold a Claude SDK session id and a
+    -- provider) so a Zeus session can hold a Claude SDK session id and a
     -- Cursor chat id side by side. The backfill below migrates legacy rows
     -- once; INSERT OR IGNORE keeps it idempotent across boots.
     CREATE TABLE IF NOT EXISTS agent_provider_sessions (
@@ -303,7 +303,7 @@ function migrate(database: Database.Database): void {
       ON plan_state (updated_at DESC);
 
     -- Git checkpoints — lightweight, session-scoped recovery points stored as
-    -- dedicated git refs (refs/limboo/checkpoints/<sessionId>/<ts>); this table
+    -- dedicated git refs (refs/zeus/checkpoints/<sessionId>/<ts>); this table
     -- holds only the metadata + which ref to restore. Never on a branch, never
     -- pushed. Soft history of an agent's work, separate from real commits.
     CREATE TABLE IF NOT EXISTS git_checkpoints (
@@ -600,7 +600,7 @@ function migrate(database: Database.Database): void {
     CREATE UNIQUE INDEX IF NOT EXISTS idx_mcp_servers_name
       ON mcp_servers (workspace_id, name);
 
-    -- Work Graph (schema v15) — the Directed Acyclic Work Graph: Limboo's own
+    -- Work Graph (schema v15) — the Directed Acyclic Work Graph: Zeus's own
     -- structural record of engineering work, normalized across BOTH providers
     -- from the AgentManager event stream. Nodes are typed, so the graph is
     -- queryable without replaying a conversation. The payload column is the
@@ -802,7 +802,7 @@ function migrate(database: Database.Database): void {
   });
 
   // How to RENDER a turn when that differs from what was sent (JSON
-  // {text, body}). Orchestration prompts Limboo composes on the user's behalf —
+  // {text, body}). Orchestration prompts Zeus composes on the user's behalf —
   // approving a plan, regenerating one — carry a whole document plus XML tags,
   // and without this the raw prompt reappeared in the transcript on every
   // reload. NULL for every ordinary prompt, which is the overwhelming majority.
@@ -830,7 +830,7 @@ function migrate(database: Database.Database): void {
   // regenerated plan replays the previous pass's tool calls.
   addColumnIfMissing(database, 'agent_plans', 'run_started_at', { type: 'INTEGER' });
   addColumnIfMissing(database, 'agent_plans', 'captured_at', { type: 'INTEGER' });
-  // Basename of the plan file inside Limboo's own plans directory. A BASENAME,
+  // Basename of the plan file inside Zeus's own plans directory. A BASENAME,
   // never a path: the directory is chosen by main, so storing the full path
   // would let a restored row point anywhere.
   addColumnIfMissing(database, 'agent_plans', 'plan_file', { type: 'TEXT' });

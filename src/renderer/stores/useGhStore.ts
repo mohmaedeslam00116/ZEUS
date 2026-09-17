@@ -48,7 +48,7 @@ interface GhStoreState {
 }
 
 function api() {
-  return window.limboo?.gh;
+  return window.zeus?.gh;
 }
 
 function activeWs(): string | null {
@@ -71,7 +71,7 @@ export const useGhStore = create<GhStoreState>((set, get) => ({
     if (!gh) return;
 
     gh.onChanged(() => void get().refresh());
-    window.limboo?.workspace.onChanged(() => {
+    window.zeus?.workspace.onChanged(() => {
       // A different repo means different PRs, issues, and possibly a different
       // remote — drop everything rather than show the previous workspace's.
       set({ pullRequests: [], issues: [] });

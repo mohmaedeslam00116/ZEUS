@@ -11,7 +11,7 @@
  * then fail at run time with a non-zero exit from a command the user never saw.
  *
  * THE CONSTRAINT THIS FILE DOES NOT BREAK
- * Limboo never rewrites a bootstrap command. `pnpm install …` is not silently
+ * Zeus never rewrites a bootstrap command. `pnpm install …` is not silently
  * retargeted at `npm`, ever: the consent contract in `bootstrap.ts` is that the
  * string the user approved is the string that executes, and the approval is
  * keyed to a fingerprint of exactly those strings. So "support every package
@@ -61,30 +61,30 @@ const SHELL_WORDS = new Set([
 const TOOL_HINTS: Readonly<Record<string, string>> = {
   pnpm:
     'Install pnpm (https://pnpm.io/installation), or run `corepack enable pnpm` — ' +
-    'corepack ships with Node.js. Restart Limboo afterwards.',
-  npm: 'Install Node.js, which provides npm, and restart Limboo.',
-  npx: 'Install Node.js, which provides npx, and restart Limboo.',
-  node: 'Install Node.js (https://nodejs.org) and restart Limboo.',
+    'corepack ships with Node.js. Restart Zeus afterwards.',
+  npm: 'Install Node.js, which provides npm, and restart Zeus.',
+  npx: 'Install Node.js, which provides npx, and restart Zeus.',
+  node: 'Install Node.js (https://nodejs.org) and restart Zeus.',
   yarn:
     'Install Yarn (https://yarnpkg.com/getting-started/install), or run ' +
-    '`corepack enable yarn`. Restart Limboo afterwards.',
-  bun: 'Install Bun (https://bun.sh) and restart Limboo.',
-  deno: 'Install Deno (https://deno.land) and restart Limboo.',
-  corepack: 'Corepack ships with Node.js — install or update Node.js, then restart Limboo.',
-  git: 'Install Git (https://git-scm.com/downloads) and restart Limboo.',
-  python: 'Install Python (https://python.org) and restart Limboo.',
-  python3: 'Install Python 3 (https://python.org) and restart Limboo.',
-  uv: 'Install uv (https://docs.astral.sh/uv/getting-started/installation/) and restart Limboo.',
-  pip: 'Install Python, which provides pip, and restart Limboo.',
-  cargo: 'Install the Rust toolchain (https://rustup.rs) and restart Limboo.',
-  go: 'Install Go (https://go.dev/dl/) and restart Limboo.',
+    '`corepack enable yarn`. Restart Zeus afterwards.',
+  bun: 'Install Bun (https://bun.sh) and restart Zeus.',
+  deno: 'Install Deno (https://deno.land) and restart Zeus.',
+  corepack: 'Corepack ships with Node.js — install or update Node.js, then restart Zeus.',
+  git: 'Install Git (https://git-scm.com/downloads) and restart Zeus.',
+  python: 'Install Python (https://python.org) and restart Zeus.',
+  python3: 'Install Python 3 (https://python.org) and restart Zeus.',
+  uv: 'Install uv (https://docs.astral.sh/uv/getting-started/installation/) and restart Zeus.',
+  pip: 'Install Python, which provides pip, and restart Zeus.',
+  cargo: 'Install the Rust toolchain (https://rustup.rs) and restart Zeus.',
+  go: 'Install Go (https://go.dev/dl/) and restart Zeus.',
 };
 
 /** Anything not in the table still gets a usable sentence. */
 function hintFor(tool: string): string {
   return (
     TOOL_HINTS[tool] ??
-    `Install \`${tool}\` and make sure it is on your PATH, then restart Limboo.`
+    `Install \`${tool}\` and make sure it is on your PATH, then restart Zeus.`
   );
 }
 
@@ -179,7 +179,7 @@ let cachedPath: string | undefined;
  *
  * Memoised for the process lifetime, matching `probeCommand`: a toolchain
  * appearing mid-session is not worth re-scanning the filesystem for on every
- * probe, and the missing-prerequisite message tells the user to restart Limboo.
+ * probe, and the missing-prerequisite message tells the user to restart Zeus.
  */
 export function augmentedPath(): string {
   if (cachedPath !== undefined) return cachedPath;

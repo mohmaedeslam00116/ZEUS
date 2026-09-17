@@ -182,7 +182,7 @@ export function PreviewRail({
               <span
                 aria-hidden="true"
                 className={cn(
-                  'limboo-rail-tick block h-0.5 w-8',
+                  'zeus-rail-tick block h-0.5 w-8',
                   atEnd ? 'origin-right' : 'origin-left',
                   displayed || selected ? 'bg-fg' : 'bg-line-strong',
                 )}

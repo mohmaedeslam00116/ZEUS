@@ -203,7 +203,7 @@ export function createActivationPipeline(deps: ActivationDeps): ActivationPipeli
 
         /*
          * 8. Services. Only for a session that owns its root, and only once the
-         *    workspace has acknowledged the repo's limboo.json (the manager
+         *    workspace has acknowledged the repo's zeus.json (the manager
          *    enforces the ack itself — this just decides whether to ask).
          */
         if (owner) deps.services.autoStartForSession(owner);

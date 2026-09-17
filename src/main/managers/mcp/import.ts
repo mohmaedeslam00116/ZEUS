@@ -6,7 +6,7 @@
  *   - Claude: <root>/.mcp.json, ~/.claude.json (projects[<root>] + top-level)
  * Prototype-pollution keys are dropped; imported values (including ${env:…} /
  * ${VAR} interpolation) are kept verbatim as NON-secret — the user can promote
- * one to a stored secret afterward. Limboo never owns these files; the registry
+ * one to a stored secret afterward. Zeus never owns these files; the registry
  * is the source of truth and injects config per run.
  */
 import * as fs from 'node:fs';

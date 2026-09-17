@@ -124,7 +124,7 @@ export const CAPABILITY_NOTE: Record<
       'The Cursor CLI does not report token counts or a context window in its stream-json output.',
     tokenUsage: 'Token counts are not present in the Cursor CLI event stream.',
     requestQuota:
-      'Cursor does not report request quotas to the CLI. Team quotas exist only in the Cursor Enterprise Admin API, which needs a team admin key and an outbound network call — Limboo is local-first and makes none.',
+      'Cursor does not report request quotas to the CLI. Team quotas exist only in the Cursor Enterprise Admin API, which needs a team admin key and an outbound network call — Zeus is local-first and makes none.',
     quotaWindows: 'Rolling usage windows are not reported by this provider.',
     costEstimate: 'Cost is not reported by this provider.',
     compaction: 'Compaction events are not reported by this provider.',
@@ -150,10 +150,10 @@ export const SEGMENT_LABEL: Record<ContextSegmentId, string> = {
 /** Hover copy naming the subsystem that consumed a segment. */
 export const SEGMENT_SUBSYSTEM: Record<ContextSegmentId, string> = {
   system:
-    'The provider preset, its tool schemas, and everything Limboo could not attribute. Measured as the remainder of the total the provider reported.',
+    'The provider preset, its tool schemas, and everything Zeus could not attribute. Measured as the remainder of the total the provider reported.',
   conversation: 'User and assistant turns in this session since the last compaction.',
   tools: 'Results returned by the built-in file, search and shell tools.',
-  mcp: 'Results returned by MCP servers, including Limboo’s own memory and search tools.',
+  mcp: 'Results returned by MCP servers, including Zeus’s own memory and search tools.',
   memory: 'The <project-memory> block the Local Memory System injected for this prompt.',
   search: 'The <project-context> block the Search Engine injected for this prompt.',
   resume: 'The <repository-delta> block the Resume Pipeline injected for this prompt.',

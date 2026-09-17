@@ -2,7 +2,7 @@
  * Provider-Neutral Hook Engine.
  *
  * The single governance/observability layer between every coding provider
- * (Claude SDK, Cursor CLI, a future ACP adapter) and every Limboo subsystem.
+ * (Claude SDK, Cursor CLI, a future ACP adapter) and every Zeus subsystem.
  * Providers emit NORMALIZED lifecycle events ({@link HookEvent}) onto this one
  * bus; the engine persists them to a redacted audit trail and fans them out to
  * any in-process subscribers.

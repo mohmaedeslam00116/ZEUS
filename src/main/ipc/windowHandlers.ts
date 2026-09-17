@@ -1,6 +1,6 @@
 /**
  * IPC handlers backing the custom (frameless) title bar window controls.
- * The renderer reaches these through `window.limboo.window.*`.
+ * The renderer reaches these through `window.zeus.window.*`.
  */
 import { BrowserWindow } from 'electron';
 import type { IpcMainInvokeEvent } from 'electron';

@@ -1,7 +1,7 @@
 /**
  * Helix loader — two columns of dots weaving left↔right with a per-row phase
  * offset, giving a DNA-strand shimmer. Used as the session-live + generate/
- * stream indicator. Pure CSS (keyframe `limboo-helix` + `.limboo-helix-dot` in
+ * stream indicator. Pure CSS (keyframe `zeus-helix` + `.zeus-helix-dot` in
  * styles/index.css); each row renders two dots running the animation in
  * antiphase (one delayed by half the cycle). Colour comes from an inline
  * `color` (dots are `background: currentColor`) so it stays on-token, and the
@@ -40,7 +40,7 @@ export function HelixLoader({
         width: size,
         height: size,
         color: invert ? 'var(--color-base)' : 'var(--color-accent)',
-        // consumed by the keyframe / .limboo-helix-dot in styles/index.css
+        // consumed by the keyframe / .zeus-helix-dot in styles/index.css
         ['--helix-speed' as string]: `${speed}s`,
         ['--helix-amp' as string]: `${amp}px`,
       }}
@@ -51,9 +51,9 @@ export function HelixLoader({
         const common = { width: dot, height: dot, left, top } as const;
         return (
           <span key={r}>
-            <span className="limboo-helix-dot" style={{ ...common, animationDelay: `${rowDelay}s` }} />
+            <span className="zeus-helix-dot" style={{ ...common, animationDelay: `${rowDelay}s` }} />
             <span
-              className="limboo-helix-dot"
+              className="zeus-helix-dot"
               style={{ ...common, animationDelay: `${rowDelay - speed / 2}s` }}
             />
           </span>

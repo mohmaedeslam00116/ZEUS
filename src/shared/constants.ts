@@ -40,7 +40,7 @@ export const ACTIVITY_TAB_IDS: readonly ActivityTab[] = [
 ];
 
 /**
- * The agent providers Limboo can run (Claude Code = Anthropic via the Agent
+ * The agent providers Zeus can run (Claude Code = Anthropic via the Agent
  * SDK, Cursor = the cursor-agent CLI in print mode). The provider follows the
  * selected model — picking a Composer model routes runs through the Cursor
  * runtime adapter.
@@ -71,7 +71,7 @@ export const AGENT_MODELS = [
   { value: 'pi:default', label: 'Pi (default model)', provider: 'pi' },
   // NO CODEX MODEL, deliberately. `@ai-sdk/harness-codex@1.0.79` declares
   // `supportsBuiltinToolApprovals: false`, so its `bash` tool cannot be routed
-  // through Limboo's permission gate and the harness is refused at preflight.
+  // through Zeus's permission gate and the harness is refused at preflight.
   // A picker entry that can only ever fail is worse than an absent one. The
   // harness stays registered (see harnessRegistry.ts) so the Harnesses surface
   // can say WHY it is unavailable; add a model here only after the published
@@ -113,7 +113,7 @@ export const HARNESS_LABELS: Record<string, string> = {
  * Harness id → the provider that serves its models. Renderer-safe.
  *
  * This direction, not the reverse: MANY harnesses can serve one provider (the
- * `claude-code` harness and Limboo's direct Claude Agent SDK path are both
+ * `claude-code` harness and Zeus's direct Claude Agent SDK path are both
  * `anthropic`), while a harness always has exactly one provider. A
  * `Record<AgentProvider, string>` could not express the first case and had to be
  * duplicated by hand wherever a harness needed its provider.
@@ -140,7 +140,7 @@ export const PROVIDER_HARNESS: Record<AgentProvider, string> = {
 };
 
 /**
- * Harness ids whose built-in READ tools cannot be routed through Limboo's
+ * Harness ids whose built-in READ tools cannot be routed through Zeus's
  * permission gate — the renderer-safe half of `HarnessCapabilities.gatesReads`.
  *
  * The AI SDK harnesses gate edits and shell commands but never reads: their
@@ -288,7 +288,7 @@ export const PLAN_LIMITS = {
  * Every one of these caps a value that rides a per-event payload AND a persisted
  * row: a worker that runs away must not be able to grow either without limit.
  * The transcript cap is the strictest-feeling one on purpose — it holds
- * forwarded model output, which is untrusted content Limboo renders verbatim.
+ * forwarded model output, which is untrusted content Zeus renders verbatim.
  */
 export const SUBAGENT_LIMITS = {
   summaryMax: { min: 500, max: 64_000, default: 4_000 },
@@ -482,12 +482,12 @@ export const MCP_LIMITS = {
 export const MCP_SERVER_NAME_RE = /^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$/;
 
 /**
- * Server names reserved by Limboo's own in-process servers and the providers'
+ * Server names reserved by Zeus's own in-process servers and the providers'
  * built-in servers — a user/imported server may never register under these.
  */
 export const MCP_RESERVED_NAMES: ReadonlySet<string> = new Set([
-  'limboo_memory',
-  'limboo_search',
+  'zeus_memory',
+  'zeus_search',
   'workspace',
   'claude-in-chrome',
   'computer-use',
@@ -557,7 +557,7 @@ export const GIT_LIMITS = {
  *
  * There is deliberately NO `settings.gh` key: detection is automatic and the
  * feature self-hides when `gh` is absent, so there is nothing for a user to
- * configure. Authentication belongs entirely to the CLI — Limboo stores no
+ * configure. Authentication belongs entirely to the CLI — Zeus stores no
  * GitHub credential (see `main/managers/gh/exec.ts`).
  */
 export const GH_LIMITS = {
@@ -712,13 +712,13 @@ export const WORKTREE_LIMITS = {
   branchMax: 200,
   /** Worktree root path length cap. */
   rootPathMax: 4096,
-  /** Max worktrees Limboo manages per repository. */
+  /** Max worktrees Zeus manages per repository. */
   maxPerRepo: 32,
   /** Timeout (ms) for `git worktree add/remove` (fresh checkouts can be slow). */
   gitTimeoutMs: 60_000,
   /** Timeout (ms) for one setup/teardown hook command (npm install is slow). */
   hookTimeoutMs: 600_000,
-  /** limboo.json repo-config size cap (bytes). */
+  /** zeus.json repo-config size cap (bytes). */
   configBytesMax: 65_536,
   /** Script / service name cap (validated against ^[a-z0-9-]+$). */
   nameMax: 32,
@@ -1160,10 +1160,10 @@ export const DEFAULT_SETTINGS: AppSettings = {
     worktrees: {
       enabled: true,
       root: '',
-      branchPrefix: 'limboo',
+      branchPrefix: 'zeus',
       // ZEUS (#14): setup hooks are opt-in. Plain workspace sessions are the
       // product default, and even an explicitly created worktree does not
-      // auto-prompt the repo's limboo.json setup commands — the user runs them
+      // auto-prompt the repo's zeus.json setup commands — the user runs them
       // via the existing ServicesStrip "Review commands…" affordance. The
       // v31→32 settings migration flips previously-defaulted `true` values.
       autoSetup: false,
@@ -1413,9 +1413,9 @@ export const DEFAULT_IGNORED_DIRS = [
   'vendor',
   '.venv',
   '__pycache__',
-  // Limboo's reserved workspace namespace (per-run Cursor attachment staging;
+  // Zeus's reserved workspace namespace (per-run Cursor attachment staging;
   // transient — created at run start and removed in the run's finally).
-  '.limboo',
+  '.zeus',
 ] as const;
 
 /** Default per-workspace configuration applied on create/open. */

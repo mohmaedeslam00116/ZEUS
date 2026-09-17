@@ -1,6 +1,6 @@
 /**
  * IPC handlers for the in-app updater. Reached from the renderer through
- * `window.limboo.updates.*`. All handlers go through the `handle()` wrapper, so
+ * `window.zeus.updates.*`. All handlers go through the `handle()` wrapper, so
  * they inherit the sender-origin validation that rejects foreign frames.
  */
 import { app } from 'electron';

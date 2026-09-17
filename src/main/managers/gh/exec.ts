@@ -9,7 +9,7 @@
  *
  * Security (CLAUDE.md §6):
  * - argv-only via `execFile`, never `shell: true`.
- * - **`--show-token` is refused by assert.** Limboo reads, stores, and
+ * - **`--show-token` is refused by assert.** Zeus reads, stores, and
  *   transmits NO GitHub credential — authentication belongs entirely to the
  *   CLI, and the app never wants to hold a token it would then have to protect.
  * - Every captured string passes {@link redactGh} **inside `runGh`**, so a
@@ -94,7 +94,7 @@ export function runGh(
         windowsHide: true,
         env: {
           // `process.env` passes through unchanged on purpose: a user's own
-          // GH_TOKEN / GH_HOST is HOW `gh` authenticates. Limboo never reads
+          // GH_TOKEN / GH_HOST is HOW `gh` authenticates. Zeus never reads
           // those values — it just must not sabotage them.
           ...process.env,
           GH_PROMPT_DISABLED: '1',

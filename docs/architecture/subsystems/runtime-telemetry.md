@@ -6,13 +6,13 @@ A live view of what the running coding agent is actually consuming: how full the
 context window is, which subsystem filled it, how much of the account's rolling
 quota is gone, and what the last run cost in time and tokens.
 
-Before this subsystem, the only "how am I doing" signal in Limboo was
+Before this subsystem, the only "how am I doing" signal in Zeus was
 `RateLimitInfo` — *scraped out of an error message with a regex*
 (`AgentManager.ts`, `parseRateLimit`). By construction that fires only after the
-user has already been cut off. Meanwhile the Claude Agent SDK was handing Limboo
+user has already been cut off. Meanwhile the Claude Agent SDK was handing Zeus
 a full telemetry stream that `handleMessage` dropped on the floor.
 
-## Why Limboo owns this
+## Why Zeus owns this
 
 Neither provider offers a runtime dashboard, and the two disagree profoundly
 about what they even measure. A UI written against either one directly would
@@ -86,7 +86,7 @@ in isolation and cannot be bypassed from a UI edit.
 ## Measured vs estimated
 
 The API reports ONE aggregate input-token count and no breakdown. The
-per-contributor split can therefore only come from Limboo measuring the
+per-contributor split can therefore only come from Zeus measuring the
 characters of blocks **it composed itself** — which it can do exactly, because
 `runOnce` is the single place the memory, search and resume blocks exist as
 strings.
@@ -97,17 +97,17 @@ strings.
 | `windowTokens`, `reservedTokens` | **measured** | `modelUsage[model]` |
 | `autoCompactTokens` | **measured, observed** | first auto `compact_boundary`'s `pre_tokens` |
 | `system` | **measured residual** | total − Σ(estimated) |
-| memory / search / resume / attachments | estimated | Limboo's own block lengths ÷ `charsPerToken` |
+| memory / search / resume / attachments | estimated | Zeus's own block lengths ÷ `charsPerToken` |
 | conversation / tools / mcp | estimated | observed character counts ÷ `charsPerToken` |
 
 The **residual** is what keeps this honest: the measured total is the authority
-and everything Limboo could not attribute lands in `system` rather than being
+and everything Zeus could not attribute lands in `system` rather than being
 guessed at.
 
 ### `attributionDegraded` — the fail-honest path
 
 When the estimates sum ABOVE the measured total (a compaction, a large cache
-read, a resumed transcript Limboo never observed), the split is **dropped**, not
+read, a resumed transcript Zeus never observed), the split is **dropped**, not
 scaled to fit, and the UI says why. A bar that always adds up is worth nothing if
 it reaches that state by inventing numbers.
 
@@ -164,7 +164,7 @@ flush; the idle tick picks them up.
   contract as `graph:save`.
 - **Bounded everywhere**: coalesced pushes, ringed `seenMessageIds` and tool
   rows, bucketed samples, ring-capped rollups, swept history, capped exports.
-- **No network is added.** The quota numbers ride the SDK stream Limboo already
+- **No network is added.** The quota numbers ride the SDK stream Zeus already
   consumes. Production CSP stays `connect-src 'self'` and no SSRF allowlist is
   needed because there is no fetch.
 - **Exports are built field by field from a whitelist** (`telemetry/exporters.ts`),

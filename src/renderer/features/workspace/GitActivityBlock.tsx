@@ -145,7 +145,7 @@ function GitActions({ git }: { git: GitActivityPayload }) {
       icon: Copy,
       // Through the preload bridge, never `navigator.clipboard` — main owns the
       // native integration and caps the payload.
-      run: () => void window.limboo?.system.clipboardWrite(command),
+      run: () => void window.zeus?.system.clipboardWrite(command),
     });
   }
 

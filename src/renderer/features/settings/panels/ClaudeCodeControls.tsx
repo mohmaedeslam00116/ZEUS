@@ -2,7 +2,7 @@
  * Claude Code harness controls — the body of the Claude card in
  * Settings › Agent › Harnesses.
  *
- * Claude Code needs no authentication UI (Limboo reuses the CLI's own local
+ * Claude Code needs no authentication UI (Zeus reuses the CLI's own local
  * login and stores no Anthropic credentials), so this carries the knobs that
  * decide HOW an Anthropic model runs, plus the one-time approval for the
  * harness's setup step.
@@ -43,7 +43,7 @@ export function ClaudeCodeControls() {
     setState('loading');
     setLoadError(null);
     try {
-      const call = window.limboo?.agent?.harnessBootstrapPlan;
+      const call = window.zeus?.agent?.harnessBootstrapPlan;
       if (!call) {
         // No bridge (a plain browser preview, or a preload that failed to load).
         // Emphatically not "this harness installs nothing".
@@ -91,7 +91,7 @@ export function ClaudeCodeControls() {
       <Field
         id="harnessLegacySdk"
         label="Use the direct Claude Agent SDK"
-        hint="Runs Anthropic models through Limboo's own Claude Agent SDK integration instead of the AI SDK harness. The documented rollback while the harness path settles — the harness packages are experimental. On by default."
+        hint="Runs Anthropic models through Zeus's own Claude Agent SDK integration instead of the AI SDK harness. The documented rollback while the harness path settles — the harness packages are experimental. On by default."
       >
         <Toggle
           checked={harness.legacyClaudeSdk}
@@ -115,7 +115,7 @@ export function ClaudeCodeControls() {
               <p className="text-[12px] leading-relaxed text-danger">
                 {info?.planError
                   ? 'This harness has a setup step but could not describe it, so runs are refused ' +
-                    'until it can. Approving commands Limboo cannot read is not something it will ' +
+                    'until it can. Approving commands Zeus cannot read is not something it will ' +
                     'ask you to do.'
                   : 'The harness adapter could not be loaded.'}
               </p>
@@ -135,14 +135,14 @@ export function ClaudeCodeControls() {
                 exact commands that will run.
               </p>
               {plan.dir && (
-                // WHERE these run is load-bearing, not context. Limboo executes
+                // WHERE these run is load-bearing, not context. Zeus executes
                 // them with the working directory set to this folder, and the
                 // adapter writes the lockfile they install from into it first —
                 // so the same commands pasted into a shell fail with
-                // ERR_PNPM_NO_LOCKFILE and read as a Limboo bug. The panel used
+                // ERR_PNPM_NO_LOCKFILE and read as a Zeus bug. The panel used
                 // to show the commands alone, and that is exactly what happened.
                 <p className="text-[11px] leading-relaxed text-faint">
-                  Limboo runs them in{' '}
+                  Zeus runs them in{' '}
                   <span className="font-mono text-muted">{plan.dir}</span>, after writing{' '}
                   <span className="font-mono text-muted">
                     {plan.files.map((f) => f.split('/').pop()).join(', ')}

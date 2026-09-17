@@ -1,7 +1,7 @@
 /**
  * Session-scoped Cursor MCP config (`<root>/.cursor/mcp.json`).
  *
- * Registers the `limboo_memory` / `limboo_search` stdio bridge servers for
+ * Registers the `zeus_memory` / `zeus_search` stdio bridge servers for
  * the run so Cursor queries the SAME platform services Claude does (memory
  * captured while one agent works is retrievable by the other). Servers run
  * the bundled mcpBridge.cjs via Electron-as-node; the per-run pipe/token ride
@@ -18,7 +18,7 @@ import { copySafeKeys, safeParseObject, UNSAFE_KEYS, withSessionFile } from './s
 export interface McpBridgeSpec {
   nodeCommand: string;
   bridgePath: string;
-  /** LIMBOO_BRIDGE_PIPE / LIMBOO_BRIDGE_TOKEN from the run's pipe server. */
+  /** ZEUS_BRIDGE_PIPE / ZEUS_BRIDGE_TOKEN from the run's pipe server. */
   bridgeEnv: Record<string, string>;
   memory: boolean;
   search: boolean;
@@ -39,11 +39,11 @@ export function buildMcpConfig(originalBytes: Buffer | null, spec: McpBridgeSpec
     env: {
       ELECTRON_RUN_AS_NODE: '1',
       ...spec.bridgeEnv,
-      LIMBOO_BRIDGE_SERVER: kind,
+      ZEUS_BRIDGE_SERVER: kind,
     },
   });
-  if (spec.memory) servers.limboo_memory = serverEntry('memory');
-  if (spec.search) servers.limboo_search = serverEntry('search');
+  if (spec.memory) servers.zeus_memory = serverEntry('memory');
+  if (spec.search) servers.zeus_search = serverEntry('search');
   for (const [name, def] of Object.entries(spec.userServers ?? {})) {
     if (UNSAFE_KEYS.has(name)) continue;
     servers[name] = def;

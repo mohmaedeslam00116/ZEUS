@@ -6,7 +6,7 @@
  * `{ allowedPrompts?: … /* deprecated *\/; [k: string]: unknown }` with no
  * `plan` field. The plan is written to a FILE, and the tool's *output* carries
  * `plan` / `filePath`. Reading `input.plan` therefore captures an empty string,
- * and because Limboo denies the tool the output never exists either.
+ * and because Zeus denies the tool the output never exists either.
  *
  * The fix is to stop guessing where the plan is. `Settings.plansDirectory`
  * ("Custom directory for plan files, relative to project root. If not set,
@@ -34,7 +34,7 @@ import { copySafeKeys, safeParseObject, withSessionFile } from '../cursor/sessio
  * sits beside the settings file that points at it and reads as tool state
  * rather than project content.
  */
-export const PLAN_DIR_REL = path.join('.claude', 'limboo-plans');
+export const PLAN_DIR_REL = path.join('.claude', 'zeus-plans');
 
 /** The generated settings file that carries `plansDirectory`. */
 const SETTINGS_REL = path.join('.claude', 'settings.local.json');

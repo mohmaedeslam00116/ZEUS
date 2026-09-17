@@ -27,7 +27,7 @@ Fourteen tables plus the FTS triggers:
 | `sessions` | development sessions per workspace |
 | `agent_messages` | conversation history (append-only user / assistant turns) |
 | `agent_activity` | the agent audit feed |
-| `agent_session_meta` | Limboo session -> SDK session id (multi-turn resume) |
+| `agent_session_meta` | Zeus session -> SDK session id (multi-turn resume) |
 | `agent_diagnostics` | lifecycle / request / recovery / heartbeat timeline (swept) |
 | `agent_plans` | Plan Mode artifacts (status, markdown, meta, timestamps) |
 | `git_checkpoints` | checkpoint metadata (session-scoped recovery points) |

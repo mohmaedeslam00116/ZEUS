@@ -1,6 +1,6 @@
 /**
  * IPC handlers for the Attachment Manager. Reached from the renderer through
- * `window.limboo.attachment.*`. Every handler validates and caps its input
+ * `window.zeus.attachment.*`. Every handler validates and caps its input
  * before it touches the manager (CLAUDE.md §6): ids/paths are bounded strings,
  * pasted bytes are size-capped, and the manager re-validates everything again
  * (realpath, magic bytes, session ownership) as defense in depth.

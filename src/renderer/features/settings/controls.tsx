@@ -165,7 +165,7 @@ export function ActionButton({
 
 /**
  * Accessible switch. Sized in **fixed px** (not rem) on purpose: the document
- * root font-size is `calc(16px * var(--limboo-font-scale))`, so rem-based track/
+ * root font-size is `calc(16px * var(--zeus-font-scale))`, so rem-based track/
  * thumb sizing drifts out of alignment (and visually "overflows") at non-default
  * font scales or in compact density. Fixed px keeps the thumb travel exact at any
  * scale. WAI-ARIA `switch` role + `aria-checked` + keyboard activation (native to
@@ -213,7 +213,7 @@ export function Toggle({
  * visually-hidden `<input type="range">`, so pointer drag, Arrow/Home/End keys,
  * and screen-reader semantics come for free. The press-scale and focus ring are
  * driven purely by CSS (`:has()` off the native input) — no JS state. All
- * styling lives in `.limboo-slider*` in `styles/index.css`; the global
+ * styling lives in `.zeus-slider*` in `styles/index.css`; the global
  * reduced-motion switch neutralizes the transitions automatically.
  */
 export function Slider({
@@ -243,25 +243,25 @@ export function Slider({
   const tickCount = showTicks && steps > 1 && steps <= 40 ? steps : 0;
 
   return (
-    <div className={cn('limboo-slider', disabled && 'opacity-50', className)}>
-      <div className="limboo-slider-track">
-        <div className="limboo-slider-fill" style={{ width: `${pct}%` }} />
+    <div className={cn('zeus-slider', disabled && 'opacity-50', className)}>
+      <div className="zeus-slider-track">
+        <div className="zeus-slider-fill" style={{ width: `${pct}%` }} />
         {tickCount > 0 && (
-          <div className="limboo-slider-ticks">
+          <div className="zeus-slider-ticks">
             {Array.from({ length: tickCount + 1 }, (_, i) => (
               <span
                 key={i}
-                className="limboo-slider-tick"
+                className="zeus-slider-tick"
                 style={{ left: `${(i / tickCount) * 100}%` }}
               />
             ))}
           </div>
         )}
       </div>
-      <span className="limboo-slider-thumb" style={{ left: `${pct}%` }} aria-hidden />
+      <span className="zeus-slider-thumb" style={{ left: `${pct}%` }} aria-hidden />
       <input
         type="range"
-        className="limboo-slider-input"
+        className="zeus-slider-input"
         min={min}
         max={max}
         step={step}

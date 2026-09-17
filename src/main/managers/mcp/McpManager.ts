@@ -818,7 +818,7 @@ export class McpManager {
 
   private envVarFor(id: string, kind: 'e' | 'h', key: string): string {
     const h = createHash('sha1').update(`${kind}\0${key}`).digest('hex').slice(0, 12).toUpperCase();
-    return `LIMBOO_MCP_${id.replace(/-/g, '').toUpperCase()}_${kind.toUpperCase()}_${h}`;
+    return `ZEUS_MCP_${id.replace(/-/g, '').toUpperCase()}_${kind.toUpperCase()}_${h}`;
   }
 
   private log(id: string, level: McpLogLine['level'], text: string): void {

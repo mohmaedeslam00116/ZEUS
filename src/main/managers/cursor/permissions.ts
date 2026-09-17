@@ -3,7 +3,7 @@
  *
  * Cursor's declarative permission system is the INVERSE of Claude's callback
  * one: allow/deny rule lists, deny beats allow, and in print mode `--force`
- * allows everything not explicitly denied. Limboo therefore materializes a
+ * allows everything not explicitly denied. Zeus therefore materializes a
  * deny-first cli.json for EVERY run (the crown-jewel guard applies even to
  * propose-only runs) and translates the user's standing posture into allow
  * rules; `--force` is only ever issued together with this rule set. The file
@@ -51,10 +51,10 @@ export function sessionDenyRules(jewels: string[]): string[] {
     'Write(**/.cursor/cli.json)',
     'Write(**/.cursor/hooks.json)',
     'Write(**/.cursor/mcp.json)',
-    // Limboo's reserved workspace namespace (per-run attachment staging).
-    'Write(.limboo/**)',
-    'Write(**/.limboo/**)',
-    // Crown jewels: Limboo's own database, config, and safeStorage store are
+    // Zeus's reserved workspace namespace (per-run attachment staging).
+    'Write(.zeus/**)',
+    'Write(**/.zeus/**)',
+    // Crown jewels: Zeus's own database, config, and safeStorage store are
     // never a tool target — the memory tools are the only sanctioned path in
     // (workspace secrets, below, are ask-for-approval instead). Both verbs per
     // jewel: writes used to ride a blanket `Write(userData/**)` rule, which also
@@ -98,7 +98,7 @@ export function sessionDenyRules(jewels: string[]): string[] {
 /**
  * Workspace secrets the agent may only touch with the user's approval. These go
  * in the cli.json `ask` list (NOT `deny`): on a hook-verified run the
- * `beforeReadFile`/`preToolUse` hook drives Limboo's own approval prompt, and on
+ * `beforeReadFile`/`preToolUse` hook drives Zeus's own approval prompt, and on
  * a non-hook run `ask` (unlike `deny`) neither hard-blocks the file nor poisons
  * other tools. The live `touchesSensitiveFile` guard in AgentManager mirrors this
  * as an approval prompt for both providers. Covers `.env` secret variants (the
@@ -154,8 +154,8 @@ export interface CursorAllowPosture {
    * of it whenever hooks do fire, so keeping it never weakens Layer 1.
    */
   readOnlyShell: boolean;
-  /** The Limboo MCP bridge servers are registered for this run. */
-  limbooMcp: boolean;
+  /** The Zeus MCP bridge servers are registered for this run. */
+  zeusMcp: boolean;
   /** Attachments are staged into the workspace for this run — allow reads. */
   attachmentsStaged?: boolean;
 }
@@ -181,7 +181,7 @@ export function readOnlyShellAllowRules(): string[] {
 }
 
 /**
- * Allow rules derived from Limboo's posture (design doc §7). Deny always
+ * Allow rules derived from Zeus's posture (design doc §7). Deny always
  * supersedes allow, so these only ever short-circuit prompts Cursor would
  * otherwise raise — they can never widen past the deny set above.
  */
@@ -201,12 +201,12 @@ export function sessionAllowRules(posture: CursorAllowPosture): string[] {
     rules.push(...readOnlyShellAllowRules());
   }
   // Staged attachment files were hand-picked by the user for this turn —
-  // reading them never prompts (writes stay denied by the .limboo deny rule).
-  if (posture.attachmentsStaged) rules.push('Read(.limboo/attachments/**)');
-  if (posture.limbooMcp) {
-    // Same trust decision Claude's canUseTool makes: the limboo_* tools are
+  // reading them never prompts (writes stay denied by the .zeus deny rule).
+  if (posture.attachmentsStaged) rules.push('Read(.zeus/attachments/**)');
+  if (posture.zeusMcp) {
+    // Same trust decision Claude's canUseTool makes: the zeus_* tools are
     // internal and strictly read-only, so they never prompt.
-    rules.push('Mcp(limboo_memory:*)', 'Mcp(limboo_search:*)');
+    rules.push('Mcp(zeus_memory:*)', 'Mcp(zeus_search:*)');
   }
   return rules;
 }

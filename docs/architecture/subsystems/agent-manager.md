@@ -3,7 +3,7 @@
 ## Purpose
 
 The Agent Manager orchestrates the coding agent. It is the single most important
-distinction in the architecture: Limboo is **not** the agent — it is the operating
+distinction in the architecture: Zeus is **not** the agent — it is the operating
 environment around it, the way a git GUI shells out to `git`. The agent
 (`@anthropic-ai/claude-agent-sdk`) owns reasoning and authentication; the Agent
 Manager owns the workspace boundary, the permission gate, memory injection, and the
@@ -24,7 +24,7 @@ with `managers/memory/memoryTools.ts`.
 
 `probeHealth()` checks for an existing sign-in (the `ANTHROPIC_API_KEY`,
 `ANTHROPIC_AUTH_TOKEN`, or `CLAUDE_CODE_OAUTH_TOKEN` env vars, or the Claude Code
-credentials file) and reports `AgentInstall`. Limboo stores no Anthropic
+credentials file) and reports `AgentInstall`. Zeus stores no Anthropic
 credentials. `retryAuth()` forces a re-probe after the user signs in again.
 
 The agent provider seam is **frozen** — see the

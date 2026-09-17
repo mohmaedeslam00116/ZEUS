@@ -39,7 +39,7 @@ Electron and never needs a `node-gyp` rebuild (see
 The shell is resolved from the workspace config, then the global terminal setting,
 then the OS default. Args add interactive flags for bash / zsh / sh. The environment
 is sanitized: it inherits the user PATH and adds `TERM=xterm-256color`,
-`LIMBOO_TERMINAL=1`, and `GIT_TERMINAL_PROMPT=0` (so git never blocks on a credential
+`ZEUS_TERMINAL=1`, and `GIT_TERMINAL_PROMPT=0` (so git never blocks on a credential
 prompt). Each terminal records its `origin` (`user`, `agent`, `hook`, or
 `service`). A terminal's `cwd` is the owning session's **effective root**
 (resolved through the [Worktree Manager](worktree-manager.md)), so terminals of

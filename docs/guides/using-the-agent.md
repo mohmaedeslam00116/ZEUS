@@ -1,35 +1,35 @@
 # Using the agent
 
-Limboo orchestrates a coding agent; it is not the agent itself. This guide explains
+Zeus orchestrates a coding agent; it is not the agent itself. This guide explains
 how to drive it: authentication, modes, permissions, and recovery. The internals are
 documented in the [Agent Manager architecture](../architecture/subsystems/agent-manager.md).
 
 ## The boundary
 
-Limboo is to the coding agent what a git GUI is to `git`: it shells out to a capable
+Zeus is to the coding agent what a git GUI is to `git`: it shells out to a capable
 engine and provides the environment around it. The agent (Claude Code, via
-`@anthropic-ai/claude-agent-sdk`) owns reasoning and authentication. Limboo owns the
+`@anthropic-ai/claude-agent-sdk`) owns reasoning and authentication. Zeus owns the
 workspace, the permission gate, memory injection, and the transcript.
 
 ## Authentication
 
-Limboo never stores credentials. It probes for an existing sign-in:
+Zeus never stores credentials. It probes for an existing sign-in:
 
 - environment variables: `ANTHROPIC_API_KEY`, `ANTHROPIC_AUTH_TOKEN`, or
   `CLAUDE_CODE_OAUTH_TOKEN`, or
 - the Claude Code credentials file in your home directory.
 
 If none is found, the agent reports an `auth-required` state. Sign in to Claude Code
-as usual, then use "retry auth" so Limboo re-probes. Questions about provider
-pricing or model behavior belong with the agent / provider, not Limboo.
+as usual, then use "retry auth" so Zeus re-probes. Questions about provider
+pricing or model behavior belong with the agent / provider, not Zeus.
 
 ### Connecting Cursor (preview)
 
 Settings › Agent › Providers has a **Cursor** card. Running Cursor agents arrives
 in a later update — connecting your account now just gets it ready. Two paths:
 
-- **Sign in** — Limboo runs `cursor-agent login`; the CLI authenticates in your
-  browser and keeps its own credentials (Limboo never reads or copies them).
+- **Sign in** — Zeus runs `cursor-agent login`; the CLI authenticates in your
+  browser and keeps its own credentials (Zeus never reads or copies them).
   Enable **Manual browser login** on remote/headless machines: the login URL is
   printed instead, with Copy URL / Open Browser actions.
 - **API key** — paste a key from the Cursor Dashboard. It is encrypted with the
@@ -78,7 +78,7 @@ files tree, git changes, a task list, an audit feed, and the terminal. See
 
 ## Checkpoints and safety
 
-Before the agent's first write or command in a run, Limboo creates a lightweight git
+Before the agent's first write or command in a run, Zeus creates a lightweight git
 checkpoint labeled "Before agent changes" (when auto-checkpoint is enabled), so you
 can restore the working tree instantly. See [Git workflow](git-workflow.md).
 
@@ -91,7 +91,7 @@ console records the lifecycle / request / recovery timeline.
 
 ## Memory injection
 
-When memory is enabled, Limboo retrieves the most relevant durable project knowledge
+When memory is enabled, Zeus retrieves the most relevant durable project knowledge
 for your prompt and injects it into the agent's system context before the prompt
 reaches the agent. The agent can also query memory through read-only tools. See
 [Memory system](memory-system.md).

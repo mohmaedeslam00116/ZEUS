@@ -35,7 +35,7 @@ export function UpdatesPanel() {
   return (
     <Section
       title="Updates"
-      hint="Limboo updates over HTTPS from its GitHub releases and verifies the signed installer before applying. No update credentials are stored."
+      hint="Zeus updates over HTTPS from its GitHub releases and verifies the signed installer before applying. No update credentials are stored."
     >
       <Field
         id="updateStatus"
@@ -53,7 +53,7 @@ export function UpdatesPanel() {
               status.stage === 'disabled' && status.disabledReason
               ? status.disabledReason
               : status.version && (status.stage === 'available' || status.stage === 'downloaded')
-                ? `Limboo ${status.version}${status.prerelease ? ' (beta)' : ''} ${
+                ? `Zeus ${status.version}${status.prerelease ? ' (beta)' : ''} ${
                     status.stage === 'downloaded' ? 'downloaded' : 'available'
                   }`
                 : // A prerelease build says so here, because "1.4.0-beta.1"

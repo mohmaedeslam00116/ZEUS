@@ -1,5 +1,5 @@
 /**
- * Answer the harness's permission requests using Limboo's own authority.
+ * Answer the harness's permission requests using Zeus's own authority.
  *
  * THE RULE: **`toolApproval` is a ROUTER; `decideToolUse` is the AUTHORITY.**
  * That was already the intent; this file is what finally makes it true.
@@ -18,11 +18,11 @@
  *    `tool-approval-request` and suspend the turn.
  *  - Custom host tools are gated by listing every one as `'user-approval'` in
  *    the map, which makes the framework emit the same request kind.
- *  - Both kinds land in {@link resolveApproval}, which asks Limboo and returns
+ *  - Both kinds land in {@link resolveApproval}, which asks Zeus and returns
  *    the continuation that resumes the turn.
  *
  * Nothing in the map is ever `'approved'` or `'auto-approve'`. Every
- * auto-approval Limboo grants — `autoApproveReads`, `permissionMode: 'auto'`,
+ * auto-approval Zeus grants — `autoApproveReads`, `permissionMode: 'auto'`,
  * trusted MCP servers, remembered per-risk choices, the staged-attachment
  * carve-out, `acceptEdits` writes — is a judgement `decideToolUseCore` makes
  * with the tool's inputs, the workspace root, the crown-jewel floor and the
@@ -80,7 +80,7 @@ export interface HarnessApprovalDeps {
  * Every custom/host tool routes to the gate.
  *
  * `'user-approval'` does NOT mean "always show a dialog" — it means "ask
- * Limboo", and Limboo answers without prompting whenever its own policy says
+ * Zeus", and Zeus answers without prompting whenever its own policy says
  * so. With no host tools this is `{}`, which is honest: there is nothing to
  * route. Built-ins are covered by `permissionMode`, not by this map.
  */
@@ -131,6 +131,6 @@ export async function resolveApproval(
     // FAIL CLOSED. A gate that threw authorized nothing, and letting the
     // rejection escape would surface as a crashed run rather than a refused
     // tool — which reads to the user as a bug instead of a decision.
-    return deny(err instanceof Error ? err.message : 'Limboo could not evaluate this tool call.');
+    return deny(err instanceof Error ? err.message : 'Zeus could not evaluate this tool call.');
   }
 }

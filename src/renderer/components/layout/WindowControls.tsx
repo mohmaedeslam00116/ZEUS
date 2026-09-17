@@ -1,6 +1,6 @@
 /**
  * Custom window controls (minimize / maximize-restore / close) for the frameless
- * window. Wired to the main process through `window.limboo.window.*`; the
+ * window. Wired to the main process through `window.zeus.window.*`; the
  * maximize icon swaps to "restore" in sync with the real window state.
  */
 import { useEffect, useState } from 'react';
@@ -12,7 +12,7 @@ export function WindowControls() {
   const [isMax, setIsMax] = useState(false);
 
   useEffect(() => {
-    const api = window.limboo?.window;
+    const api = window.zeus?.window;
     if (!api) return;
     void api.isMaximized().then(setIsMax);
     return api.onMaximizedChange(setIsMax);
@@ -20,16 +20,16 @@ export function WindowControls() {
 
   return (
     <div className="no-drag flex h-10 items-stretch">
-      <WindowButton label="Minimize" onClick={() => window.limboo?.window.minimize()}>
+      <WindowButton label="Minimize" onClick={() => window.zeus?.window.minimize()}>
         <Minus size={15} />
       </WindowButton>
       <WindowButton
         label={isMax ? 'Restore' : 'Maximize'}
-        onClick={() => window.limboo?.window.maximize()}
+        onClick={() => window.zeus?.window.maximize()}
       >
         {isMax ? <Copy size={12} /> : <Square size={12} />}
       </WindowButton>
-      <WindowButton label="Close" danger onClick={() => window.limboo?.window.close()}>
+      <WindowButton label="Close" danger onClick={() => window.zeus?.window.close()}>
         <X size={15} />
       </WindowButton>
     </div>

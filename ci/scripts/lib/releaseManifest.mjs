@@ -26,7 +26,7 @@ import { parseCompareLinks, parseSections, parseSummary, versionIndex } from './
  * Where this project publishes. Used to synthesize the tag/release URLs that
  * nobody writes into the changelog by hand.
  */
-export const RELEASE_REPO = 'limboo-ai/limboo';
+export const RELEASE_REPO = 'mohmaedeslam00116/ZEUS';
 const RELEASE_BASE = `https://github.com/${RELEASE_REPO}`;
 
 /**

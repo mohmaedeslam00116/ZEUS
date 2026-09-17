@@ -1,6 +1,6 @@
 /**
  * OS-level containment for the local sandbox provider (defense-in-depth
- * Layer 3). Translates Limboo's ONE provider-neutral policy
+ * Layer 3). Translates Zeus's ONE provider-neutral policy
  * ({@link EffectiveSandbox}, resolved in `sandbox/policy.ts`) into an argv
  * prefix that wraps every command the harness runs.
  *

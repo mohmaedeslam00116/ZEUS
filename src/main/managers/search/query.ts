@@ -162,7 +162,7 @@ const FILE_LANG: Record<string, string> = {
   '.gitignore': 'gitignore',
   '.gitattributes': 'gitignore',
   '.env': 'ini',
-  'limboo.json': 'json',
+  'zeus.json': 'json',
 };
 
 /** True for text extensions treated as documentation (drives the `doc` kind). */

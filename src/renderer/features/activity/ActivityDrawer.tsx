@@ -60,7 +60,7 @@ function FilesHeaderActions() {
         label="Reveal in file explorer"
         size="sm"
         disabled={!activeId}
-        onClick={() => activeId && void window.limboo?.fs?.reveal(activeId)}
+        onClick={() => activeId && void window.zeus?.fs?.reveal(activeId)}
         className="disabled:pointer-events-none disabled:opacity-50"
       >
         <FolderOpen size={13} />

@@ -152,7 +152,7 @@ export function WorkspaceSwitcher() {
                       mouse is not reachable. */}
                   <IconButton
                     size="sm"
-                    label={`Remove ${ws.name} from Limboo`}
+                    label={`Remove ${ws.name} from Zeus`}
                     className="opacity-0 transition-opacity hover:text-danger focus-visible:opacity-100 group-hover:opacity-100"
                     onClick={() => requestRemove(ws)}
                   >

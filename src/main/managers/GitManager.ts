@@ -6,7 +6,7 @@
  * Design (project.md / CLAUDE.md): git is treated as a *timeline of the work*, not
  * a bag of commands. This manager exposes status, diffs, staging, commits,
  * history, branches, tags, blame, and — its defining capability — lightweight
- * **checkpoints** stored as dedicated refs under `refs/limboo/checkpoints/*` so an
+ * **checkpoints** stored as dedicated refs under `refs/zeus/checkpoints/*` so an
  * agent's work is always recoverable without polluting real history.
  *
  * Security: all git runs go through {@link runGit} (argv-only, fixed cwd, no
@@ -149,7 +149,7 @@ export class GitManager {
    * `Bash("git …")` — it never enters this class, and it already renders as a
    * tool row with its own output, so recording it here too would double the
    * timeline (the mistake `MARKER_TYPES` documents by excluding `'tool'`). The
-   * one operation Limboo performs on the AGENT's behalf is the auto-checkpoint,
+   * one operation Zeus performs on the AGENT's behalf is the auto-checkpoint,
    * which `AgentManager` records itself with `origin: 'agent'`.
    */
   private activityRecorder?: {
@@ -182,7 +182,7 @@ export class GitManager {
   /**
    * Record against a KNOWN session rather than the active one. Checkpoints
    * already carry their session id, and `createCheckpoint`'s `auto` flag is the
-   * honest origin signal: an auto-checkpoint is the one git operation Limboo
+   * honest origin signal: an auto-checkpoint is the one git operation Zeus
    * performs on the agent's behalf.
    */
   private recordActivityFor(
@@ -864,7 +864,7 @@ export class GitManager {
     const root = await this.resolveRoot(workspaceId);
     const cp = this.checkpointById(checkpointId);
     if (!root || !cp) return none;
-    const tmpIndex = path.join(os.tmpdir(), `limboo-preview-${crypto.randomUUID()}.index`);
+    const tmpIndex = path.join(os.tmpdir(), `zeus-preview-${crypto.randomUUID()}.index`);
     try {
       const now = await this.snapshotTree(root, tmpIndex);
       if (!now) return none;
@@ -906,29 +906,29 @@ export class GitManager {
     if (!root) return null;
 
     const status = await this.status(workspaceId);
-    const tmpIndex = path.join(os.tmpdir(), `limboo-ckpt-${crypto.randomUUID()}.index`);
+    const tmpIndex = path.join(os.tmpdir(), `zeus-ckpt-${crypto.randomUUID()}.index`);
     const env = { GIT_INDEX_FILE: tmpIndex };
     try {
       const head = await gitText(root, ['rev-parse', '--verify', 'HEAD']);
       const tree = await this.snapshotTree(root, tmpIndex);
       if (!tree) throw new Error('git write-tree failed');
 
-      const commitArgs = ['commit-tree', tree, '-m', `[limboo checkpoint] ${label}`];
+      const commitArgs = ['commit-tree', tree, '-m', `[zeus checkpoint] ${label}`];
       if (head) commitArgs.push('-p', head);
       // Always supply an identity so commit-tree never fails on missing config.
       const g = this.settings.getAll().git;
       const identityEnv = {
-        GIT_AUTHOR_NAME: g.userName.trim() || 'Limboo Checkpoint',
-        GIT_AUTHOR_EMAIL: g.userEmail.trim() || 'checkpoint@limboo.local',
-        GIT_COMMITTER_NAME: g.userName.trim() || 'Limboo Checkpoint',
-        GIT_COMMITTER_EMAIL: g.userEmail.trim() || 'checkpoint@limboo.local',
+        GIT_AUTHOR_NAME: g.userName.trim() || 'Zeus Checkpoint',
+        GIT_AUTHOR_EMAIL: g.userEmail.trim() || 'checkpoint@zeus.local',
+        GIT_COMMITTER_NAME: g.userName.trim() || 'Zeus Checkpoint',
+        GIT_COMMITTER_EMAIL: g.userEmail.trim() || 'checkpoint@zeus.local',
       };
       const commitRes = await runGit(root, commitArgs, { env: { ...env, ...identityEnv } });
       if (!commitRes.ok) throw new Error(commitRes.stderr || 'git commit-tree failed');
       const commitHash = commitRes.stdout.trim();
 
       const ts = Date.now();
-      const ref = `refs/limboo/checkpoints/${sessionId}/${ts}`;
+      const ref = `refs/zeus/checkpoints/${sessionId}/${ts}`;
       const upd = await runGit(root, ['update-ref', ref, commitHash]);
       if (!upd.ok) throw new Error(upd.stderr || 'git update-ref failed');
 
@@ -973,7 +973,7 @@ export class GitManager {
       });
       this.graph?.onCheckpoint(sessionId, checkpoint, 'create');
       // `auto` is the honest origin signal: an auto-checkpoint is the one git
-      // operation Limboo performs on the AGENT's behalf.
+      // operation Zeus performs on the AGENT's behalf.
       this.recordActivityFor(
         sessionId,
         {
@@ -1045,7 +1045,7 @@ export class GitManager {
     const root = await this.requireRoot(workspaceId);
     const cp = this.checkpointById(checkpointId);
     if (!cp) return [];
-    const tmpIndex = path.join(os.tmpdir(), `limboo-cpdiff-${crypto.randomUUID()}.index`);
+    const tmpIndex = path.join(os.tmpdir(), `zeus-cpdiff-${crypto.randomUUID()}.index`);
     try {
       const now = await this.snapshotTree(root, tmpIndex);
       if (!now) return [];
@@ -1299,7 +1299,7 @@ function rowToCheckpoint(row: CheckpointRow): GitCheckpoint {
 
 /**
  * Decode `git push` stderr into structured flags. Credentials are never stored
- * by Limboo, so an auth failure is surfaced as guidance to configure the system
+ * by Zeus, so an auth failure is surfaced as guidance to configure the system
  * credential helper / SSH agent rather than a raw error.
  */
 function classifyPushError(stderr: string): Partial<GitPushResult> {

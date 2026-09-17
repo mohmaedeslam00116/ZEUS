@@ -29,7 +29,7 @@ export class HarnessBootstrapFailedError extends Error {
 
   constructor(label: string, detail: string) {
     super(
-      `${label}'s one-time setup did not complete. Limboo ran the commands you ` +
+      `${label}'s one-time setup did not complete. Zeus ran the commands you ` +
         'approved and one of them failed, so no agent was started. The setup ' +
         `step reported:\n\n${detail}`,
     );
@@ -97,7 +97,7 @@ export function classifyHarnessRefusal(
 }
 
 /**
- * The adapter cannot ask Limboo for permission before a built-in tool edits a
+ * The adapter cannot ask Zeus for permission before a built-in tool edits a
  * file or runs a command.
  *
  * Thrown as a PREFLIGHT, before the first turn. An adapter that does not
@@ -109,15 +109,15 @@ export function classifyHarnessRefusal(
  *
  * The framework raises its own error for this condition, but its message
  * suggests setting `allow-all` as the remedy, which is precisely the unsafe
- * thing. Hence a Limboo-owned error with a Limboo-owned message.
+ * thing. Hence a Zeus-owned error with a Zeus-owned message.
  */
 export class HarnessUngatedError extends Error {
   readonly name = 'HarnessUngatedError';
 
   constructor(label: string) {
     super(
-      `${label} cannot ask Limboo for permission before it edits files or runs ` +
-        'commands, so Limboo will not run it. This is a limitation of the ' +
+      `${label} cannot ask Zeus for permission before it edits files or runs ` +
+        'commands, so Zeus will not run it. This is a limitation of the ' +
         'harness adapter, not a setting you can change.',
     );
   }
@@ -127,7 +127,7 @@ export class HarnessUngatedError extends Error {
  * The run's own sandbox network policy makes the adapter's one-time bootstrap
  * impossible.
  *
- * The bootstrap installs the agent CLI from the npm registry, and Limboo's
+ * The bootstrap installs the agent CLI from the npm registry, and Zeus's
  * sandbox policy is authoritative — it refuses to be widened by a provider. So
  * `network: 'off'` (or an allowlist without the registry) cannot be reconciled
  * with a first-run bootstrap. Detected up front and named, because the
@@ -146,9 +146,9 @@ export class HarnessBootstrapBlockedError extends Error {
  * The user has not acknowledged the adapter's bootstrap commands.
  *
  * The bootstrap runs third-party commands and reaches the npm registry from the
- * user's machine — the only place Limboo does that outside its two documented
+ * user's machine — the only place Zeus does that outside its two documented
  * outbound requests — so it requires the same explicit, verbatim-command
- * consent that repo-authored `limboo.json` hooks do. No ack, no bootstrap.
+ * consent that repo-authored `zeus.json` hooks do. No ack, no bootstrap.
  */
 export class HarnessConsentRequiredError extends Error {
   readonly name = 'HarnessConsentRequiredError';
@@ -182,9 +182,9 @@ export class HarnessBootstrapUnreadableError extends Error {
 
   constructor(label: string, detail: string) {
     super(
-      `${label} has a one-time setup step but could not describe it, so Limboo ` +
+      `${label} has a one-time setup step but could not describe it, so Zeus ` +
         'will not run it — approving commands it cannot read is not something ' +
-        `Limboo can ask you to do. The adapter reported: ${detail}`,
+        `Zeus can ask you to do. The adapter reported: ${detail}`,
     );
   }
 }

@@ -2,7 +2,7 @@
  * MCP store — the renderer-side mirror of the main-process McpManager. Holds the
  * active-scope server list (global + active workspace) with live runtime, and
  * mirrors `mcp:servers-changed` (full list) + `mcp:server-status` (one server's
- * runtime) pushes. All mutations go through `window.limboo.mcp`; in a plain
+ * runtime) pushes. All mutations go through `window.zeus.mcp`; in a plain
  * browser preview (no preload) it degrades to empty state. Secrets never cross —
  * the list carries only the `secret: true` flag, never a plaintext value.
  */
@@ -30,7 +30,7 @@ interface McpState {
 }
 
 function mcpApi() {
-  return window.limboo?.mcp;
+  return window.zeus?.mcp;
 }
 
 function toastError(title: string, err: unknown): void {

@@ -27,7 +27,7 @@ export function WorkspaceSkyline({ className }: { className?: string }) {
 
   return (
     <div
-      className={cn('limboo-skyline group relative z-0 w-full select-none overflow-hidden', className)}
+      className={cn('zeus-skyline group relative z-0 w-full select-none overflow-hidden', className)}
       aria-hidden
     >
       <svg
@@ -37,7 +37,7 @@ export function WorkspaceSkyline({ className }: { className?: string }) {
         xmlns="http://www.w3.org/2000/svg"
       >
         <defs>
-          <filter id="limboo-skyline-liquid" x="-20%" y="-20%" width="140%" height="140%">
+          <filter id="zeus-skyline-liquid" x="-20%" y="-20%" width="140%" height="140%">
             <feTurbulence
               type="fractalNoise"
               baseFrequency="0.005 0.012"
@@ -48,8 +48,8 @@ export function WorkspaceSkyline({ className }: { className?: string }) {
               {!reduced && (
                 <animate
                   attributeName="baseFrequency"
-                  begin="limboo-skyline-root.mouseover"
-                  end="limboo-skyline-root.mouseout"
+                  begin="zeus-skyline-root.mouseover"
+                  end="zeus-skyline-root.mouseout"
                   dur="7s"
                   values="0.005 0.008;0.008 0.02;0.005 0.008"
                   repeatCount="indefinite"
@@ -60,8 +60,8 @@ export function WorkspaceSkyline({ className }: { className?: string }) {
               {!reduced && (
                 <animate
                   attributeName="scale"
-                  begin="limboo-skyline-root.mouseover"
-                  end="limboo-skyline-root.mouseout"
+                  begin="zeus-skyline-root.mouseover"
+                  end="zeus-skyline-root.mouseout"
                   dur="2.4s"
                   values="0;16;9;16;0"
                   repeatCount="indefinite"
@@ -72,7 +72,7 @@ export function WorkspaceSkyline({ className }: { className?: string }) {
         </defs>
 
         {/* Hover target spans the whole graphic so the ripple triggers anywhere. */}
-        <g id="limboo-skyline-root">
+        <g id="zeus-skyline-root">
           {/* Transparent hit area (the path itself has gaps between bars). */}
           <rect x="0" y="0" width="1440" height="320" fill="transparent" />
           {/* Back layer: fainter + offset for a sense of depth. */}
@@ -83,7 +83,7 @@ export function WorkspaceSkyline({ className }: { className?: string }) {
             opacity={0.7}
           />
           {/* Front layer: the silhouette that ripples on hover. */}
-          <g className="limboo-skyline-bars" filter="url(#limboo-skyline-liquid)">
+          <g className="zeus-skyline-bars" filter="url(#zeus-skyline-liquid)">
             <path d={SKYLINE_PATH} style={{ fill: 'var(--color-surface-2)' }} />
           </g>
         </g>

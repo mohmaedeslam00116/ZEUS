@@ -86,7 +86,7 @@ if (path.resolve(app.getPath('userData')) !== path.resolve(expectedUserData)) {
 
 // One stable Windows identity for the taskbar, notifications, and the installer
 // (must match electron-builder.yml `appId`). Harmless on other platforms.
-app.setAppUserModelId('dev.limboo.app');
+app.setAppUserModelId('dev.zeus.app');
 
 installGlobalErrorHandlers();
 
@@ -201,7 +201,7 @@ function bootstrap(): void {
     // git / file-watcher / search all consult it instead of deriving paths.
     worktrees = new WorktreeManager(workspace, sessions, settings);
     worktrees.setTerminalManager(terminal);
-    // Scripts & Services — supervised per-session processes from limboo.json.
+    // Scripts & Services — supervised per-session processes from zeus.json.
     // Stopped before any worktree removal (open handles = EBUSY on Windows).
     services = new ServiceManager(sessions, settings);
     services.setTerminalManager(terminal);
@@ -236,7 +236,7 @@ function bootstrap(): void {
     hooks = new HookEngine(settings);
     // The OPTIONAL GitHub CLI integration. `gh` is detected, never required:
     // when it is absent or logged out the GitHub surface hides itself and
-    // nothing else changes. Limboo stores no GitHub credential — auth belongs
+    // nothing else changes. Zeus stores no GitHub credential — auth belongs
     // entirely to the CLI (see managers/gh/exec.ts).
     gh = new GhManager(workspace, settings);
     // In-app updater (electron-updater + GitHub releases). No-op in dev / non-AppImage.
@@ -262,7 +262,7 @@ function bootstrap(): void {
     // provider actually reports and omits what it does not. Purely additive:
     // like the Work Graph it only observes, and every ingestion path swallows.
     runtime = new RuntimeTelemetryManager(settings, sessions);
-    // The Limboo-owned half of a snapshot. Plain getters rather than manager
+    // The Zeus-owned half of a snapshot. Plain getters rather than manager
     // injections — this needs one fact from each subsystem, and the worktree
     // path is deliberately relativized here so an absolute $HOME path can never
     // reach a snapshot or an export.
@@ -399,7 +399,7 @@ function bootstrap(): void {
     // search scope). The resolvers are cheap, synchronous DB lookups.
     agent.setSessionRootResolver((sessionId) => worktrees.resolveSessionRoot(sessionId));
     // Cursor runs: the runtime + auth gate, plus the repo-trust resolver that
-    // decides `--trust` — trusted when the repo has no limboo.json (nothing
+    // decides `--trust` — trusted when the repo has no zeus.json (nothing
     // repo-authored to distrust) or the user acked its hash (the existing
     // HooksConfirmDialog gate). Never passed blindly.
     agent.setCursorRuntime(cursorRuntime);
@@ -431,7 +431,7 @@ function bootstrap(): void {
       // Credential var NAMES the harness that will actually run reads. Resolved
       // through `harnessIdForRun` — the harness follows the MODEL — so a Codex
       // or Pi run gets its own keys instead of Claude's. Forwarded only when the
-      // user's own environment already has them; Limboo stores none.
+      // user's own environment already has them; Zeus stores none.
       envKeysFor: () => harnessById(harnessIdForRun(settings.getAll().agent))?.envKeys ?? [],
       // Only consulted to decide whether a session may fall back to the
       // worktree's parent when the private state root cannot be prepared.
@@ -516,7 +516,7 @@ function bootstrap(): void {
     // Work Graph: AgentManager is the one place both adapters converge, and it
     // swallows sink throws, so telemetry can never break a run.
     runtime.start(agent);
-    // Observe Limboo's OWN MCP tools. Both providers call the same PlainTool
+    // Observe Zeus's OWN MCP tools. Both providers call the same PlainTool
     // handlers, so this one hook covers the SDK in-process servers (Claude) and
     // the stdio bridge dispatcher (Cursor). Enrichment only — these calls
     // already arrive as tool events, so this adds real durations, not nodes.
@@ -610,7 +610,7 @@ function bootstrap(): void {
 
     /**
      * Focus the main window, recreating it if it is gone. Shared by the tray and
-     * by macOS `activate` so "Show Limboo" can never be a silent no-op.
+     * by macOS `activate` so "Show Zeus" can never be a silent no-op.
      */
     const showOrCreateWindow = (): void => {
       const existing = getMainWindow();
@@ -638,7 +638,7 @@ function bootstrap(): void {
       if (trayHintShown) return;
       trayHintShown = true;
       notifications.notify({
-        title: 'Limboo is still running',
+        title: 'Zeus is still running',
         body: 'The window was hidden to the system tray. Open it again from the tray icon.',
       });
     };
@@ -653,7 +653,7 @@ function bootstrap(): void {
      * vanished because the whole app had quit.
      *
      * The `tray.isActive()` guard is not defensive noise. Swallowing the close on
-     * a desktop where the tray never appeared would leave Limboo running with no
+     * a desktop where the tray never appeared would leave Zeus running with no
      * window and no icon — unreachable and unquittable. Quitting is the correct
      * behaviour there, whatever the setting says.
      */
@@ -675,7 +675,7 @@ function bootstrap(): void {
     tray.init({ showWindow: showOrCreateWindow, quit: requestQuit });
     attachCloseToTray(win);
 
-    logger.info('Limboo main process ready');
+    logger.info('Zeus main process ready');
 
     app.on('activate', () => {
       if (BrowserWindow.getAllWindows().length === 0) showOrCreateWindow();

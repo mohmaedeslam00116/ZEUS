@@ -67,7 +67,7 @@ interface LayoutState {
 }
 
 const persist = debounce((layout: Partial<LayoutState>) => {
-  void window.limboo?.settings.set({
+  void window.zeus?.settings.set({
     layout: {
       leftWidth: layout.leftWidth,
       rightWidth: layout.rightWidth,

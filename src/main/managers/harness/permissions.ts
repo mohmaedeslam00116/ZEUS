@@ -2,11 +2,11 @@
  * Composer mode → the harness's built-in permission mode.
  *
  * This is the single most important line of configuration on the harness path,
- * because `permissionMode` is what decides whether the adapter asks Limboo for
+ * because `permissionMode` is what decides whether the adapter asks Zeus for
  * permission at all. It governs **built-in** tools (read/write/edit/bash/…);
  * `toolApproval` governs only custom host tools. Leaving it unset means
  * `'allow-all'`, under which the adapter emits NO approval requests and every
- * built-in file write and shell command runs with Limboo's permission gate
+ * built-in file write and shell command runs with Zeus's permission gate
  * bypassed entirely.
  *
  * Every mode maps to `'allow-reads'`, and that is deliberate, not lazy. The
@@ -28,7 +28,7 @@
  *  - `acceptEdits` needs `allow-reads` too, NOT the apparently-matching
  *    `allow-edits`. Skipping the gate for writes would lose the crown-jewel
  *    guard, the sensitive-file consent, the workspace containment check, the
- *    Work Graph approval node and the timeline audit row. Limboo's own gate
+ *    Work Graph approval node and the timeline audit row. Zeus's own gate
  *    already auto-approves edits in this mode, so the only cost of gating is
  *    one suspend/continue round-trip per edit — and that round-trip is cheap
  *    (the CLI child stays alive; the continuation just resolves the promise the
@@ -51,7 +51,7 @@ export function harnessPermissionMode(mode: SessionPermissionMode): HarnessPermi
     case 'default':
     case 'acceptEdits':
       // See the header: this is the only value that routes both edits and shell
-      // commands (and therefore ExitPlanMode) through Limboo's gate.
+      // commands (and therefore ExitPlanMode) through Zeus's gate.
       return 'allow-reads';
     default: {
       const never: never = mode;

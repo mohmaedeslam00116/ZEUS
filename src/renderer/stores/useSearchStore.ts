@@ -40,7 +40,7 @@ interface SearchState {
 }
 
 function api() {
-  return window.limboo?.search;
+  return window.zeus?.search;
 }
 
 function activeWs(): string | null {
@@ -69,7 +69,7 @@ export const useSearchStore = create<SearchState>((set, get) => ({
       if (progress.phase === 'done' && get().query.trim()) void get().run(get().query);
     });
     void get().refresh();
-    window.limboo?.workspace.onChanged(() => {
+    window.zeus?.workspace.onChanged(() => {
       set({ query: '', groups: [], kindFilter: null });
       void get().refresh();
     });

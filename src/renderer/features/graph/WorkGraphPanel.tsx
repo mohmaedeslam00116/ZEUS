@@ -240,7 +240,7 @@ export function WorkGraphPanel() {
       if (toFile) {
         // The image formats always capture the whole canvas: they are a picture
         // of the layout, and there is no partial layout to render.
-        const res = await window.limboo?.graph.save(
+        const res = await window.zeus?.graph.save(
           sessionId,
           // svg/png were materialized into `image` above and never reach the
           // main-process data exporter — narrow the target to the data formats.
@@ -274,7 +274,7 @@ export function WorkGraphPanel() {
           `this export is ${Math.ceil(text.length / 1000)} kB — use "Save to file" instead`,
         );
       }
-      await window.limboo?.system.clipboardWrite(text);
+      await window.zeus?.system.clipboardWrite(text);
       addToast({
         title: `Work Graph copied as ${format.toUpperCase()}`,
         description: `${Math.ceil(text.length / 1000)} kB on your clipboard.`,

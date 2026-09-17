@@ -43,7 +43,7 @@ export const useUpdateStore = create<UpdateState>((set, get) => ({
   hydrate: () => {
     if (get().hydrated) return;
     set({ hydrated: true });
-    const api = window.limboo?.updates;
+    const api = window.zeus?.updates;
     if (!api) {
       set({ status: { stage: 'disabled', currentVersion: '' } });
       return;
@@ -68,7 +68,7 @@ export const useUpdateStore = create<UpdateState>((set, get) => ({
   },
 
   check: async () => {
-    const api = window.limboo?.updates;
+    const api = window.zeus?.updates;
     if (!api) return;
     set({ busy: true });
     try {
@@ -82,7 +82,7 @@ export const useUpdateStore = create<UpdateState>((set, get) => ({
   // process never emits (the download throws before its first progress event),
   // relying on the push alone leaves the Download button disabled forever.
   download: async () => {
-    const api = window.limboo?.updates;
+    const api = window.zeus?.updates;
     if (!api) return;
     set({ busy: true });
     try {
@@ -96,7 +96,7 @@ export const useUpdateStore = create<UpdateState>((set, get) => ({
   // failed to launch). It used to fail silently, which is indistinguishable from
   // a dead button — always say something.
   install: async () => {
-    const api = window.limboo?.updates;
+    const api = window.zeus?.updates;
     if (!api) return;
     const result = await api.install();
     if (result && !result.ok) {

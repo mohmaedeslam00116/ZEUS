@@ -24,7 +24,7 @@ export interface RequestUsage {
   outputTokens: number;
 }
 
-/** Character counts of the blocks Limboo itself composed for a prompt. */
+/** Character counts of the blocks Zeus itself composed for a prompt. */
 export interface InjectedContextChars {
   memory: number;
   search: number;

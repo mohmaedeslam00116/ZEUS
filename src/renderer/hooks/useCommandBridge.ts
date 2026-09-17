@@ -8,7 +8,7 @@ import { runCommand } from '@/renderer/lib/commands';
 
 export function useCommandBridge(): void {
   useEffect(() => {
-    const events = window.limboo?.events;
+    const events = window.zeus?.events;
     if (!events) return;
     return events.onCommand((id) => runCommand(id));
   }, []);

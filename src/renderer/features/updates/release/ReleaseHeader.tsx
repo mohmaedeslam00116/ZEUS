@@ -30,7 +30,7 @@ export function ReleaseHeader({
     <header className="flex flex-col gap-3 rounded-md border border-line bg-surface p-4">
       <div className="flex flex-wrap items-center gap-2">
         <h1 className="text-[18px] font-semibold tracking-tight text-fg">
-          Limboo {manifest.version}
+          Zeus {manifest.version}
         </h1>
         {manifest.codename && (
           <span className="text-[13px] text-muted">&ldquo;{manifest.codename}&rdquo;</span>
@@ -59,7 +59,7 @@ export function ReleaseHeader({
             This version is published for testing ahead of a stable release. It may contain
             bugs, unfinished features, and changes that are reverted before release. Settings
             and session data are migrated forward but not back, so a build made after this one
-            may not read data this one wrote. Keep a stable install if you rely on Limboo for
+            may not read data this one wrote. Keep a stable install if you rely on Zeus for
             work you cannot repeat.
           </p>
         </div>

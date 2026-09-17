@@ -11,7 +11,7 @@ deriving paths itself. See the [Git workflow guide](../../guides/git-workflow.md
 
 Source: [`src/main/managers/worktree/WorktreeManager.ts`](../../../src/main/managers/worktree/WorktreeManager.ts)
 (+ [`paths.ts`](../../../src/main/managers/worktree/paths.ts) containment guards,
-[`config.ts`](../../../src/main/managers/worktree/config.ts) `limboo.json` parsing).
+[`config.ts`](../../../src/main/managers/worktree/config.ts) `zeus.json` parsing).
 
 ## Responsibilities
 
@@ -31,7 +31,7 @@ Source: [`src/main/managers/worktree/WorktreeManager.ts`](../../../src/main/mana
   UI offers **Recreate** — from the surviving branch or base ref — or
   **Detach**) and runs `git worktree repair` + `prune` per repository. A failed
   recreate restores the recorded branch/base metadata so it stays retryable.
-- Trust gate for `limboo.json` (see the [reference](../../reference/limboo-json.md)):
+- Trust gate for `zeus.json` (see the [reference](../../reference/zeus-json.md)):
   `ackConfig` persists a per-workspace hash acknowledgment of the exact
   displayed commands; `runSetup` acks then streams setup hooks through visible
   terminals; teardown runs only while the ack still matches the current hash.

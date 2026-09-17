@@ -1,11 +1,11 @@
 # Sessions
 
-A session is the unit of work in Limboo. Everything you do happens inside one. This
+A session is the unit of work in Zeus. Everything you do happens inside one. This
 page explains what a session is and why the whole application is organized around it.
 
 ## Why sessions
 
-Traditional IDEs organize work around files and windows. Limboo organizes it around
+Traditional IDEs organize work around files and windows. Zeus organizes it around
 sessions, because an AI development task is not "edit this file" — it is a unit of
 intent ("implement authentication") that spans many files, commands, and decisions.
 A session captures the entire context of that intent in one place, so you can leave
@@ -25,7 +25,7 @@ A session bundles, for one workspace:
 - execution history,
 - optionally, a dedicated **git worktree** (its own checkout directory +
   branch) and the **services** declared by the repo's
-  [limboo.json](../reference/limboo-json.md).
+  [zeus.json](../reference/zeus-json.md).
 
 Instead of opening many windows, everything lives inside one workspace view: the
 left sidebar lists sessions, the center is the conversation, and the right drawer
@@ -43,7 +43,7 @@ and services — proceed in parallel without contending for one working tree.
 - Everything that executes for the session (agent, terminals, git, search,
   file watching) runs in its **effective root** — the worktree while it is
   healthy, the workspace checkout otherwise.
-- If the worktree directory vanishes outside Limboo, the session is flagged
+- If the worktree directory vanishes outside Zeus, the session is flagged
   `missing` and a banner offers **Recreate** (from the surviving branch or the
   base ref) or **Detach** (revert to a plain session).
 - Archiving can optionally tear the directory down (`teardownOnArchive`) while
@@ -85,7 +85,7 @@ cards. The active row uses a left accent bar.
 - The **Worktree Manager** owns each session's checkout lifecycle and resolves
   its effective execution root for every other manager.
 - The **Service Manager** supervises the session's declared dev services and
-  scripts (the strip under the session header), gated behind the limboo.json
+  scripts (the strip under the session header), gated behind the zeus.json
   approval dialog.
 
 ## See also

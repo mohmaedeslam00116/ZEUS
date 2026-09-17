@@ -25,7 +25,7 @@ export type HarnessSettingsShape = 'claude-code' | 'codex' | 'pi';
 export interface AdapterSettingsInput {
   model: string;
   maxTurns: number;
-  /** Native-format MCP server definitions, when Limboo has any to offer. */
+  /** Native-format MCP server definitions, when Zeus has any to offer. */
   mcpServers?: Record<string, unknown>;
   /** Composer mode, for adapters that expose a reasoning/thinking dial. */
   mode: SessionPermissionMode;
@@ -48,7 +48,7 @@ export function buildAdapterSettings(
   input: AdapterSettingsInput,
 ): Record<string, unknown> {
   const mcp = input.mcpServers ? { mcpServers: input.mcpServers } : {};
-  // A `:default` id is Limboo's way of saying "the adapter picks" — omitting
+  // A `:default` id is Zeus's way of saying "the adapter picks" — omitting
   // the key is how the adapters document that, and sending the sentinel itself
   // would put a fake model id on a real API call.
   const model = isAdapterDefaultModel(input.model) ? {} : { model: input.model };
@@ -63,7 +63,7 @@ export function buildAdapterSettings(
     case 'codex':
       // No `maxTurns` — the agent loop is bounded by `stopWhen` instead. `port`
       // is deliberately NOT set: the adapter takes the first port the sandbox
-      // declares, and Limboo's provider only ever hands out loopback ones, so
+      // declares, and Zeus's provider only ever hands out loopback ones, so
       // naming a port here could only ever be wrong.
       return {
         ...model,
@@ -73,7 +73,7 @@ export function buildAdapterSettings(
       };
     case 'pi':
       // Host-process: no bridge, no port, no bootstrap. `extensionFactories` is
-      // never passed — it loads arbitrary code into Limboo's own process, which
+      // never passed — it loads arbitrary code into Zeus's own process, which
       // is not something a settings toggle should be able to do. `agentDir` is
       // left at its default so Pi keeps its state outside the worktree.
       return {

@@ -1,6 +1,6 @@
 # Git workflow
 
-Limboo includes a deep git engine that runs entirely in the main process. This guide
+Zeus includes a deep git engine that runs entirely in the main process. This guide
 covers the day-to-day workflow; the engine internals are in the
 [Git Engine architecture](../architecture/subsystems/git-engine.md).
 
@@ -40,7 +40,7 @@ branch with uncommitted changes can be guarded by a confirmation setting.
   unpushed badge on the Git rail tab.
 - **Pull** uses your configured strategy (`ff-only` or `rebase`).
 
-Network operations rely on your own credential helper or SSH agent. Limboo stores no
+Network operations rely on your own credential helper or SSH agent. Zeus stores no
 remote credentials, and embedded-credential remote URLs are redacted from results and
 logs. Push and pull errors are classified into structured outcomes (no upstream,
 rejected / needs pull, not fast-forward, conflicts, auth failed) so the UI can guide
@@ -48,8 +48,8 @@ the next step.
 
 ## Checkpoints
 
-Checkpoints are Limboo's lightweight, per-session recovery points. They are stored as
-git refs under a private `refs/limboo/checkpoints/...` namespace, so they never land
+Checkpoints are Zeus's lightweight, per-session recovery points. They are stored as
+git refs under a private `refs/zeus/checkpoints/...` namespace, so they never land
 on a branch and are never pushed.
 
 - The agent auto-creates a checkpoint before its first change in a run (when
@@ -68,30 +68,30 @@ directory and branch via `git worktree add`, so several sessions can proceed in
 parallel — each agent, terminal, and dev server works in its own tree.
 
 - Worktrees live under `{userData}/worktrees` (configurable:
-  `git.worktrees.root`); branches default to `limboo/<slug>`
+  `git.worktrees.root`); branches default to `zeus/<slug>`
   (`git.worktrees.branchPrefix`).
 - An editor-style tab strip above the session header switches between worktree
   sessions (`Ctrl+Tab` / `Ctrl+Shift+Tab`); the plain workspace checkout is
   always reachable as a tab.
 - Everything session-scoped (agent, terminals, git, search) runs inside the
   worktree while it is healthy.
-- If a checkout vanishes outside Limboo, the session is flagged and a banner
+- If a checkout vanishes outside Zeus, the session is flagged and a banner
   offers **Recreate** or **Detach**. **Prune stale worktrees** (palette) cleans
   leftover metadata.
 - Deleting a worktree session opens a dependency dialog (dirty checkout?
   branch? terminals? checkpoints?) with explicit remove-worktree /
   delete-branch choices.
 
-## Scripts & Services (limboo.json)
+## Scripts & Services (zeus.json)
 
 A repo can declare setup/teardown hooks, on-demand scripts, and supervised dev
-services in a root [`limboo.json`](../reference/limboo-json.md). Because the
+services in a root [`zeus.json`](../reference/zeus-json.md). Because the
 file is repo-authored, **nothing runs until you approve the exact commands** in
 a confirmation dialog (and any edit re-requires approval — the Services strip
 shows "Review commands…" when re-approval is needed).
 
 - **Setup hooks** run in a fresh worktree (install dependencies, copy `.env`
-  from the source checkout via `LIMBOO_SOURCE_ROOT`).
+  from the source checkout via `ZEUS_SOURCE_ROOT`).
 - **Scripts** get one-click run buttons in the strip under the session header.
 - **Services** are supervised: auto-assigned loopback port (`PORT`), live
   status dot, clickable URL, start/stop/restart, optional crash respawn, and
@@ -105,4 +105,4 @@ shows "Review commands…" when re-approval is needed).
 - [Git Engine architecture](../architecture/subsystems/git-engine.md).
 - [Worktree Manager architecture](../architecture/subsystems/worktree-manager.md).
 - [Service Manager architecture](../architecture/subsystems/service-manager.md).
-- [limboo.json reference](../reference/limboo-json.md).
+- [zeus.json reference](../reference/zeus-json.md).

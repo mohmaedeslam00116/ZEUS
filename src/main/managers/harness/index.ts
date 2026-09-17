@@ -31,7 +31,7 @@ function pick<T>(mod: unknown, name: string, specifier: string): T {
 
 /**
  * Resolve `HarnessAgent`, the adapter instance, and `stepCountIs` for a
- * harness id. Rejects for a native runtime (Cursor), which Limboo drives
+ * harness id. Rejects for a native runtime (Cursor), which Zeus drives
  * itself and which has no AI SDK adapter.
  */
 export function loadHarness(harnessId: string): Promise<LoadedHarness> {

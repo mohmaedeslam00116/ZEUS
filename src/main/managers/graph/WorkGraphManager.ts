@@ -128,7 +128,7 @@ export interface GraphRefSource {
   importsOf(workspaceId: string, srcPath: string): string[];
 }
 
-/** Script names declared by the repo's own limboo.json, for `verified-by`. */
+/** Script names declared by the repo's own zeus.json, for `verified-by`. */
 export interface GraphScriptSource {
   scriptNames(sessionId: string): string[];
 }

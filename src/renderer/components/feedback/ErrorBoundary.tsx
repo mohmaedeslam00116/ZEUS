@@ -52,7 +52,7 @@ export class ErrorBoundary extends Component<Props, State> {
     const report = [error.message, error.stack, componentStack]
       .filter(Boolean)
       .join('\n\n');
-    void window.limboo?.system?.clipboardWrite(report);
+    void window.zeus?.system?.clipboardWrite(report);
     this.setState({ copied: true });
     if (this.copyTimer) clearTimeout(this.copyTimer);
     this.copyTimer = setTimeout(() => this.setState({ copied: false }), 1400);

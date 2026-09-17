@@ -29,12 +29,12 @@ export function RuntimePanel() {
 
       <Section
         title="Connection & reliability"
-        hint="How Limboo supervises the connected coding agent — shared by every provider. A failed request never marks the agent dead; these knobs govern heartbeat checks and automatic recovery."
+        hint="How Zeus supervises the connected coding agent — shared by every provider. A failed request never marks the agent dead; these knobs govern heartbeat checks and automatic recovery."
       >
         <Field
           id="heartbeatInterval"
           label="Heartbeat interval"
-          hint="How often Limboo verifies the agent is healthy (a lightweight auth/SDK check, never a model call). Default 30s. Off disables monitoring."
+          hint="How often Zeus verifies the agent is healthy (a lightweight auth/SDK check, never a model call). Default 30s. Off disables monitoring."
         >
           <Select
             value={agent.connection.heartbeatInterval}
@@ -65,7 +65,7 @@ export function RuntimePanel() {
         <StackedField
           id="maxRecoveryAttempts"
           label={`Max recovery attempts · ${agent.connection.maxRecoveryAttempts}`}
-          hint="How many times Limboo transparently retries a run after a transient failure before surfacing an error. Default 3. 0 disables auto-recovery."
+          hint="How many times Zeus transparently retries a run after a transient failure before surfacing an error. Default 3. 0 disables auto-recovery."
         >
           <Slider
             min={AGENT_CONNECTION_LIMITS.maxRecoveryAttempts.min}
@@ -95,7 +95,7 @@ export function RuntimePanel() {
         <Field
           id="idleTimeout"
           label="Idle refresh"
-          hint="After this idle window Limboo refreshes its health baseline. Default 5m. Off keeps background work to a minimum."
+          hint="After this idle window Zeus refreshes its health baseline. Default 5m. Off keeps background work to a minimum."
         >
           <Select
             value={agent.connection.idleTimeout}

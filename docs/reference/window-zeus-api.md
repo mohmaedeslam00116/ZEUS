@@ -1,8 +1,8 @@
-# Reference: the `window.limboo` API
+# Reference: the `window.zeus` API
 
-`window.limboo` is the typed bridge the preload exposes to the renderer through
+`window.zeus` is the typed bridge the preload exposes to the renderer through
 `contextBridge`. It is the only way the UI reaches the main process. The source of
-truth is [`src/preload/index.ts`](../../src/preload/index.ts) (`LimbooApi`), with
+truth is [`src/preload/index.ts`](../../src/preload/index.ts) (`ZeusApi`), with
 types flowing into the renderer via [`src/global.d.ts`](../../src/global.d.ts).
 
 Every method maps to a channel name in
@@ -13,7 +13,7 @@ an unsubscribe function.
 The API has 18 namespaces:
 
 ```
-window.limboo.{ window, settings, system, app, events,
+window.zeus.{ window, settings, system, app, events,
                workspace, session, agent, fs, terminal, git,
                worktree, services, memory, search, updates,
                attachment }
@@ -145,7 +145,7 @@ Session-owned git worktrees (see
 - `prune(workspaceId)` — drop stale worktree metadata
 - `recreate(sessionId)`, `detach(sessionId)` — missing-worktree recovery
 - `getRepoConfig(sessionId) -> RepoConfigState` — the repo's
-  [limboo.json](limboo-json.md) + hash + acknowledgment state
+  [zeus.json](zeus-json.md) + hash + acknowledgment state
 - `ackConfig(sessionId, ackHash)` — trust the displayed config (works without
   setup hooks and for plain sessions)
 - `runSetup(sessionId, ackHash)` — acknowledge + run setup hooks
@@ -154,7 +154,7 @@ Session-owned git worktrees (see
 
 ## services
 
-Scripts & Services from [limboo.json](limboo-json.md) (see
+Scripts & Services from [zeus.json](zeus-json.md) (see
 [the Service Manager](../architecture/subsystems/service-manager.md)).
 
 - `list(sessionId) -> ServiceInfo[]`
@@ -257,6 +257,6 @@ Attachment Manager — session-owned files staged for the agent's tool loop.
 
 ## Usage note
 
-Renderer calls guard with optional chaining (`window.limboo?.…`) so the UI still
+Renderer calls guard with optional chaining (`window.zeus?.…`) so the UI still
 renders in a plain browser preview where the preload is absent. Adding a method here
 requires the full bridge path; see [the IPC layer](../architecture/ipc-layer.md).

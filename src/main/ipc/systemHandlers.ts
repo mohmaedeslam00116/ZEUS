@@ -1,8 +1,8 @@
 /**
  * IPC handlers for native OS integrations: desktop notifications, opening
  * external links in the OS browser, clipboard read/write, and app metadata.
- * Reached from the renderer through `window.limboo.system.*` and
- * `window.limboo.app.*`.
+ * Reached from the renderer through `window.zeus.system.*` and
+ * `window.zeus.app.*`.
  */
 import { app, clipboard, shell } from 'electron';
 import { IpcChannels } from '@shared/ipc-channels';

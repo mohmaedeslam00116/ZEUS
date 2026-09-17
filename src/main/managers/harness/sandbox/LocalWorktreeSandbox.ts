@@ -2,10 +2,10 @@
  * A `HarnessV1SandboxProvider` backed by the session's REAL git worktree.
  *
  * Every shipped AI SDK sandbox provider is remote (Vercel) or a local
- * emulation with its own filesystem. Limboo can use neither: it is local-first
+ * emulation with its own filesystem. Zeus can use neither: it is local-first
  * and makes exactly two kinds of outbound request (CLAUDE.md §1), so the user's
  * repository must never leave the machine — and the agent must edit the actual
- * worktree, because Limboo's whole model is that a session IS a worktree that
+ * worktree, because Zeus's whole model is that a session IS a worktree that
  * git, the diff viewer, checkpoints and the Work Graph all observe directly.
  * A provider that copied files in and out would desynchronise all of them.
  *
@@ -21,7 +21,7 @@
  * would therefore put the agent in `<worktree>/claude-code-<id>/` — an empty
  * folder inside the repo, not the repo.
  *
- * Hence `defaultWorkingDirectory` is a Limboo-owned STATE ROOT under userData
+ * Hence `defaultWorkingDirectory` is a Zeus-owned STATE ROOT under userData
  * and the caller passes `workDir = basename(worktree)`, which that root holds
  * as a link to the real worktree — so the join lands exactly on the worktree
  * while the adapter's own `.harness-bootstrap` / `.agent-runs` directories
@@ -68,7 +68,7 @@ export interface LocalSandboxDeps {
    * values).
    *
    * Each is forwarded to the child only when already present in the host
-   * environment. Limboo stores no provider credential — this exists so a user
+   * environment. Zeus stores no provider credential — this exists so a user
    * whose shell has `ANTHROPIC_API_KEY` can authenticate, without the app ever
    * holding, echoing or persisting the value.
    *
@@ -80,7 +80,7 @@ export interface LocalSandboxDeps {
    */
   envKeysFor?(sessionId: string): readonly string[];
   /**
-   * Limboo's worktree root (`{userData}/worktrees` by default).
+   * Zeus's worktree root (`{userData}/worktrees` by default).
    *
    * Consulted only to decide whether a session may fall back to
    * `path.dirname(root)` when the state-root link cannot be created — see
@@ -123,7 +123,7 @@ const ENV_ALLOWLIST = [
  * `extraKeys` is a SECOND, explicitly-named list rather than a widening of
  * `ENV_ALLOWLIST`, so a review diff reads "we now forward ANTHROPIC_API_KEY to
  * the harness bridge" instead of "we splatted process.env". A key is forwarded
- * only when it is already present on the host — Limboo stores no provider
+ * only when it is already present on the host — Zeus stores no provider
  * credential, accepts none over IPC, and puts none in argv; this is pure
  * passthrough of what the user's own shell already has.
  *
@@ -214,7 +214,7 @@ class LocalSandboxSession {
     for (const jewel of crownJewelPaths()) {
       const rj = realpathNearest(jewel);
       if (contains(rj, real) || real.startsWith(`${rj}-`)) {
-        throw new Error(`Refused: ${path.basename(p)} is a protected Limboo file.`);
+        throw new Error(`Refused: ${path.basename(p)} is a protected Zeus file.`);
       }
     }
 
@@ -558,7 +558,7 @@ class LocalSandboxSession {
   }
 
   readonly setNetworkPolicy = async (policy: unknown): Promise<void> => {
-    // Limboo's policy is authoritative; a request to LOOSEN it is refused
+    // Zeus's policy is authoritative; a request to LOOSEN it is refused
     // rather than applied (the same rule withSessionSandboxJson follows).
     // Nothing is enforced until the jail lands, so this only records intent.
     this.diag('debug', 'Sandbox network policy requested', JSON.stringify(policy).slice(0, 200));
@@ -608,7 +608,7 @@ class LocalSandboxSession {
 /** The provider. One instance for the app; sessions are keyed by session id. */
 export class LocalWorktreeSandboxProvider {
   readonly specificationVersion = 'harness-sandbox-v1' as const;
-  readonly providerId = 'limboo-local-worktree';
+  readonly providerId = 'zeus-local-worktree';
   /** Bridge-backed adapters ask for one port; we hand out loopback ones. */
   readonly bridgePorts = 1;
 
@@ -643,7 +643,7 @@ export class LocalWorktreeSandboxProvider {
 
     const session = new LocalSandboxSession(
       sessionId,
-      // A Limboo-owned state root under userData that holds a link to the
+      // A Zeus-owned state root under userData that holds a link to the
       // worktree — the framework appends a subdirectory to this. See the
       // working-directory note in the module header and `stateRoot.ts`.
       this.stateRootFor(root),
@@ -667,7 +667,7 @@ export class LocalWorktreeSandboxProvider {
    * Normally `{userData}/harness-state/<bucket>`, with a link to the execution
    * root inside it (see `stateRoot.ts`). If the link cannot be created, fall
    * back to the worktree's parent ONLY when that parent is already inside
-   * Limboo's worktree root — which is what shipped before and is still under
+   * Zeus's worktree root — which is what shipped before and is still under
    * userData. For a plain session the parent is the user's own projects
    * directory, so writing adapter state there is refused instead: littering
    * `.harness-bootstrap/` beside somebody's repository is not a degraded mode,
@@ -687,7 +687,7 @@ export class LocalWorktreeSandboxProvider {
         return path.dirname(root);
       }
       throw new Error(
-        'Limboo could not prepare a private directory for the agent harness, and ' +
+        'Zeus could not prepare a private directory for the agent harness, and ' +
           'this session is not worktree-backed — so the harness would have to write ' +
           'its runtime beside your repository. Create a worktree for this session, ' +
           `or fix the state directory. Reason: ${detail}`,

@@ -5,7 +5,7 @@
  * long-running processes (dev servers, APIs, workers) supervised for the
  * lifetime of their owning session: auto-assigned loopback port, restart
  * policy, status, and logs streamed through the integrated terminal (the PTY
- * scrollback IS the structured log). Both come from the repo's `limboo.json`
+ * scrollback IS the structured log). Both come from the repo's `zeus.json`
  * (see worktree/config.ts) and are inert until the workspace acknowledges that
  * config — the same trust gate as setup/teardown hooks.
  *
@@ -182,12 +182,12 @@ export class ServiceManager {
 
   /** Run a named on-demand script in the session's root (visible terminal). */
   /**
-   * Script names the repo's own limboo.json declares. The Work Graph treats a
+   * Script names the repo's own zeus.json declares. The Work Graph treats a
    * declared script as a strong signal that a command was verification — the
    * project itself defining what "verify" means for this codebase.
    */
   scriptNames(sessionId: string): string[] {
-    // Deliberately NOT gated on the limboo.json ack: this reads declared script
+    // Deliberately NOT gated on the zeus.json ack: this reads declared script
     // NAMES for classification, never a command, and never runs anything. The
     // ack gate exists to stop repo-authored commands from executing, which this
     // cannot do. Reading names before an ack is safe and keeps inference
@@ -290,10 +290,10 @@ export class ServiceManager {
     // Peer discovery: already-running siblings of the SAME session see each
     // other's ports/URLs (loopback only) — no hard-coded networking.
     const env: Record<string, string> = {
-      LIMBOO_PORT: String(port),
+      ZEUS_PORT: String(port),
       PORT: String(port),
-      LIMBOO_SERVICE_NAME: name,
-      LIMBOO_SESSION_ID: sessionId,
+      ZEUS_SERVICE_NAME: name,
+      ZEUS_SESSION_ID: sessionId,
     };
     for (const peer of this.services.values()) {
       if (
@@ -303,8 +303,8 @@ export class ServiceManager {
         peer.info.port !== null
       ) {
         const envName = peer.info.name.toUpperCase().replace(/-/g, '_');
-        env[`LIMBOO_SERVICE_${envName}_PORT`] = String(peer.info.port);
-        env[`LIMBOO_SERVICE_${envName}_URL`] = `http://127.0.0.1:${peer.info.port}`;
+        env[`ZEUS_SERVICE_${envName}_PORT`] = String(peer.info.port);
+        env[`ZEUS_SERVICE_${envName}_URL`] = `http://127.0.0.1:${peer.info.port}`;
       }
     }
 
@@ -412,7 +412,7 @@ export class ServiceManager {
   private requireAckedConfig(sessionId: string): ReturnType<ConfigSource['getRepoConfigState']> {
     if (!this.source) throw new Error('Worktree manager unavailable');
     const state = this.source.getRepoConfigState(sessionId);
-    if (!state.config) throw new Error('No limboo.json in this session');
+    if (!state.config) throw new Error('No zeus.json in this session');
     if (!state.acked) {
       throw new Error('Review and confirm the repo commands first (run worktree setup once)');
     }

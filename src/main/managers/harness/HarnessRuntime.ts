@@ -63,8 +63,8 @@ export interface HarnessRunSpec {
   /** Vision blocks, when the turn carries images. */
   messages?: unknown;
   /**
-   * Native-format MCP server definitions. Limboo's own `limboo_memory` /
-   * `limboo_search` are served by the SAME plain tools and the SAME stdio
+   * Native-format MCP server definitions. Zeus's own `zeus_memory` /
+   * `zeus_search` are served by the SAME plain tools and the SAME stdio
    * bridge Cursor uses, so both agents query one index and better-sqlite3 stays
    * in a single process.
    */
@@ -78,7 +78,7 @@ export interface HarnessRunSpec {
   bootstrapAck?: string;
   /**
    * The custom/host-tool router. Built-in tools are gated by `permissionMode`
-   * instead; this map is only consulted for tools Limboo supplies itself.
+   * instead; this map is only consulted for tools Zeus supplies itself.
    */
   toolApproval?: HarnessToolApproval;
   /** How a permission request is answered — the delegation into Layer 1. */
@@ -178,7 +178,7 @@ export class HarnessRuntime {
     //
     // `permissionMode` only produces approval requests if the adapter declares
     // it can emit them. Without that, built-in write/edit/bash would execute
-    // with Limboo's permission gate bypassed entirely — and there is no setting
+    // with Zeus's permission gate bypassed entirely — and there is no setting
     // that recovers it. That is not a degraded mode worth offering, so the run
     // is refused. The framework raises its own error here too, but its message
     // recommends `allow-all`, which is precisely the unsafe remedy.
@@ -274,7 +274,7 @@ export class HarnessRuntime {
         // write, see the stream end, and report success having done nothing.
         //
         // Each round therefore drains a stream, collects the approval requests
-        // it surfaced, answers them through Limboo's gate, and resumes. The
+        // it surfaced, answers them through Zeus's gate, and resumes. The
         // requests are resolved AFTER the drain, never inside it: the stream is
         // already closing, the gate can block on a user dialog for minutes, and
         // batching is also correct if an adapter ever emits two at once.

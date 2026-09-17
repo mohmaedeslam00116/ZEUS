@@ -1,6 +1,6 @@
 # Security model
 
-Limboo is local-first, which makes its attack surface small, and it is hardened in
+Zeus is local-first, which makes its attack surface small, and it is hardened in
 depth so that even a compromised renderer cannot reach the OS. This page consolidates
 the threat model and the enforcement patterns. None of these may be weakened by a
 change. The user-facing summary is [SECURITY.md](../../SECURITY.md).
@@ -70,7 +70,7 @@ contract and the ADR-0004 regression protocol — is
     embedded-credential remote URLs are redacted from git results and logs.
     ([`logger.ts`](../../src/main/logger.ts))
 
-11. **Encrypted secret storage** — the only credential Limboo holds on the user's
+11. **Encrypted secret storage** — the only credential Zeus holds on the user's
     behalf (an optional Cursor API key) lives in the safeStorage-backed
     [`SecretStore`](../../src/main/secrets/SecretStore.ts): encrypted at rest under
     `userData/secrets/`, gated on `safeStorage.isEncryptionAvailable()`, decrypted

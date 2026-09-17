@@ -38,7 +38,7 @@ export function SessionDeleteDialog({
 
   useEffect(() => {
     let cancelled = false;
-    void window.limboo?.session
+    void window.zeus?.session
       .getDependencies(session.id)
       .then((d) => {
         if (!cancelled) setDeps(d);

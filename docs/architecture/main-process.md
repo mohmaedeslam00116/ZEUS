@@ -42,7 +42,7 @@ construction wiring (no hidden globals):
 - `fileSystem.setGitManager(git)` — notify git on tree changes.
 - `services.setTerminalManager(terminal)` / `services.setConfigSource(worktrees)`
   and `worktrees.setTerminalManager(terminal)` / `worktrees.setServiceManager(services)`
-  — services spawn through PTYs, read the acknowledged limboo.json from the
+  — services spawn through PTYs, read the acknowledged zeus.json from the
   Worktree Manager, and are stopped before a worktree is removed.
 - `worktrees.setReleaseRootHook(...)` — the watcher / search index are
   retargeted off a worktree directory before it is deleted (Windows EBUSY).

@@ -183,7 +183,7 @@ async function main() {
     manifest.commit = git(['rev-parse', `${tag}^{commit}`], { allowFailure: true }) || null;
     const prev = previousTag(tag);
     if (prev && !manifest.links.compare) {
-      manifest.links.compare = `https://github.com/limboo-ai/limboo/compare/${prev}...${tag}`;
+      manifest.links.compare = `https://github.com/mohmaedeslam00116/ZEUS/compare/${prev}...${tag}`;
     }
   }
 

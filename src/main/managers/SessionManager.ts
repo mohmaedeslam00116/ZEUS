@@ -1,6 +1,6 @@
 /**
  * Session Manager — owns the lifecycle of every development session (the
- * primary unit of work in Limboo) and is the source of truth the renderer reads
+ * primary unit of work in Zeus) and is the source of truth the renderer reads
  * through IPC. Lives in the main process; persists to SQLite.
  *
  * Modeled on {@link WorkspaceManager}: a `db` accessor, prepared/bound

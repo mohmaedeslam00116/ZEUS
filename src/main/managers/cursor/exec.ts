@@ -176,7 +176,7 @@ async function probeExecutable(): Promise<CursorExecutable | null> {
       if (viaLayout) return viaLayout;
       if (/\.ps1$/i.test(p)) {
         execProblem =
-          'Configured path is a PowerShell shim and its directory has no node.exe + index.js layout Limboo can run directly.';
+          'Configured path is a PowerShell shim and its directory has no node.exe + index.js layout Zeus can run directly.';
         return null;
       }
       const viaShim = await tryVersion({ path: p, kind: 'cmd', source: 'override' });
@@ -445,8 +445,8 @@ export async function spawnCursorLogin(env: NodeJS.ProcessEnv): Promise<ChildPro
 export class CursorShimError extends Error {
   constructor() {
     super(
-      'cursor-agent resolved to a .cmd shim, which Limboo cannot run safely. ' +
-        'Hit Refresh in Settings › Agent (Limboo resolves the native install layout ' +
+      'cursor-agent resolved to a .cmd shim, which Zeus cannot run safely. ' +
+        'Hit Refresh in Settings › Agent (Zeus resolves the native install layout ' +
         'under %LOCALAPPDATA%\\cursor-agent directly), or point the Executable path ' +
         'setting at the install directory, then retry.',
     );

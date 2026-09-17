@@ -64,7 +64,7 @@ export const IpcChannels = {
   worktreeAckConfig: 'worktree:ackConfig',
   worktreeRunSetup: 'worktree:runSetup',
 
-  // Scripts & Services — supervised per-session processes from limboo.json.
+  // Scripts & Services — supervised per-session processes from zeus.json.
   serviceList: 'service:list',
   serviceStart: 'service:start',
   serviceStop: 'service:stop',
@@ -241,7 +241,7 @@ export const IpcChannels = {
   searchSavedCreate: 'search:savedCreate',
   searchSavedDelete: 'search:savedDelete',
 
-  // Work Graph — Limboo's own provider-neutral DAG of engineering work.
+  // Work Graph — Zeus's own provider-neutral DAG of engineering work.
   // Read + maintenance only: nodes are produced in the main process from the
   // normalized event stream, never submitted by the renderer.
   graphGet: 'graph:get',
@@ -261,7 +261,7 @@ export const IpcChannels = {
   /** Write one file per session into a user-chosen directory (main owns it). */
   graphSaveBatch: 'graph:saveBatch',
 
-  // Runtime Telemetry — Limboo's provider-neutral runtime metrics service.
+  // Runtime Telemetry — Zeus's provider-neutral runtime metrics service.
   // Read + maintenance only: snapshots are produced in main from the provider
   // event streams; the renderer never submits a measurement. The whole surface
   // takes IDS and ENUM LITERALS only — no renderer-supplied object crosses it,
@@ -312,7 +312,7 @@ export type IpcChannel = (typeof IpcChannels)[keyof typeof IpcChannels];
 
 /**
  * One-way channels the main process pushes to the renderer. The renderer
- * subscribes through `window.limboo.events.on(channel, cb)`.
+ * subscribes through `window.zeus.events.on(channel, cb)`.
  */
 export const IpcEvents = {
   windowMaximizedChanged: 'window:maximized-changed',

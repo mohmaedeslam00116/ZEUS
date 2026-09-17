@@ -18,7 +18,7 @@
  * ── WHY NOT `path.dirname(worktree)` ─────────────────────────────────────
  * That was the original answer, and it is right exactly when the session is
  * worktree-backed: the parent is `{userData}/worktrees/<bucket>`, already
- * Limboo-owned. But `WorktreeManager.resolveSessionRoot` FALLS BACK to the
+ * Zeus-owned. But `WorktreeManager.resolveSessionRoot` FALLS BACK to the
  * workspace path for a plain session, and then the parent is wherever the user
  * keeps their code — so a first run would create `~/Desktop/.harness-bootstrap/`
  * and `~/Desktop/.agent-runs/` beside their repository, and the provider's own
@@ -26,7 +26,7 @@
  * arbitrary location on disk.
  *
  * ── THE ANSWER ───────────────────────────────────────────────────────────
- * Report a Limboo-owned directory as `defaultWorkingDirectory` for EVERY
+ * Report a Zeus-owned directory as `defaultWorkingDirectory` for EVERY
  * session — worktree-backed or not — and make `<stateRoot>/<basename(root)>` a
  * real on-disk link to the execution root:
  *
@@ -128,7 +128,7 @@ export function prepareStateRoot(root: string): HarnessStateLayout {
 /**
  * May a session fall back to `path.dirname(root)` when the link cannot be made?
  *
- * ONLY when the parent is already inside Limboo's own worktree root — i.e. the
+ * ONLY when the parent is already inside Zeus's own worktree root — i.e. the
  * session is worktree-backed and the fallback writes into
  * `{userData}/worktrees/<bucket>`, which is exactly what shipped before. For a
  * plain session the parent is the user's own projects directory, and writing

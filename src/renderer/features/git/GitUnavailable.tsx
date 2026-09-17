@@ -56,7 +56,7 @@ export function GitUnavailable({ env }: { env: GitEnvironment }) {
     <EmptyState
       icon={FolderGit2}
       title="Git isn't installed"
-      description="Limboo builds on Git for version history, branches, checkpoints, per-session worktrees, and reviewing the agent's work. Install Git to enable all of it — nothing else in the app is affected."
+      description="Zeus builds on Git for version history, branches, checkpoints, per-session worktrees, and reviewing the agent's work. Install Git to enable all of it — nothing else in the app is affected."
       actions={
         <div className="flex w-full max-w-md flex-col items-center gap-4">
           <div className="w-full text-left">
@@ -79,7 +79,7 @@ export function GitUnavailable({ env }: { env: GitEnvironment }) {
             </button>
             <button
               type="button"
-              onClick={() => void window.limboo?.system.openExternal(hint.url)}
+              onClick={() => void window.zeus?.system.openExternal(hint.url)}
               className="rounded-md border border-line bg-surface-2 px-3 py-1.5 text-[12px] font-medium text-fg transition-colors hover:border-line-strong"
             >
               Installation guide

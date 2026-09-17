@@ -1,5 +1,5 @@
 /**
- * The release document — everything in one version of Limboo, rendered as a
+ * The release document — everything in one version of Zeus, rendered as a
  * workspace tab.
  *
  * The manifest is COMPILED INTO THE BUNDLE from `CHANGELOG.md` (see
@@ -15,7 +15,7 @@
  * provider. Claude Code shipped a fix for exactly this bug — its "Show all"
  * release-notes view was injecting the whole changelog into every subsequent
  * request. The agent CAN read release notes here, but only by calling the
- * `limboo_release` tool when it is actually asked (see
+ * `zeus_release` tool when it is actually asked (see
  * `src/main/managers/search/releaseTools.ts`); nothing is ever pushed into a
  * system prompt.
  *
@@ -146,7 +146,7 @@ export function ReleaseNotesDocument({ version }: ReleaseNotesDocumentProps) {
             label="Export as Markdown"
             icon={Download}
             onClick={() => {
-              void window.limboo?.release
+              void window.zeus?.release
                 ?.export(version, markdown)
                 .then((r) => {
                   if (r?.saved) {
@@ -274,7 +274,7 @@ function useBuildInfo(): BuildInfo | null {
   const [info, setInfo] = useState<BuildInfo | null>(null);
   useEffect(() => {
     let alive = true;
-    void window.limboo?.updates?.getBuildInfo?.().then((value) => {
+    void window.zeus?.updates?.getBuildInfo?.().then((value) => {
       if (alive) setInfo(value);
     });
     return () => {

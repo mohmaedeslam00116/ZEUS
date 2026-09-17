@@ -2,7 +2,7 @@
 
 The renderer is presentation only. It draws the pure-black three-pane shell, holds
 view state in Zustand slice stores, and reaches the main process exclusively through
-the `window.limboo` bridge. This page maps the renderer so you can find where things
+the `window.zeus` bridge. This page maps the renderer so you can find where things
 live. The entry is [`src/renderer/main.tsx`](../../src/renderer/main.tsx).
 
 ## Startup and hydration

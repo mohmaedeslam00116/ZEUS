@@ -1,17 +1,17 @@
 # Conversation-first UI
 
-Limboo's interface revolves around a conversation, not a file tree. This page
+Zeus's interface revolves around a conversation, not a file tree. This page
 explains the idea and how the three-pane shell expresses it.
 
 ## Files vs conversations
 
-A traditional IDE asks "which file should I edit?". Limboo asks you to state intent:
+A traditional IDE asks "which file should I edit?". Zeus asks you to state intent:
 
 ```
 Implement authentication.
 ```
 
-The coding agent figures out the files; Limboo visualizes the process. The
+The coding agent figures out the files; Zeus visualizes the process. The
 conversation is the primary surface, and the file tree, diffs, tasks, and terminal
 are supporting views that show what the conversation produced.
 

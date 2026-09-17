@@ -86,13 +86,13 @@ describe('SessionManager — explicit worktree opt-in still works (#14 preservat
     const wtPath = join(TMP_USER_DATA, 'wt-under-test');
     sessions.setWorktree(s.id, {
       worktreePath: wtPath,
-      worktreeBranch: 'limboo/wt-under-test',
+      worktreeBranch: 'zeus/wt-under-test',
       worktreeStatus: 'ready',
       baseRef: 'main',
     });
     const loaded = sessions.get(s.id) as Session;
     expect(loaded.worktreePath).toBe(wtPath);
-    expect(loaded.worktreeBranch).toBe('limboo/wt-under-test');
+    expect(loaded.worktreeBranch).toBe('zeus/wt-under-test');
     expect(loaded.worktreeStatus).toBe('ready');
     expect(loaded.baseRef).toBe('main');
   });
@@ -101,7 +101,7 @@ describe('SessionManager — explicit worktree opt-in still works (#14 preservat
     const s = sessions.create(workspaceId);
     sessions.setWorktree(s.id, {
       worktreePath: join(TMP_USER_DATA, 'wt-to-clear'),
-      worktreeBranch: 'limboo/wt-to-clear',
+      worktreeBranch: 'zeus/wt-to-clear',
       worktreeStatus: 'ready',
     });
     expect(sessions.get(s.id)?.worktreePath).not.toBeNull();
@@ -123,7 +123,7 @@ describe('SessionManager — explicit worktree opt-in still works (#14 preservat
     const backed = sessions.create(workspaceId);
     sessions.setWorktree(backed.id, {
       worktreePath: join(TMP_USER_DATA, 'wt-coexist'),
-      worktreeBranch: 'limboo/wt-coexist',
+      worktreeBranch: 'zeus/wt-coexist',
       worktreeStatus: 'ready',
     });
     const listed = sessions.list(workspaceId);

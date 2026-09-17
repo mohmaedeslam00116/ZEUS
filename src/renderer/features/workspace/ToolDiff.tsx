@@ -3,7 +3,7 @@
  * stream. Renders the removed (before) and added (after) content as two
  * Shiki-highlighted, tinted segments — the same visual language as the Git
  * panel's DiffView (red for removals, green for additions) — plus gutter line
- * numbers inherited from the shared `.limboo-code` styles. Creates show only the
+ * numbers inherited from the shared `.zeus-code` styles. Creates show only the
  * added segment, deletions only the removed one. Highlighting is async (Shiki),
  * so each segment falls back to plain mono text until it settles.
  */
@@ -54,11 +54,11 @@ function DiffSegment({
       </div>
       {html ? (
         <div
-          className="limboo-code overflow-x-auto text-[12px]"
+          className="zeus-code overflow-x-auto text-[12px]"
           dangerouslySetInnerHTML={{ __html: html }}
         />
       ) : (
-        <pre className="limboo-code overflow-x-auto px-3 py-1.5 text-[12px]">
+        <pre className="zeus-code overflow-x-auto px-3 py-1.5 text-[12px]">
           <code className="font-mono text-fg">{code}</code>
         </pre>
       )}

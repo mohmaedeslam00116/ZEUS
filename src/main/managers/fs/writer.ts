@@ -105,7 +105,7 @@ function resolveMutationTarget(root: string, relPath: string): string {
 function atomicWrite(target: string, content: string): void {
   const tmp = path.join(
     path.dirname(target),
-    `.limboo-tmp-${crypto.randomBytes(6).toString('hex')}`,
+    `.zeus-tmp-${crypto.randomBytes(6).toString('hex')}`,
   );
   let committed = false;
   try {

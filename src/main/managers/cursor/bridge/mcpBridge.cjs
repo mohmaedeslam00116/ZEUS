@@ -1,26 +1,26 @@
 #!/usr/bin/env node
 /**
- * Limboo stdio MCP bridge — the process `cursor-agent` spawns for the
- * `limboo_memory` / `limboo_search` servers declared in the generated
+ * Zeus stdio MCP bridge — the process `cursor-agent` spawns for the
+ * `zeus_memory` / `zeus_search` servers declared in the generated
  * session `.cursor/mcp.json`. It speaks minimal MCP (JSON-RPC 2.0 over
  * newline-delimited stdio: initialize / tools/list / tools/call / ping) and
- * forwards tool traffic over Limboo's per-run bridge pipe, so the actual
+ * forwards tool traffic over Zeus's per-run bridge pipe, so the actual
  * Memory/Search data access stays in the main process (one better-sqlite3
  * owner, no cross-process WAL contention).
  *
  * MUST stay self-contained (node:net / node:process only — no imports from
  * the app bundle): it is emitted as a standalone asset beside main.js and
  * executed via `ELECTRON_RUN_AS_NODE=1 <electron> mcpBridge.cjs`, including
- * from a packaged app. Which server it fronts rides LIMBOO_BRIDGE_SERVER
+ * from a packaged app. Which server it fronts rides ZEUS_BRIDGE_SERVER
  * ('memory' | 'search') — set per entry in the generated mcp.json.
  */
 'use strict';
 
 const net = require('node:net');
 
-const PIPE = process.env.LIMBOO_BRIDGE_PIPE || '';
-const TOKEN = process.env.LIMBOO_BRIDGE_TOKEN || '';
-const SERVER = process.env.LIMBOO_BRIDGE_SERVER === 'memory' ? 'memory' : 'search';
+const PIPE = process.env.ZEUS_BRIDGE_PIPE || '';
+const TOKEN = process.env.ZEUS_BRIDGE_TOKEN || '';
+const SERVER = process.env.ZEUS_BRIDGE_SERVER === 'memory' ? 'memory' : 'search';
 const PROTOCOL_VERSION = '2024-11-05';
 const REQUEST_TIMEOUT_MS = 60 * 1000;
 const MAX_LINE = 4 * 1024 * 1024;
@@ -75,9 +75,9 @@ function ensureSocket() {
       else p.reject(new Error(typeof reply.error === 'string' ? reply.error : 'bridge error'));
     }
   });
-  socket.on('error', () => failAllPending('Limboo bridge unreachable'));
+  socket.on('error', () => failAllPending('Zeus bridge unreachable'));
   socket.on('close', () => {
-    failAllPending('Limboo bridge closed');
+    failAllPending('Zeus bridge closed');
     socket = null;
   });
   return socket;
@@ -131,7 +131,7 @@ async function handle(message) {
             ? params.protocolVersion
             : PROTOCOL_VERSION,
         capabilities: { tools: {} },
-        serverInfo: { name: `limboo_${SERVER}`, version: '1.0.0' },
+        serverInfo: { name: `zeus_${SERVER}`, version: '1.0.0' },
       });
       return;
     case 'ping':
@@ -151,7 +151,7 @@ async function handle(message) {
         // Tool-level failures ride the MCP result contract, not JSON-RPC errors.
         sendResult(id, {
           content: [
-            { type: 'text', text: err && err.message ? err.message : 'The Limboo bridge failed.' },
+            { type: 'text', text: err && err.message ? err.message : 'The Zeus bridge failed.' },
           ],
           isError: true,
         });

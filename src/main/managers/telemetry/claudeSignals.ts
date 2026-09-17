@@ -12,7 +12,7 @@
  *   - `result` carries `usage`, `modelUsage`, `total_cost_usd`, `num_turns`,
  *     `duration_ms`, `duration_api_ms`, `ttft_ms`, `permission_denials`.
  *   - `modelUsage[model]` carries `contextWindow` and `maxOutputTokens` — the
- *     denominator, provider-supplied, which is why Limboo needs no model table.
+ *     denominator, provider-supplied, which is why Zeus needs no model table.
  *   - `rate_limit_event` carries `rate_limit_info` (the rolling quota windows).
  *   - `system/compact_boundary`, `system/status`, `system/thinking_tokens`,
  *     `system/api_retry` and `tool_progress` carry the rest.

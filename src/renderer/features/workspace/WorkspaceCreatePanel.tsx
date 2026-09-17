@@ -118,7 +118,7 @@ export function WorkspaceCreatePanel() {
         <div className="flex flex-col gap-1">
           <h1 className="text-lg font-semibold tracking-tight text-fg">Create a workspace</h1>
           <p className="text-[12px] text-muted">
-            Limboo creates a new, empty project folder inside the location you pick. Already
+            Zeus creates a new, empty project folder inside the location you pick. Already
             have a project with files? Open its folder instead — its files show up right away.
           </p>
         </div>

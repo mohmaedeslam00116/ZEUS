@@ -17,7 +17,7 @@ import { useSessionStore } from './useSessionStore';
 
 /** Guarded accessor so the UI still renders in a plain browser preview. */
 function api() {
-  return window.limboo?.runtime;
+  return window.zeus?.runtime;
 }
 
 interface RuntimeStoreState {

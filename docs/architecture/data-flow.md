@@ -1,6 +1,6 @@
 # Data flow: the unified streaming timeline
 
-The most important runtime data path in Limboo is the agent event stream that becomes
+The most important runtime data path in Zeus is the agent event stream that becomes
 the conversation. Understanding it explains how a single prompt turns into the
 streaming reply, the inline tool cards, the file changes, the task list, and the git
 refresh you see. It is deliberately a renderer-only fold over one event stream —
@@ -10,12 +10,12 @@ there is no separate streaming manager.
 
 ```
  user prompt
-     |  window.limboo.agent.send(sessionId, prompt, mode?)
+     |  window.zeus.agent.send(sessionId, prompt, mode?)
      v
  AgentManager (main)  runs the Claude Code SDK, emits structured AgentEvents
      |  IpcEvents.agentEvent  ("agent:event")
      v
- window.limboo.agent.onEvent(cb)   (preload subscription)
+ window.zeus.agent.onEvent(cb)   (preload subscription)
      |
      v
  useAgentStore.apply(event)   upserts into bySession[sessionId] snapshot
@@ -94,7 +94,7 @@ middle:
  HooksConfirmDialog  (exact commands shown verbatim)
      |  approve
      v
- worktree.ackConfig(sessionId, hash)   fail-closed if limboo.json changed
+ worktree.ackConfig(sessionId, hash)   fail-closed if zeus.json changed
      |  + worktree.runSetup(...) when setup hooks exist and the worktree is ready
      v
  setup hooks stream through visible PTYs; services/scripts unlock

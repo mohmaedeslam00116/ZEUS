@@ -4,7 +4,7 @@
  *
  *  - `WorkspaceDragOverlay` — a full-area drop target that appears ONLY while a file
  *    is being dragged over the window (no permanent dashed box at rest). It resolves
- *    the dropped folder's real path through `window.limboo.system.getDroppedPath`
+ *    the dropped folder's real path through `window.zeus.system.getDroppedPath`
  *    (the Electron-32+ replacement for `File.path`) and hands it to the validated
  *    `workspace:open` IPC — the renderer never touches the filesystem.
  *  - `WorkspaceActions` — the always-visible Open / Create buttons (no dashed
@@ -89,7 +89,7 @@ export function WorkspaceDragOverlay() {
       });
     }
 
-    const resolve = window.limboo?.system?.getDroppedPath;
+    const resolve = window.zeus?.system?.getDroppedPath;
     if (!resolve) return;
     try {
       const path = resolve(files[0]);
@@ -123,7 +123,7 @@ export function WorkspaceDragOverlay() {
       <div className="flex flex-col gap-1">
         <span className="text-sm font-medium text-fg">Drop to open as a workspace</span>
         <span className="text-[12px] text-muted">
-          Limboo profiles its languages, package managers, and git branch automatically.
+          Zeus profiles its languages, package managers, and git branch automatically.
         </span>
       </div>
     </div>

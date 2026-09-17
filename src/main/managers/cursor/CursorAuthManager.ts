@@ -4,7 +4,7 @@
  *
  * Owns two auth paths, kept deliberately distinct:
  *  - **CLI login** — spawns `cursor-agent login` (argv-only) and lets the CLI
- *    own its credentials; Limboo never reads, copies, or exports them. Manual
+ *    own its credentials; Zeus never reads, copies, or exports them. Manual
  *    browser mode (`NO_OPEN_BROWSER=1`) captures the printed login URL for the
  *    UI to copy/open through the validated system handlers.
  *  - **API key** — held encrypted via {@link SecretStore} (Electron
@@ -134,7 +134,7 @@ export class CursorAuthManager {
           getCursorExecProblem() ??
           'Cursor CLI (cursor-agent) not found — checked PATH, %LOCALAPPDATA%\\cursor-agent, and ~/.local/bin. ' +
             'If you just installed it, hit Refresh; otherwise install it from cursor.com/cli, ' +
-            'set an explicit executable path below, or restart Limboo to pick up a new PATH.',
+            'set an explicit executable path below, or restart Zeus to pick up a new PATH.',
       });
       return this.state;
     }

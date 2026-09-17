@@ -61,7 +61,7 @@ export function NotReported({ note }: { note?: string }) {
 }
 
 /**
- * The estimate disclaimer. Rendered wherever a value derives from Limboo's own
+ * The estimate disclaimer. Rendered wherever a value derives from Zeus's own
  * character counts rather than a provider measurement.
  */
 export function EstimateNote({ children }: { children: React.ReactNode }) {

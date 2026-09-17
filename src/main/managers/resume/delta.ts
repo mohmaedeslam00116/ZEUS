@@ -73,9 +73,9 @@ const MANIFEST_BASENAMES = new Set([
   'gemfile.lock',
   'composer.json',
   'composer.lock',
-  // limboo.json is the repo's scripts/services config behind the ack-hash
+  // zeus.json is the repo's scripts/services config behind the ack-hash
   // trust gate — a change here must be prominent in the delta.
-  'limboo.json',
+  'zeus.json',
 ]);
 
 const DOC_EXTENSIONS = new Set(['md', 'mdx', 'txt', 'rst', 'adoc']);

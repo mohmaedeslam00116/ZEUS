@@ -10,7 +10,7 @@
  *  - Every connection must present a per-run random token as its FIRST line
  *    (timing-safe compare); anything else destroys the socket.
  *  - The pipe path + token ride only the child ENVIRONMENT
- *    (`LIMBOO_BRIDGE_PIPE` / `LIMBOO_BRIDGE_TOKEN`), never argv.
+ *    (`ZEUS_BRIDGE_PIPE` / `ZEUS_BRIDGE_TOKEN`), never argv.
  *  - Bounded: max line length, max concurrent connections, per-request
  *    timeout. Handler errors answer the request; they never crash the server.
  */
@@ -133,7 +133,7 @@ export async function startBridgeServer(handlers: BridgeHandlers): Promise<RunBr
   });
 
   return {
-    env: { LIMBOO_BRIDGE_PIPE: pipePath, LIMBOO_BRIDGE_TOKEN: token },
+    env: { ZEUS_BRIDGE_PIPE: pipePath, ZEUS_BRIDGE_TOKEN: token },
     get hookConnected() {
       return hookConnected;
     },
@@ -221,8 +221,8 @@ function parseLine(line: string): Record<string, unknown> | null {
 /** win32: named pipe; posix: socket file inside a fresh 0700 directory. */
 function makePipePath(): string {
   const rand = crypto.randomBytes(9).toString('hex');
-  if (process.platform === 'win32') return `\\\\.\\pipe\\limboo-bridge-${rand}`;
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'limboo-bridge-'));
+  if (process.platform === 'win32') return `\\\\.\\pipe\\zeus-bridge-${rand}`;
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'zeus-bridge-'));
   fs.chmodSync(dir, 0o700);
   return path.join(dir, `${rand}.sock`);
 }

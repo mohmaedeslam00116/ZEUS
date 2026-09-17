@@ -1,5 +1,5 @@
 /**
- * `limboo.json` — the repo-authored worktree/session runtime config: setup and
+ * `zeus.json` — the repo-authored worktree/session runtime config: setup and
  * teardown hooks, named scripts, and supervised services.
  *
  * Security (CLAUDE.md §6): this file is REPO-AUTHORED and therefore untrusted
@@ -19,9 +19,9 @@ import { logger } from '../../logger';
 const NAME_RE = /^[a-z0-9][a-z0-9-]{0,31}$/;
 const FORBIDDEN_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
 
-/** Read + strictly validate `<root>/limboo.json`. Null when absent/invalid. */
+/** Read + strictly validate `<root>/zeus.json`. Null when absent/invalid. */
 export function readRepoConfig(root: string): RepoConfig | null {
-  const file = path.join(root, 'limboo.json');
+  const file = path.join(root, 'zeus.json');
   let raw: string;
   try {
     const stat = fs.statSync(file);
@@ -35,7 +35,7 @@ export function readRepoConfig(root: string): RepoConfig | null {
   try {
     parsed = JSON.parse(raw);
   } catch (err) {
-    logger.warn(`limboo.json parse failed: ${err instanceof Error ? err.message : String(err)}`);
+    logger.warn(`zeus.json parse failed: ${err instanceof Error ? err.message : String(err)}`);
     return null;
   }
   if (!isPlainObject(parsed)) return null;
@@ -70,7 +70,7 @@ export function readRepoConfig(root: string): RepoConfig | null {
 /**
  * Stable hash over the EXECUTABLE portions of the config (hooks + scripts +
  * services). The renderer displays the commands, the user acknowledges, and
- * this hash is what gets stored/compared — so an edited limboo.json always
+ * this hash is what gets stored/compared — so an edited zeus.json always
  * re-confirms (TOCTOU guard between display and run).
  */
 export function hashRepoConfig(config: RepoConfig | null): string {

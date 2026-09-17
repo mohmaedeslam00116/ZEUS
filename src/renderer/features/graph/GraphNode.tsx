@@ -44,7 +44,7 @@ const STATUS_COLOR: Record<WorkGraphNodeStatus, string> = {
 const PROVIDER_COLOR: Record<string, string> = {
   anthropic: 'var(--color-accent)',
   cursor: 'var(--color-warning)',
-  limboo: 'var(--color-muted)',
+  zeus: 'var(--color-muted)',
 };
 
 export type NodeColoring = 'kind' | 'status' | 'provider';

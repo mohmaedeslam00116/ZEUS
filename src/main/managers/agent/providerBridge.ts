@@ -1,6 +1,6 @@
 /**
  * The provider seam: run-scoped callbacks a provider runtime uses to report
- * what happened, without knowing anything about how Limboo records it.
+ * what happened, without knowing anything about how Zeus records it.
  *
  * All streaming / tool / persistence / telemetry behaviour stays owned by
  * `AgentManager`; a runtime only translates its own wire format into these

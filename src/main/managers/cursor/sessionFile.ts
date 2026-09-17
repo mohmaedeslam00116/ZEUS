@@ -1,9 +1,9 @@
 /**
  * Session-scoped generated-file lifecycle for Cursor runs.
  *
- * Every file Limboo materializes inside a session worktree for the duration of
+ * Every file Zeus materializes inside a session worktree for the duration of
  * a run (`.cursor/cli.json`, `.cursor/hooks.json`, `.cursor/mcp.json`,
- * `.cursor/rules/limboo-context.mdc`) goes through {@link withSessionFile}:
+ * `.cursor/rules/zeus-context.mdc`) goes through {@link withSessionFile}:
  * containment-checked against the session root, written atomically
  * (tmp + rename), and restored to the exact pre-run bytes — or removed, along
  * with any directories we created — in `finally`, so the working tree ends the
@@ -91,7 +91,7 @@ export async function withSessionFile<T>(
     }
   }
 
-  const tmp = `${file}.limboo-tmp`;
+  const tmp = `${file}.zeus-tmp`;
   await fs.promises.writeFile(tmp, body, 'utf8');
   await fs.promises.rename(tmp, file);
 
@@ -128,8 +128,8 @@ async function isSymlink(p: string): Promise<boolean> {
  * Materialize a per-run staging DIRECTORY at `<root>/<relDir>` — the directory
  * sibling of {@link withSessionFile}, disposer-shaped so callers can create it
  * before building the run prompt and tear it down in their own `finally`. The
- * leaf dir is Limboo's own namespace: crash leftovers are cleared on create,
- * every path component is refused when it is a symlink (a symlinked `.limboo`
+ * leaf dir is Zeus's own namespace: crash leftovers are cleared on create,
+ * every path component is refused when it is a symlink (a symlinked `.zeus`
  * would redirect the writes AND the recursive cleanup outside the workspace),
  * and `cleanup()` removes the leaf recursively plus any parent directories
  * this call created (deepest-first, best-effort), so `git status` ends the

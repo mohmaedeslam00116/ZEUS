@@ -143,7 +143,7 @@ export function subagentRecordRows(
   if (info?.background) rows.push(['execution', 'background']);
   if (info?.outcome && info.outcome !== 'completed') rows.push(['outcome', info.outcome]);
   // `toolUses` counts what the worker actually invoked, including calls whose
-  // events never reached Limboo; the child list is the fallback.
+  // events never reached Zeus; the child list is the fallback.
   const toolCount = info?.toolUses ?? childCount;
   if (toolCount) rows.push(['tool calls', String(toolCount)]);
   if (info?.totalTokens) rows.push(['tokens', info.totalTokens.toLocaleString()]);

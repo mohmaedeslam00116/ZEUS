@@ -14,7 +14,7 @@
  * key lives only in transient local input state (cleared on save/unmount) and
  * crosses IPC exactly once; everything rendered comes from the secret-free
  * {@link CursorAuthState}. URLs are the shared CURSOR_URLS constants and open
- * only through the validated `window.limboo.system.openExternal` path.
+ * only through the validated `window.zeus.system.openExternal` path.
  */
 import { useEffect, useState } from 'react';
 import { CURSOR_URLS } from '@shared/constants';
@@ -106,7 +106,7 @@ export function CursorAuthControls() {
     void update({ agent: { cursor: { executablePath: next } } });
   };
 
-  const openExternal = (url: string): void => void window.limboo?.system?.openExternal?.(url);
+  const openExternal = (url: string): void => void window.zeus?.system?.openExternal?.(url);
   // The status pill is rendered by HarnessCard via useCursorStatus().
   const login = auth?.login ?? { phase: 'idle' as const };
   const loginBusy = login.phase !== 'idle' && login.phase !== 'failed';
@@ -205,14 +205,14 @@ export function CursorAuthControls() {
       {/* OS-level sandbox now lives in the provider-neutral “Sandbox” section
           below (one policy translated to both agents), not per-provider here. */}
 
-      {/* Session hooks bridge — Limboo's per-tool permission prompts, registered
+      {/* Session hooks bridge — Zeus's per-tool permission prompts, registered
           per run via a session-scoped hooks.json. Capability-gated: it can only
           tighten (the deny-first rule file applies either way). */}
       {installed && (
         <Field
           id="cursorHooks"
           label="Permission hooks"
-          hint="Auto registers Limboo's interactive per-tool approval prompts for each run (applies when the CLI executes hooks; only ever tightens). Off skips registering them."
+          hint="Auto registers Zeus's interactive per-tool approval prompts for each run (applies when the CLI executes hooks; only ever tightens). Off skips registering them."
         >
           <SegmentedControl
             value={cursorPrefs.hooks}
@@ -231,7 +231,7 @@ export function CursorAuthControls() {
           <Field
             id="cursorProvider"
             label="Sign in with Cursor"
-            hint="Runs cursor-agent login — the CLI authenticates in your browser and keeps its own credentials. Limboo never reads or copies them."
+            hint="Runs cursor-agent login — the CLI authenticates in your browser and keeps its own credentials. Zeus never reads or copies them."
           >
             {loginBusy ? (
               <span className="flex items-center gap-2 text-[11px] text-muted">
@@ -264,7 +264,7 @@ export function CursorAuthControls() {
                 <ActionButton
                   label="Copy URL"
                   onClick={() => {
-                    void window.limboo?.system?.clipboardWrite?.(login.url ?? '');
+                    void window.zeus?.system?.clipboardWrite?.(login.url ?? '');
                     addToast({ title: 'Login URL copied', tone: 'info' });
                   }}
                 />

@@ -11,7 +11,7 @@
  *    delta-coalescing window, shipped below as "Update frequency".
  *  - "caching" — there is no configurable cache. The renderer holds the graph;
  *    the worker holds the last layout.
- *  - "background indexing priority" — Limboo has no prioritized scheduler and
+ *  - "background indexing priority" — Zeus has no prioritized scheduler and
  *    Node has no thread priorities.
  *  - "semantic compression" — that means a model call to summarize old
  *    branches, on the user's dime. Replaced by "Collapse completed runs", which
@@ -62,7 +62,7 @@ export function GraphPanel() {
     <div className="flex flex-col gap-5">
       <Section
         title="Capture"
-        hint="Limboo records every session's execution as a typed graph — objectives, plans, tasks, tools, commands, files, commits — normalized across both coding agents. Neither Claude nor Cursor exposes a work graph; this is Limboo's own layer built from the structured events they do emit, so it works identically whichever agent is running."
+        hint="Zeus records every session's execution as a typed graph — objectives, plans, tasks, tools, commands, files, commits — normalized across both coding agents. Neither Claude nor Cursor exposes a work graph; this is Zeus's own layer built from the structured events they do emit, so it works identically whichever agent is running."
       >
         <Field
           id="graphEnabled"
@@ -149,7 +149,7 @@ export function GraphPanel() {
             <Field
               id="graphDerivedEdges"
               label="Show inferred relationships"
-              hint="Links Limboo deduced rather than observed — always drawn dashed so they are never mistaken for fact."
+              hint="Links Zeus deduced rather than observed — always drawn dashed so they are never mistaken for fact."
             >
               <Toggle
                 checked={graph.showDerivedEdges}

@@ -296,7 +296,7 @@ export function DiffToolbar({
             label="Copy file path"
             icon={Copy}
             onClick={() => {
-              void window.limboo?.system.clipboardWrite(path);
+              void window.zeus?.system.clipboardWrite(path);
               addToast({ title: 'Path copied', tone: 'success' });
               setMenu(false);
             }}

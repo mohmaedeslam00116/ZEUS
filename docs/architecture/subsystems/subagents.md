@@ -119,7 +119,7 @@ events — the SDK documents it as always `null` on `SDKPartialAssistantMessage`
 because token deltas from subagents are not forwarded ([streaming output][3]).
 
 Rules the roll-up enforces:
-- `limboo_memory` / `limboo_search` are **not** MCP servers — they are Limboo's
+- `zeus_memory` / `zeus_search` are **not** MCP servers — they are Zeus's
   own retrieval bridges, excluded here exactly as everywhere else.
 - `filesRead` counts every read-shaped tool (`Read`/`Glob`/`LS`/`NotebookRead`),
   matching the stage that produces it.
@@ -270,7 +270,7 @@ Three consequences this subsystem made concrete:
   it: a blanket grant follows every worker.
 - **A worker's transcript is untrusted content.** Claude Code scans a subagent's
   final message for instruction-shaped patterns (control-tag imitation,
-  `Human:`/`Assistant:` turn markers) before the parent reads it. Limboo now
+  `Human:`/`Assistant:` turn markers) before the parent reads it. Zeus now
   renders that text itself, so it is bounded by `transcriptMax`, stored as data,
   and **never** merged into a system prompt or a context provider —
   `buildOptions` still has exactly three context producers.

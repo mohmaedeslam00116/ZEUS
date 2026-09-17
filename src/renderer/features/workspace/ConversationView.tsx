@@ -57,7 +57,7 @@ const MARKER_TYPES: ReadonlySet<AgentActivityItem['type']> = new Set([
   'status',
   'error',
   'clarification',
-  // A git operation the USER performed (staging, commit, push) or that Limboo
+  // A git operation the USER performed (staging, commit, push) or that Zeus
   // performed on the agent's behalf (the auto-checkpoint). The agent's OWN git
   // is `Bash("git …")`, which is a `tool` and is excluded above — recording it
   // here as well would show the same operation twice.
@@ -430,7 +430,7 @@ const TurnView = memo(function TurnView({
 
 /** DOM id for a turn's anchor — shared with the ConversationRail. */
 export function turnAnchorId(turnKey: string): string {
-  return `limboo-turn-${turnKey}`;
+  return `zeus-turn-${turnKey}`;
 }
 
 /** The payload behind a block (message / tool call / activity item). Blocks are
@@ -559,7 +559,7 @@ function UserBubble({
 }) {
   const [raw, setRaw] = useState(false);
   const body = useRef<HTMLDivElement>(null);
-  // An orchestration turn Limboo composed (plan approval) renders as its summary
+  // An orchestration turn Zeus composed (plan approval) renders as its summary
   // line, with the document beneath it as a card. The raw toggle still shows the
   // true sent text, tags and all — the display is a presentation choice, never a
   // concealment. See ChatMessage.display.

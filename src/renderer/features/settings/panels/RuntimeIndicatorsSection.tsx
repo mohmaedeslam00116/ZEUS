@@ -5,8 +5,8 @@
  * `settings.runtime` — a top-level peer of `settings.graph`, because Runtime
  * Telemetry is a provider-neutral platform service rather than provider config.
  *
- * Every knob here changes how Limboo DISPLAYS what a provider already reported.
- * None of them makes Limboo fetch anything, and no provider is ever polled —
+ * Every knob here changes how Zeus DISPLAYS what a provider already reported.
+ * None of them makes Zeus fetch anything, and no provider is ever polled —
  * the numbers ride the same event stream that drives the conversation. The
  * hints say so, because "refresh interval" otherwise reads like polling.
  */
@@ -59,7 +59,7 @@ export function RuntimeIndicatorsSection() {
   return (
     <Section
       title="Runtime Indicators"
-      hint="A live view of the running agent’s context window and provider limits, shown as a ring beside the composer status. Everything here is measured from the events Limboo already receives — no provider is ever polled and no network request is added. The inspector is anchored to the ring rather than draggable, so there is no panel position to remember, and reduced motion in Appearance overrides the animation setting below."
+      hint="A live view of the running agent’s context window and provider limits, shown as a ring beside the composer status. Everything here is measured from the events Zeus already receives — no provider is ever polled and no network request is added. The inspector is anchored to the ring rather than draggable, so there is no panel position to remember, and reduced motion in Appearance overrides the animation setting below."
     >
       <Field
         id="runtimeEnabled"
@@ -194,7 +194,7 @@ export function RuntimeIndicatorsSection() {
       <Field
         id="runtimeShowEstimates"
         label="Show estimated breakdown"
-        hint="The per-contributor split is estimated from character counts Limboo measured; the total is measured by the provider. Off shows only the measured total."
+        hint="The per-contributor split is estimated from character counts Zeus measured; the total is measured by the provider. Off shows only the measured total."
       >
         <Toggle
           checked={rt.showEstimates}

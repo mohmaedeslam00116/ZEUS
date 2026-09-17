@@ -1,6 +1,6 @@
 # Documentation standards
 
-Documentation is a first-class deliverable in Limboo. This page defines how to write
+Documentation is a first-class deliverable in Zeus. This page defines how to write
 it so the docs stay consistent, accurate, and maintainable.
 
 ## The five layers
@@ -37,7 +37,7 @@ Put new content in the layer it belongs to; do not grow the README into a manual
 
 ## Accuracy
 
-Reference pages (IPC channels, the `window.limboo` API, settings, design tokens,
+Reference pages (IPC channels, the `window.zeus` API, settings, design tokens,
 commands) must match the source. When you change code that a reference page
 describes, update the page in the same PR. The source files named on each reference
 page are authoritative; the docs mirror them.

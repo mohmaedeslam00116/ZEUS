@@ -1,6 +1,6 @@
 /**
  * IPC handlers for the Cursor provider's authentication + CLI maintenance.
- * Reached from the renderer through `window.limboo.agent.cursor.*`.
+ * Reached from the renderer through `window.zeus.agent.cursor.*`.
  *
  * The surface is capability-based (CLAUDE.md §6): the API key crosses exactly
  * once (set), is validated + length-capped here, and is NEVER returned,

@@ -1,6 +1,6 @@
 # Process model
 
-Limboo is an Electron application, and Electron's process model is the most important
+Zeus is an Electron application, and Electron's process model is the most important
 thing to understand before working in the codebase. Contributors unfamiliar with
 Electron often confuse the responsibilities of the main process, the renderer, and
 the preload script. This page makes the separation explicit and explains why it is
@@ -10,7 +10,7 @@ drawn where it is.
 
 ```
  Renderer (Chromium + React)   src/renderer/**   (entry: main.tsx)
-        |  window.limboo.*
+        |  window.zeus.*
         v
  Preload (contextBridge)        src/preload/index.ts   (the ONLY bridge)
         |  ipcRenderer <-> ipcMain
@@ -43,11 +43,11 @@ lifecycle, and workspace / session / settings persistence.
 ### Preload — the only bridge
 
 The preload script runs with `contextIsolation` on and `nodeIntegration` off. It
-uses `contextBridge` to expose a tightly scoped, typed API on `window.limboo` — not
+uses `contextBridge` to expose a tightly scoped, typed API on `window.zeus` — not
 unrestricted Node access. Exposing a curated bridge (rather than the `ipcRenderer`
 object or Node built-ins) is what keeps a compromised renderer from reaching the OS.
 The bridge surface is documented in
-[the `window.limboo` reference](../reference/window-limboo-api.md).
+[the `window.zeus` reference](../reference/window-zeus-api.md).
 
 ## Why everything crosses IPC
 

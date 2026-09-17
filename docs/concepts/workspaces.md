@@ -7,7 +7,7 @@ page explains what a workspace represents and how its lifecycle works.
 
 The agent needs an unambiguous, bounded root to operate in: a single directory it
 can read, watch, index, run git against, and spawn terminals inside, with every path
-guarded to stay within it. A workspace is that root, plus the metadata Limboo detects
+guarded to stay within it. A workspace is that root, plus the metadata Zeus detects
 about it. Bounding everything to a workspace is also a security primitive — it is the
 boundary that path-traversal guards enforce.
 
@@ -34,7 +34,7 @@ Workspaces are owned by the main-process Workspace Manager and persisted in SQLi
 - **Update config** — change ignored directories, preferred shell, and so on.
 - **Rescan** — re-run detection (branch changed, lockfile added, framework
   detected).
-- **Remove** — unregister from Limboo. Files are never deleted.
+- **Remove** — unregister from Zeus. Files are never deleted.
 
 ## Active-workspace wiring
 

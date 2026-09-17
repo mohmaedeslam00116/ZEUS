@@ -784,7 +784,7 @@ export class MemoryManager {
   ): void {
     try {
       const subject = (commit.subject || '').trim();
-      if (!subject || subject.startsWith('[limboo checkpoint]')) return;
+      if (!subject || subject.startsWith('[zeus checkpoint]')) return;
       // Conventional-commit type hints the tier (feat/fix → solution, refactor →
       // convention, otherwise a project note). Confidence is modest.
       const lower = subject.toLowerCase();
@@ -827,7 +827,7 @@ export class MemoryManager {
             {
               tier: 'preference',
               title: 'How I like to work',
-              body: 'Record your preferred languages, formatting, testing philosophy, commit conventions, and explanation depth here. Limboo will surface these to the agent automatically.',
+              body: 'Record your preferred languages, formatting, testing philosophy, commit conventions, and explanation depth here. Zeus will surface these to the agent automatically.',
               pinned: 1,
             },
           ]

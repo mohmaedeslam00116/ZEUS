@@ -1,6 +1,6 @@
 # Debugging
 
-This page collects the practical entry points for diagnosing problems in Limboo,
+This page collects the practical entry points for diagnosing problems in Zeus,
 across its three processes.
 
 ## Logs
@@ -44,11 +44,11 @@ auth, or rate-limit issues. See
   and shows a diagnostic page if it never comes up. Restart `npm start`.
 - **Native module errors** — rebuild after a Node / Electron change; see
   [dependency updates](dependency-updates.md).
-- **Database issues** — the SQLite file is `{userData}/limboo.db` (WAL). See
+- **Database issues** — the SQLite file is `{userData}/zeus.db` (WAL). See
   [the database](../architecture/subsystems/database.md).
 
 ## State on disk
 
-For reproducing or clearing state, the user-data directory holds `limboo.db`,
+For reproducing or clearing state, the user-data directory holds `zeus.db`,
 `settings.json`, `window-state.json`, and the log file. See
 [Local-first](../concepts/local-first.md).

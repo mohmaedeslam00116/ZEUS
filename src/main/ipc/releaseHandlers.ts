@@ -43,7 +43,7 @@ export function registerReleaseHandlers(): void {
       const win = BrowserWindow.getFocusedWindow() ?? BrowserWindow.getAllWindows()[0];
       const opts = {
         title: 'Export release notes',
-        defaultPath: `limboo-${version}-release-notes.md`,
+        defaultPath: `zeus-${version}-release-notes.md`,
         filters: [
           { name: 'Markdown', extensions: ['md'] },
           { name: 'All files', extensions: ['*'] },

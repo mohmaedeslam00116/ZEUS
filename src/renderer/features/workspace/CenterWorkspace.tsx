@@ -151,7 +151,7 @@ export function CenterWorkspace() {
                       Start the conversation
                     </span>
                     <span className="text-[13px] leading-relaxed text-muted">
-                      Describe what you want to build. Limboo coordinates the repository,
+                      Describe what you want to build. Zeus coordinates the repository,
                       files, terminal, and tasks while the agent does the work.
                     </span>
                   </div>
@@ -185,7 +185,7 @@ export function CenterWorkspace() {
                 <Logo size={40} />
                 <div className="flex flex-col gap-1">
                   <span className="text-[15px] font-semibold tracking-tight text-fg">
-                    Welcome to Limboo
+                    Welcome to Zeus
                   </span>
                   <span className="max-w-md text-[13px] leading-relaxed text-muted">
                     The local-first workspace for orchestrating coding agents. Create
@@ -225,7 +225,7 @@ export function CenterWorkspace() {
 
 /**
  * Recovery banner for a worktree session whose checkout directory vanished
- * (moved/deleted outside Limboo). Recreate re-provisions from the recorded
+ * (moved/deleted outside Zeus). Recreate re-provisions from the recorded
  * branch (or base ref); Detach reverts to a plain workspace-checkout session.
  */
 function MissingWorktreeBanner({ sessionId }: { sessionId: string }) {
@@ -253,7 +253,7 @@ function MissingWorktreeBanner({ sessionId }: { sessionId: string }) {
       <button
         type="button"
         disabled={busy}
-        onClick={() => void act((id) => window.limboo?.worktree.recreate(id))()}
+        onClick={() => void act((id) => window.zeus?.worktree.recreate(id))()}
         className="rounded-md bg-accent px-2 py-1 text-[11px] font-semibold text-base transition-opacity hover:opacity-90 disabled:opacity-50"
       >
         Recreate
@@ -261,7 +261,7 @@ function MissingWorktreeBanner({ sessionId }: { sessionId: string }) {
       <button
         type="button"
         disabled={busy}
-        onClick={() => void act((id) => window.limboo?.worktree.detach(id))()}
+        onClick={() => void act((id) => window.zeus?.worktree.detach(id))()}
         className="rounded-md border border-line bg-surface-2 px-2 py-1 text-[11px] font-medium text-fg transition-colors hover:border-line-strong disabled:opacity-50"
       >
         Detach

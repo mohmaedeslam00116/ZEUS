@@ -4,7 +4,7 @@
  * `hydrate()` loads the sessions for the active workspace through the preload
  * bridge and subscribes to live changes (`onUpdated` / `onActiveChanged`). It
  * also follows the active workspace: switching workspaces re-fetches the list.
- * All mutations go through `window.limboo.session.*`; the broadcast keeps every
+ * All mutations go through `window.zeus.session.*`; the broadcast keeps every
  * surface in sync. In a plain browser preview (no preload) it degrades to an
  * empty, read-only list so the UI still renders.
  *
@@ -100,9 +100,9 @@ interface SessionState {
 
 /** Resolve the session bridge, warning (dev) when it is unexpectedly absent. */
 function sessionApi() {
-  const api = window.limboo?.session;
+  const api = window.zeus?.session;
   if (!api && typeof console !== 'undefined') {
-    console.warn('[limboo] window.limboo.session is unavailable — the preload bridge did not load.');
+    console.warn('[zeus] window.zeus.session is unavailable — the preload bridge did not load.');
   }
   return api;
 }
@@ -145,7 +145,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
   hydrate: async () => {
     if (get().hydrated) return;
     set({ hydrated: true });
-    const api = window.limboo?.session;
+    const api = window.zeus?.session;
     if (!api) return;
 
     api.onUpdated(() => void get().refresh());
@@ -273,7 +273,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
    * setup hooks) still needs the acknowledgment before anything can run.
    */
   maybePromptSetup: async (sessionId: string) => {
-    const wt = window.limboo?.worktree;
+    const wt = window.zeus?.worktree;
     if (!wt) return;
     const prefs = useSettingsStore.getState().settings.git.worktrees;
     if (!prefs.autoSetup) return;
@@ -304,7 +304,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
    * autoSetup preference (that pref only gates the auto-offer on creation).
    */
   promptRepoConfig: async (sessionId: string) => {
-    const wt = window.limboo?.worktree;
+    const wt = window.zeus?.worktree;
     if (!wt) return;
     try {
       const state = await wt.getRepoConfig(sessionId);
@@ -312,7 +312,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
       set({ hooksPrompt: { sessionId, config: state.config, hash: state.hash } });
     } catch (err) {
       useUIStore.getState().addToast({
-        title: 'Could not read limboo.json',
+        title: 'Could not read zeus.json',
         description: errorMessage(err),
         tone: 'danger',
       });
@@ -323,7 +323,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
     const prompt = get().hooksPrompt;
     if (!prompt) return;
     set({ hooksPrompt: null });
-    const wt = window.limboo?.worktree;
+    const wt = window.zeus?.worktree;
     if (!wt) return;
     try {
       // Trust first (unlocks scripts/services/teardown even with no setup

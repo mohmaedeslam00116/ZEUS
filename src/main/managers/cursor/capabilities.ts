@@ -1,6 +1,6 @@
 /**
  * Cursor CLI capability record — main-process-owned, deliberately NOT in
- * settings (settings.set is renderer-writable over IPC; whether Limboo may pass
+ * settings (settings.set is renderer-writable over IPC; whether Zeus may pass
  * `--force` is an execution-capability gate, so only verified main-process
  * observations can flip it).
  *

@@ -46,7 +46,7 @@ export function CodeBlock({
   }, [code, lang, streaming]);
 
   const copy = () => {
-    void window.limboo?.system?.clipboardWrite(code);
+    void window.zeus?.system?.clipboardWrite(code);
     setCopied(true);
     setTimeout(() => setCopied(false), 1400);
   };
@@ -55,7 +55,7 @@ export function CodeBlock({
   // `offset`) starts wherever the file actually did.
   const gutter =
     startLine && startLine > 1
-      ? ({ ['--limboo-code-start' as string]: String(startLine - 1) } as CSSProperties)
+      ? ({ ['--zeus-code-start' as string]: String(startLine - 1) } as CSSProperties)
       : undefined;
 
   return (
@@ -81,12 +81,12 @@ export function CodeBlock({
       </div>
       {html ? (
         <div
-          className="limboo-code overflow-x-auto text-[12.5px]"
+          className="zeus-code overflow-x-auto text-[12.5px]"
           style={gutter}
           dangerouslySetInnerHTML={{ __html: html }}
         />
       ) : (
-        <pre className={cn('limboo-code overflow-x-auto px-3 py-2.5 text-[12.5px]')} style={gutter}>
+        <pre className={cn('zeus-code overflow-x-auto px-3 py-2.5 text-[12.5px]')} style={gutter}>
           <code className="font-mono text-fg">{code}</code>
         </pre>
       )}

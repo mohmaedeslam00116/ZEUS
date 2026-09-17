@@ -122,12 +122,12 @@ export function normalizeSettings(input: Partial<AppSettings>): AppSettings {
 
     // Migration (SETTINGS_VERSION 31 -> 32): ZEUS makes worktree setup hooks
     // opt-in (#14) — plain workspace sessions are the product default, and
-    // worktree creation no longer auto-prompts the repo's limboo.json setup
+    // worktree creation no longer auto-prompts the repo's zeus.json setup
     // commands. The constructor of SettingsManager persists the FULL merged
     // object back to disk, so a settings.json written during the #8–#13 window
     // already carries `git.worktrees.autoSetup: true` as if explicitly chosen —
     // byte-identical to a user's deliberate true. ZEUS is pre-release (no
-    // Limboo migration per ADR-0005), so every persisted `true` on a pre-32
+    // Zeus migration per ADR-0005), so every persisted `true` on a pre-32
     // file is the old default, not an explicit choice: flip it. From v32 on,
     // the only writer of `true` is the user's own Settings toggle.
     if (merged.version < 32 && merged.git.worktrees.autoSetup === true) {

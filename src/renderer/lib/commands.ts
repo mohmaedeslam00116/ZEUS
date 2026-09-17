@@ -246,7 +246,7 @@ export const COMMANDS: Command[] = [
     inPalette: true,
     run: () => {
       const markdown = currentReleaseMarkdown();
-      if (markdown) void window.limboo?.system?.clipboardWrite(markdown);
+      if (markdown) void window.zeus?.system?.clipboardWrite(markdown);
     },
   },
   {
@@ -260,7 +260,7 @@ export const COMMANDS: Command[] = [
       if (!version || !markdown) return;
       // Main owns the save dialog and the path — the renderer supplies content
       // only (the `graph:save` contract).
-      void window.limboo?.release?.export(version, markdown);
+      void window.zeus?.release?.export(version, markdown);
     },
   },
   {
@@ -385,7 +385,7 @@ export const COMMANDS: Command[] = [
         useUIStore.getState().addToast({ title: 'No active workspace', tone: 'warning' });
         return;
       }
-      void window.limboo?.worktree
+      void window.zeus?.worktree
         .prune(id)
         .then((ok) =>
           useUIStore.getState().addToast({

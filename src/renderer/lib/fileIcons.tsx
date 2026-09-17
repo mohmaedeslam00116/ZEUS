@@ -52,7 +52,7 @@ const BY_BASENAME: Record<string, FileIconSpec> = {
   'yarn.lock': { icon: FileLock, className: 'text-faint' },
   'pnpm-lock.yaml': { icon: FileLock, className: 'text-faint' },
   'cargo.lock': { icon: FileLock, className: 'text-faint' },
-  'limboo.json': { icon: FileCog, className: 'text-accent' },
+  'zeus.json': { icon: FileCog, className: 'text-accent' },
   dockerfile: { icon: Container, className: 'text-accent' },
   'docker-compose.yml': { icon: Container, className: 'text-accent' },
   'docker-compose.yaml': { icon: Container, className: 'text-accent' },

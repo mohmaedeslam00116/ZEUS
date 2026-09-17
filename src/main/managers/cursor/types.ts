@@ -25,7 +25,7 @@ export interface CursorRunSpec {
   mode: SessionPermissionMode;
   /** True adds `--force` (edits applied). False = propose-only per the docs. */
   force: boolean;
-  /** True adds `--trust` (Limboo's ack-hash gate decided, never blind). */
+  /** True adds `--trust` (Zeus's ack-hash gate decided, never blind). */
   trusted: boolean;
   model: string;
   /** Prior chat id for `--resume` (multi-turn conversations). */

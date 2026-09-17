@@ -45,7 +45,7 @@ function cursorDiagnosticText(
   interactive?: { active: boolean; cliVersion: string | null },
 ): string {
   const lines = [
-    '--- Limboo agent diagnostics ---',
+    '--- Zeus agent diagnostics ---',
     `Claude Code: ${claude.installed ? `connected${claude.version ? ` (${claude.version})` : ''}` : claude.error ?? 'not connected'}`,
     `Cursor status: ${auth?.status ?? 'unknown'}`,
     `Cursor executable: ${auth?.exec?.path ?? 'not resolved'}`,
@@ -75,7 +75,7 @@ function interactiveLabel(interactive?: { active: boolean; cliVersion: string | 
 function bridgeLabel(active: boolean | null | undefined, kind: 'hooks' | 'mcp'): string {
   if (active === undefined) return 'No Cursor run yet this session.';
   if (active === null) return 'Not registered for the last run.';
-  if (active) return kind === 'hooks' ? 'Active — prompts bridged on the last run.' : 'Active — Limboo memory/search served on the last run.';
+  if (active) return kind === 'hooks' ? 'Active — prompts bridged on the last run.' : 'Active — Zeus memory/search served on the last run.';
   return kind === 'hooks'
     ? 'Registered, but no hook connected — this CLI version likely does not execute hooks (the deny-first rules still applied).'
     : 'Registered, but the servers never connected — they may need a one-time approval in Cursor.';
@@ -90,9 +90,9 @@ export function AgentTroubleshooting() {
   const addToast = useUIStore((s) => s.addToast);
 
   const meta = cursorStatusMeta(auth?.status ?? 'unknown');
-  const openExternal = (url: string): void => void window.limboo?.system?.openExternal?.(url);
+  const openExternal = (url: string): void => void window.zeus?.system?.openExternal?.(url);
   const copyDiagnostics = () => {
-    void window.limboo?.system?.clipboardWrite?.(
+    void window.zeus?.system?.clipboardWrite?.(
       cursorDiagnosticText(auth, install, bridge, interactive),
     );
     addToast({ title: 'Diagnostics copied', tone: 'info' });
@@ -135,7 +135,7 @@ export function AgentTroubleshooting() {
       <StackedField
         id="troubleshootBridge"
         label="Cursor run bridge"
-        hint="Whether the last Cursor run's permission hooks and Limboo memory/search MCP servers connected over the per-run bridge. Both layers only ever tighten — runs stay safe without them."
+        hint="Whether the last Cursor run's permission hooks and Zeus memory/search MCP servers connected over the per-run bridge. Both layers only ever tighten — runs stay safe without them."
       >
         <div className="flex flex-col gap-1 py-1">
           <DiagRow label="Hooks" value={bridgeLabel(bridge?.hooksActive, 'hooks')} />
@@ -165,16 +165,16 @@ export function AgentTroubleshooting() {
         <ul className="flex list-disc flex-col gap-1.5 pl-4 text-[11px] text-muted">
           <li>
             <span className="text-fg">Installed the Cursor CLI but still see “Install CLI”?</span>{' '}
-            Hit Refresh detection — Limboo probes PATH, the native Windows install at{' '}
+            Hit Refresh detection — Zeus probes PATH, the native Windows install at{' '}
             <span className="font-mono">%LOCALAPPDATA%\cursor-agent</span>, and{' '}
             <span className="font-mono">~/.local/bin</span>. The installer edits PATH only for new
-            processes, so a Limboo started before the install won’t see it via PATH — the direct
+            processes, so a Zeus started before the install won’t see it via PATH — the direct
             install-directory probe covers that; a full app restart also works.
           </li>
           <li>
             <span className="text-fg">Installed somewhere custom?</span> Set the Executable path in
             the Cursor provider card above — it accepts the binary, the install directory, or the{' '}
-            <span className="font-mono">cursor-agent.cmd</span> shim (Limboo resolves the shim to
+            <span className="font-mono">cursor-agent.cmd</span> shim (Zeus resolves the shim to
             its native layout). When set it is used exclusively, never falling back to PATH.
           </li>
           <li>
@@ -184,7 +184,7 @@ export function AgentTroubleshooting() {
           </li>
           <li>
             <span className="text-fg">Runs failing right after a CLI update?</span> Use Update CLI
-            (or Refresh detection) so Limboo re-resolves the newest installed version before the
+            (or Refresh detection) so Zeus re-resolves the newest installed version before the
             next run.
           </li>
         </ul>

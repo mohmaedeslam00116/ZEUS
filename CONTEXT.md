@@ -1,7 +1,7 @@
 # CONTEXT.md
 
 Glossary for ZEUS. Terms only — no implementation details, no specs.
-Vocabulary is inherited from the Limboo codebase (see ADR-0001) and marked
+Vocabulary is inherited from the Zeus codebase (see ADR-0001) and marked
 where ZEUS's own product model must still validate it.
 
 ## Product
@@ -9,7 +9,7 @@ where ZEUS's own product model must still validate it.
 - **ZEUS** — the product: the environment *around* a coding agent. ZEUS is not
   a model and not an agent; it owns everything else (workspaces, sessions,
   files, git, terminals, memory, security).
-- **Limboo** — the codebase ZEUS evolves from. Lineage, not a user-facing term.
+- **Zeus** — the codebase ZEUS evolves from. Lineage, not a user-facing term.
 
 ## Core nouns
 
@@ -42,6 +42,24 @@ where ZEUS's own product model must still validate it.
   `default` | `acceptEdits`.
 - **Crown Jewels** — the small set of protected paths (secrets, database,
   settings) that every security layer denies to the agent, always.
+
+## Naming conventions
+
+- **zeus.json** — the repo-authored worktree/session config file at a
+  workspace or worktree root (hooks, setup commands, trust ack). Successor of
+  the inherited `limboo.json` (ADR-0010 rename; no compat layer).
+- **.zeus/** — the per-workspace ZEUS namespace for attachment staging and
+  generated state; successor of `.limboo/`. `.zeus-tmp-*` is its temp-file
+  convention. Cursor rule materialization targets `Write(.zeus/**)`.
+- **zeus_memory / zeus_search** — the MCP tool-server names ZEUS registers
+  (tool-call namespace `mcp__zeus_memory__*` / `mcp__zeus_search__*`);
+  Cursor allow rules materialize as `Mcp(zeus_memory:*)` / `Mcp(zeus_search:*)`.
+- **window.zeus** — the preload bridge global exposed to the renderer
+  (internal API name; successor of the inherited bridge namespace).
+- **refs/zeus/checkpoints/*** — the git-ref namespace for session checkpoints;
+  successor of the inherited checkpoint refs (clean-cut; no dual-prefix reads).
+- **ZEUS vs zeus** — user-visible identity renders `ZEUS` (ADR-0009); internal
+  and storage identifiers are lowercase `zeus`.
 
 ## Services
 

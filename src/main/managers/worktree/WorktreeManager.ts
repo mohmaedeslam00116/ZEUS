@@ -547,7 +547,7 @@ export class WorktreeManager {
   /* ------------------------------------------------------- hooks + config */
 
   /**
-   * The repo's `limboo.json` (hooks / scripts / services) read from the
+   * The repo's `zeus.json` (hooks / scripts / services) read from the
    * session's effective root, plus its hash and whether this workspace has
    * already acknowledged it. Repo config is untrusted until acknowledged.
    */
@@ -565,7 +565,7 @@ export class WorktreeManager {
    * Persist the user's acknowledgment of the CURRENT repo config for this
    * session's workspace. `ackHash` must equal the hash of the config the
    * renderer displayed (the confirmation acknowledges those exact commands —
-   * an edited limboo.json between display and ack fails closed). Trusting the
+   * an edited zeus.json between display and ack fails closed). Trusting the
    * config is independent of setup hooks: a repo declaring only scripts or
    * services (no setup) is acknowledged the same way, and plain (non-worktree)
    * sessions can ack too.
@@ -574,7 +574,7 @@ export class WorktreeManager {
     const session = this.sessions.get(sessionId);
     if (!session) throw new Error('Session not found');
     const state = this.getRepoConfigState(sessionId);
-    if (!state.config || !state.hash) throw new Error('No limboo.json in this session');
+    if (!state.config || !state.hash) throw new Error('No zeus.json in this session');
     if (!ackHash || ackHash !== state.hash) {
       throw new Error('Repo commands changed since they were displayed — review and confirm again');
     }
@@ -669,10 +669,10 @@ export class WorktreeManager {
     // Paseo-parity environment: hooks can copy ignored files (e.g. .env) from
     // the source checkout and brand their output per branch.
     const env: Record<string, string> = {
-      LIMBOO_WORKTREE: '1',
-      LIMBOO_SOURCE_ROOT: ws.path,
-      LIMBOO_BRANCH: session.worktreeBranch ?? '',
-      LIMBOO_SESSION_ID: session.id,
+      ZEUS_WORKTREE: '1',
+      ZEUS_SOURCE_ROOT: ws.path,
+      ZEUS_BRANCH: session.worktreeBranch ?? '',
+      ZEUS_SESSION_ID: session.id,
     };
 
     for (let i = 0; i < commands.length; i += 1) {

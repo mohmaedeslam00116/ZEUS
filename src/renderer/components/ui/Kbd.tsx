@@ -1,19 +1,9 @@
 /**
  * Keyboard-shortcut hint chip. Renders one or more keys; on macOS the common
- * modifiers are shown as symbols.
+ * modifiers are shown as symbols, elsewhere `Mod` resolves to `Ctrl`.
  */
 import { cn } from '@/renderer/lib/cn';
-
-const IS_MAC =
-  typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform);
-
-function display(key: string): string {
-  if (!IS_MAC) return key;
-  return key
-    .replace(/Mod|Cmd|Ctrl/i, '⌘')
-    .replace(/Alt|Option/i, '⌥')
-    .replace(/Shift/i, '⇧');
-}
+import { detectKeyPlatform, displayKey } from '@/renderer/lib/keyLabels';
 
 export function Kbd({ keys, className }: { keys: string[]; className?: string }) {
   return (
@@ -23,7 +13,7 @@ export function Kbd({ keys, className }: { keys: string[]; className?: string })
           key={k}
           className="flex h-5 min-w-5 items-center justify-center rounded border border-line bg-surface-2 px-1.5 font-mono text-[10px] text-faint"
         >
-          {display(k)}
+          {displayKey(k, detectKeyPlatform(typeof navigator !== 'undefined' ? navigator : undefined))}
         </kbd>
       ))}
     </span>

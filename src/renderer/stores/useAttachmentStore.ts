@@ -1,7 +1,7 @@
 /**
  * Attachment store — the renderer mirror of the main-process Attachment
  * Manager. Holds every session's attachment set (drafts + sent) plus live
- * staging progress. All mutations go through `window.limboo.attachment.*`;
+ * staging progress. All mutations go through `window.zeus.attachment.*`;
  * main pushes the authoritative set back via `attachment:changed`, so this
  * store never invents state — it only reflects it.
  */
@@ -50,7 +50,7 @@ export const useAttachmentStore = create<AttachmentStoreState>((set, get) => ({
   hydrated: false,
 
   hydrate: () => {
-    const api = window.limboo?.attachment;
+    const api = window.zeus?.attachment;
     if (!api || get().hydrated) return;
     api.onChanged(({ sessionId, attachments }) => {
       set((state) => {
@@ -75,7 +75,7 @@ export const useAttachmentStore = create<AttachmentStoreState>((set, get) => ({
   },
 
   loadSession: async (sessionId) => {
-    const api = window.limboo?.attachment;
+    const api = window.zeus?.attachment;
     if (!api) return;
     try {
       const attachments = await api.list(sessionId);
@@ -86,7 +86,7 @@ export const useAttachmentStore = create<AttachmentStoreState>((set, get) => ({
   },
 
   pickFiles: async (sessionId) => {
-    const api = window.limboo?.attachment;
+    const api = window.zeus?.attachment;
     if (!api) return;
     const before = new Set((get().bySession[sessionId] ?? []).map((a) => a.id));
     try {
@@ -98,7 +98,7 @@ export const useAttachmentStore = create<AttachmentStoreState>((set, get) => ({
   },
 
   addDropped: async (sessionId, files) => {
-    const api = window.limboo?.attachment;
+    const api = window.zeus?.attachment;
     if (!api || files.length === 0) return;
     const paths: string[] = [];
     for (const file of files) {
@@ -120,7 +120,7 @@ export const useAttachmentStore = create<AttachmentStoreState>((set, get) => ({
   },
 
   pasteImage: async (sessionId, file) => {
-    const api = window.limboo?.attachment;
+    const api = window.zeus?.attachment;
     if (!api) return;
     const before = new Set((get().bySession[sessionId] ?? []).map((a) => a.id));
     try {
@@ -138,7 +138,7 @@ export const useAttachmentStore = create<AttachmentStoreState>((set, get) => ({
   },
 
   remove: async (sessionId, id) => {
-    const api = window.limboo?.attachment;
+    const api = window.zeus?.attachment;
     if (!api) return;
     try {
       await api.remove(sessionId, id);
@@ -148,7 +148,7 @@ export const useAttachmentStore = create<AttachmentStoreState>((set, get) => ({
   },
 
   reveal: (sessionId, id) => {
-    void window.limboo?.attachment?.reveal(sessionId, id);
+    void window.zeus?.attachment?.reveal(sessionId, id);
   },
 }));
 

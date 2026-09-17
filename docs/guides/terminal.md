@@ -1,6 +1,6 @@
 # Terminal
 
-Limboo includes an integrated terminal backed by real pseudo-terminals. This guide
+Zeus includes an integrated terminal backed by real pseudo-terminals. This guide
 covers using it; the internals are in the
 [Terminal Manager architecture](../architecture/subsystems/terminal-manager.md).
 
@@ -22,7 +22,7 @@ then the OS default. Terminals spawn in the workspace root.
 
 ## Agent command mirroring
 
-When the agent runs a shell command, Limboo can mirror it into the integrated
+When the agent runs a shell command, Zeus can mirror it into the integrated
 terminal as a command record, so the agent's shell activity and your own share one
 view. This is controlled by the `agent.terminal.mirrorAgentCommands` setting.
 

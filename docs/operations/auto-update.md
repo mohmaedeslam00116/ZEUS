@@ -2,15 +2,15 @@
 
 > **ZEUS status (#13, ADR-0006):** ZEUS inherits the auto-update *client*
 > implementation and its packaging invariants, but there is **no update feed
-> and no release publishing yet** — the inherited Limboo feed is intentionally
+> and no release publishing yet** — the inherited Zeus feed is intentionally
 > not served to ZEUS users. The invariants below are preserved as reference
 > for the future ZEUS release design; the feed remains unset until then.
 
-How Limboo updates itself, what differs per platform, and the invariants that
+How Zeus updates itself, what differs per platform, and the invariants that
 must not be broken. Implementation:
 [`src/main/managers/AutoUpdateManager.ts`](../../src/main/managers/AutoUpdateManager.ts).
 
-Limboo uses `electron-updater` against this repository's GitHub Releases. The
+Zeus uses `electron-updater` against this repository's GitHub Releases. The
 feed is public and read-only, so no update credentials are stored anywhere.
 
 ## The flow
@@ -79,10 +79,10 @@ the wording has to survive a screenshot and the Markdown export.
 | Windows (NSIS) | Runs the downloaded installer with `--updated /S --force-run` | — |
 | macOS | Squirrel.Mac, fed the update zip over a loopback proxy | **A valid code signature** |
 | Linux AppImage | Replaces the AppImage in place, then re-execs it | `APPIMAGE` in the environment |
-| Linux deb / rpm / pacman | **Limboo's own installer** (`managers/updates/linuxInstall.ts`) runs `dpkg`/`apt-get`, `dnf`/`zypper`/`yum`/`rpm`, or `pacman` under `pkexec` | `pkexec` (polkit) |
+| Linux deb / rpm / pacman | **Zeus's own installer** (`managers/updates/linuxInstall.ts`) runs `dpkg`/`apt-get`, `dnf`/`zypper`/`yum`/`rpm`, or `pacman` under `pkexec` | `pkexec` (polkit) |
 | Microsoft Store (MSIX) | **Disabled** — the Store owns updates | — |
 
-Windows uses silent mode deliberately. Limboo's NSIS installer is the assisted
+Windows uses silent mode deliberately. Zeus's NSIS installer is the assisted
 (multi-page) kind, and a non-silent update re-runs the whole wizard, which reads
 to users as "clicking the button did nothing".
 
@@ -96,12 +96,12 @@ no matter how healthy the rest of the pipeline is. `AutoUpdateManager` probes
 this at startup with `codesign -dv` and reports updates as disabled with a
 reason, rather than offering a button that fails after a ~240 MB download.
 
-### macOS update zips must be rooted at `Limboo.app/`
+### macOS update zips must be rooted at `Zeus.app/`
 
 Squirrel.Mac unpacks the zip and expects the `.app` at its root. This is decided
 by what `scripts/dist.mjs` passes to `electron-builder --prepackaged`: on macOS
 that value is treated as the `.app` bundle path, not as a containing directory.
-Passing the directory produces a zip rooted at `Limboo-darwin-arm64/`, which
+Passing the directory produces a zip rooted at `Zeus-darwin-arm64/`, which
 downloads and verifies perfectly and then never installs.
 
 `ci/scripts/verify-artifacts.mjs` asserts the zip root on every release.
@@ -184,7 +184,7 @@ electron-updater's own path has four properties a desktop app cannot ship with:
    package managers exist, so a host with no rpm tooling still prompts before
    failing.
 
-Limboo's replacement is argv-only (never `shell: true`, per CLAUDE.md §6),
+Zeus's replacement is argv-only (never `shell: true`, per CLAUDE.md §6),
 **asynchronous** so the renderer can paint the `installing` stage, single-shot
 (no retry chain, therefore one prompt), and `pkexec`-only — gksudo/kdesudo take
 the command as a shell-quoted string, which is the very thing being removed.
@@ -213,13 +213,13 @@ shipped exactly that: `electron-builder.yml` declared no `pacman:` block, so
 app-builder-lib's default `depends` applied — and two of its entries,
 `http-parser` (dropped from Arch) and `libappindicator-gtk3` (AUR-only), do not
 exist in the Arch/Manjaro repos. Every pacman self-update failed with
-`cannot resolve "http-parser", a dependency of "limboo"`.
+`cannot resolve "http-parser", a dependency of "zeus"`.
 
 `electron-builder.yml` now declares `pacman.depends` explicitly. Anything added
 there must exist in `core`/`extra` — verify before shipping:
 
 ```bash
-bsdtar -xOf dist/limboo-*-x64.pacman .PKGINFO | grep '^depend'
+bsdtar -xOf dist/zeus-*-x64.pacman .PKGINFO | grep '^depend'
 ```
 
 ## AppImage filenames change on update
@@ -235,8 +235,8 @@ This is standard AppImage behaviour, not a failure — the app listens for
 npm run dist -- --publish never
 node ci/scripts/verify-artifacts.mjs dist
 
-./dist/limboo-*.AppImage                        # run from a terminal
-tail -f ~/.config/Limboo/logs/limboo-main.log   # watch the [updater] lines
+./dist/zeus-*.AppImage                        # run from a terminal
+tail -f ~/.config/Zeus/logs/zeus-main.log   # watch the [updater] lines
 ```
 
 A healthy install logs `[updater] using AppImageUpdater`, then
@@ -260,7 +260,7 @@ defers `app.quit()` to the next tick. Two things used to go wrong there:
 
 ## After the update: the release document
 
-An update that installs silently and says nothing is a maintenance task. Limboo
+An update that installs silently and says nothing is a maintenance task. Zeus
 turns it into a workspace document instead.
 
 **The rule.** On launch, once settings have hydrated, the renderer compares
@@ -308,7 +308,7 @@ download and a measurement of what is executing are different kinds of statement
 Claude Code shipped a fix for exactly that bug, where its release-notes view
 injected the whole changelog into every subsequent request. The agent can still
 answer "what changed in 1.7.0?" — by calling the read-only `list_releases` /
-`release_notes` tools on the `limboo_search` MCP server when it is actually asked.
+`release_notes` tools on the `zeus_search` MCP server when it is actually asked.
 
 ## Related
 

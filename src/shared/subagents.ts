@@ -17,7 +17,7 @@
  *
  * ## Provider neutrality
  *
- * Tool names reaching Limboo are already Claude-shaped for both providers
+ * Tool names reaching Zeus are already Claude-shaped for both providers
  * (`cursor/translate.ts` maps Cursor's tool union onto them), so this table is
  * provider-neutral by construction. Cursor print mode carries no derivable
  * parent linkage, so nothing there currently resolves to a subagent — the

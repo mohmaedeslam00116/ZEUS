@@ -2,7 +2,7 @@
  * Session-scoped Cursor hooks config (`<root>/.cursor/hooks.json`).
  *
  * Hooks give the adapter a synchronous per-tool-call decision point that
- * feeds Limboo's EXISTING permission machinery (risk chips, path guard,
+ * feeds Zeus's EXISTING permission machinery (risk chips, path guard,
  * auto-approval, the interactive PermissionRequest dialog) — the same
  * semantics Claude gets from canUseTool. Every registered hook runs the
  * bundled hookRunner.cjs, which forwards the payload over the per-run bridge
@@ -16,7 +16,7 @@
  *
  * SECURITY: the session hooks.json REPLACES a repo-authored one for the
  * duration of the run (restored byte-for-byte after). Repo-authored hooks are
- * arbitrary commands that would execute outside the limboo.json ack-hash
+ * arbitrary commands that would execute outside the zeus.json ack-hash
  * trust gate — merging them in would let any cloned repo run code the user
  * never approved.
  */
@@ -31,7 +31,7 @@ import { withSessionFile } from './sessionFile';
  * `subagent_model` and a set of id fields — but the id fields are reported to
  * all carry the same session id, so parent linkage is not derivable from them,
  * and `subagentStop` is reported not to fire at all for background workers.
- * Limboo therefore treats these as a bonus signal that can enrich a row when it
+ * Zeus therefore treats these as a bonus signal that can enrich a row when it
  * arrives and changes nothing when it does not: no permission decision, no
  * lifecycle state, and no UI that breaks by their absence. Cursor's stream
  * carries no `parent_tool_use_id` analogue, so a Cursor run still renders its

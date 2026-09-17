@@ -3,7 +3,7 @@
 ## Purpose
 
 The Service Manager supervises **Scripts & Services** declared by the repo's
-`limboo.json` (see the [reference](../../reference/limboo-json.md)): named
+`zeus.json` (see the [reference](../../reference/zeus-json.md)): named
 on-demand scripts (test, lint, migrate) and long-running services (dev servers,
 APIs, workers) owned by a session. Services get an auto-assigned loopback port,
 a restart policy, live status, and logs streamed through the integrated
@@ -26,8 +26,8 @@ Source: [`src/main/managers/services/ServiceManager.ts`](../../../src/main/manag
   its budget back. A stale exit event from a replaced PTY (restart race) is
   ignored via a terminal-id guard.
 - Peer discovery: sibling services of the same session see each other via
-  `LIMBOO_SERVICE_<NAME>_PORT/_URL` env vars (loopback only), plus their own
-  `PORT`/`LIMBOO_PORT`/`LIMBOO_SERVICE_NAME`/`LIMBOO_SESSION_ID`.
+  `ZEUS_SERVICE_<NAME>_PORT/_URL` env vars (loopback only), plus their own
+  `PORT`/`ZEUS_PORT`/`ZEUS_SERVICE_NAME`/`ZEUS_SESSION_ID`.
 - Run on-demand scripts in the session's effective root (visible terminal).
 - `autoStartForSession` starts `autoStart: true` services on session
   activation (acknowledged configs only); `stopForSession` tears everything

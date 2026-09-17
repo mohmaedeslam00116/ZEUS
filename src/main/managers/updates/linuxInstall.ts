@@ -1,5 +1,5 @@
 /**
- * linuxInstall — Limboo's own privileged installer for the Linux
+ * linuxInstall — Zeus's own privileged installer for the Linux
  * package-manager formats (deb / rpm / pacman).
  *
  * WHY THIS EXISTS. electron-updater applies these formats from inside
@@ -336,7 +336,7 @@ function spawnBounded(command: string, args: string[]): Promise<PrivilegedInstal
  * 126/127 are pkexec's own codes and mean the command never ran, so the package
  * manager's output (if any) is noise; every other code is the package manager
  * talking, and its first real line is the most useful thing we have. This is
- * where `cannot resolve "http-parser", a dependency of "limboo"` finally reaches
+ * where `cannot resolve "http-parser", a dependency of "zeus"` finally reaches
  * the user instead of being swallowed.
  */
 function describeFailure(code: number | null, output: string): string {

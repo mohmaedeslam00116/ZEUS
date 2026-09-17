@@ -1,6 +1,6 @@
 /**
  * IPC handlers for the Coding Agent Manager. Reached from the renderer through
- * `window.limboo.agent.*`. Every handler validates and caps its input before it
+ * `window.zeus.agent.*`. Every handler validates and caps its input before it
  * touches the manager (CLAUDE.md §6): prompt length is bounded, ids must be
  * non-empty strings, and any renderer-supplied object is screened for
  * prototype-polluting keys.

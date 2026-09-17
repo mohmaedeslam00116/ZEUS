@@ -1,6 +1,6 @@
 # Packaging and signing
 
-Limboo uses a **hybrid two-tool build**. This page covers producing distributable
+Zeus uses a **hybrid two-tool build**. This page covers producing distributable
 artifacts; the signing credentials themselves are documented in
 [`docs/ci/code-signing.md`](../ci/code-signing.md).
 

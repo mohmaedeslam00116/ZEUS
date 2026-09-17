@@ -2,7 +2,7 @@
  * TerminalView — hosts one xterm.js instance bound to a main-process PTY.
  *
  * The renderer never touches a shell directly: keystrokes go out through
- * `window.limboo.terminal.write` and PTY output streams back via `onData`. This
+ * `window.zeus.terminal.write` and PTY output streams back via `onData`. This
  * component owns the xterm lifecycle, replays buffered scrollback on mount, fits
  * the grid to its container (reporting size changes back to the PTY), and themes
  * the terminal with the app's pure-black design tokens so it matches the shell.
@@ -36,7 +36,7 @@ export function TerminalView({
 
   useEffect(() => {
     const host = hostRef.current;
-    const api = window.limboo?.terminal;
+    const api = window.zeus?.terminal;
     if (!host || !api) return;
 
     const c = cfgRef.current;
@@ -113,7 +113,7 @@ export function TerminalView({
     if (c.copyOnSelect) {
       selectionSub = terminal.onSelectionChange(() => {
         const sel = terminal.getSelection();
-        if (sel) void window.limboo?.system.clipboardWrite(sel);
+        if (sel) void window.zeus?.system.clipboardWrite(sel);
       });
     }
 

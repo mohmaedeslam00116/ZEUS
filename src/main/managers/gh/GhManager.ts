@@ -1,13 +1,13 @@
 /**
  * GitHub CLI integration — optional, detected, never a dependency.
  *
- * `gh` is treated exactly like `git`: a local tool Limboo drives argv-only and
+ * `gh` is treated exactly like `git`: a local tool Zeus drives argv-only and
  * reads the state of. When it is absent or logged out, everything else keeps
  * working and the GitHub surface simply hides itself — this manager must never
  * become something the Git panel waits on.
  *
  * SECURITY (CLAUDE.md §6):
- * - **Limboo stores no GitHub credential.** Authentication lives entirely in
+ * - **Zeus stores no GitHub credential.** Authentication lives entirely in
  *   the CLI's own config; this manager never passes `--show-token`, never reads
  *   a token, and there is no field on {@link GhState} that could carry one.
  * - The renderer supplies only enums and integers. Every subcommand and every
@@ -262,7 +262,7 @@ export class GhManager {
    * The ONLY write this manager performs, and the only one it may ever grow
    * without a fresh decision: no merge, no close, no review, no approve. The
    * agent reaches it through a tool that is deliberately excluded from the
-   * `limboo_search` auto-allow set, so every call shows the user the exact body
+   * `zeus_search` auto-allow set, so every call shows the user the exact body
    * first (see `AgentManager.decideToolUseCore`).
    *
    * The body travels on STDIN via `--body-file -`, never on argv.
@@ -299,7 +299,7 @@ export class GhManager {
   /**
    * Resolve this repository's commit emails to GitHub accounts.
    *
-   * The ONE place Limboo reaches `api.github.com`, and it exists because no
+   * The ONE place Zeus reaches `api.github.com`, and it exists because no
    * local data can answer the question: a commit carries a name and an email,
    * and only GitHub knows which account owns that email. `GET /repos/{owner}/
    * {repo}/commits` returns the mapping for a whole page at once.
@@ -308,7 +308,7 @@ export class GhManager {
    * - Read-only, one fixed endpoint, built from the remote WE parsed — the
    *   renderer and the agent still have no route to `gh api`, and never will.
    * - The request goes through the `gh` CLI, so authentication stays the CLI's
-   *   and Limboo still never reads or stores a token.
+   *   and Zeus still never reads or stores a token.
    * - Gated by `settings.git.avatars.enabled` alongside the image fetch, so one
    *   switch turns off every outbound request this feature makes.
    *

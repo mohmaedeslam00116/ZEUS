@@ -7,10 +7,10 @@
  * running `pnpm install --frozen-lockfile` and then the CLI's own installer —
  * i.e. **reaching the npm registry from the user's machine**.
  *
- * Limboo makes exactly three kinds of outbound request, and CLAUDE.md §1 is the
+ * Zeus makes exactly three kinds of outbound request, and CLAUDE.md §1 is the
  * paragraph that enumerates them. This is the third, and it is the only one the
  * user can be surprised by, so it is gated the same way repo-authored
- * `limboo.json` commands are: the verbatim commands are shown, the user
+ * `zeus.json` commands are: the verbatim commands are shown, the user
  * approves them once, and the approval is keyed to a FINGERPRINT of those exact
  * commands. An adapter upgrade that changes what runs re-prompts, because the
  * thing the user approved is no longer what would execute.
@@ -40,7 +40,7 @@ export interface BootstrapPlan {
    * that is where the adapter just wrote `pnpm-lock.yaml`. A consent surface
    * that shows the commands without the directory invites the user to paste
    * them into their shell, where they fail with `ERR_PNPM_NO_LOCKFILE` and look
-   * like a Limboo bug.
+   * like a Zeus bug.
    *
    * Deliberately NOT part of the fingerprint. Consent is over what EXECUTES;
    * folding the directory in would void every existing approval for a string
@@ -84,7 +84,7 @@ export type BootstrapRead =
  * nothing to consent to and nothing to block on — that is `none`. An adapter
  * that HAS a `getBootstrap` but throws from it is `unreadable`, and the caller
  * must refuse the run: approving commands nobody can read is not something
- * Limboo can ask a user to do.
+ * Zeus can ask a user to do.
  */
 export async function readBootstrapPlan(adapter: unknown): Promise<BootstrapRead> {
   const get = (adapter as { getBootstrap?: () => Promise<RawBootstrap> } | null)?.getBootstrap;
@@ -143,7 +143,7 @@ export async function readBootstrapPlan(adapter: unknown): Promise<BootstrapRead
  *
  * Deliberately not a boolean "allow network" setting: the user approves *these
  * commands*, not a standing permission. That is the same distinction the
- * limboo.json ack-hash gate makes.
+ * zeus.json ack-hash gate makes.
  */
 export function assertBootstrapConsent(
   plan: BootstrapPlan,
@@ -180,7 +180,7 @@ export function assertBootstrapPossible(plan: BootstrapPlan, eff: EffectiveSandb
   }
   // Only ever assert on tools the plan ITSELF invokes, derived from the command
   // strings rather than a hardcoded package-manager list — so an adapter that
-  // bootstraps with yarn, bun or corepack is checked just as precisely. Limboo
+  // bootstraps with yarn, bun or corepack is checked just as precisely. Zeus
   // never substitutes one tool for another: the approved string is the executed
   // string, so a missing tool is reported, not worked around.
   for (const { tool, found, hint } of resolveTools(plan)) {

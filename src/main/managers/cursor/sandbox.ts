@@ -1,7 +1,7 @@
 /**
  * Cursor OS-level sandbox translation (defense-in-depth Layer 3, Cursor side).
  *
- * Limboo's ONE provider-neutral sandbox policy ({@link EffectiveSandbox},
+ * Zeus's ONE provider-neutral sandbox policy ({@link EffectiveSandbox},
  * resolved in `sandbox/policy.ts`) is translated here into the two mechanisms
  * the cursor-agent CLI understands:
  *
@@ -13,7 +13,7 @@
  *  2. the `--sandbox enabled|disabled` argv flag ({@link sandboxArgv}).
  *
  * The workspace itself is already the writable root (the CLI is spawned with
- * `--workspace <worktree>`), and Limboo's own `userData`/secrets are denied by
+ * `--workspace <worktree>`), and Zeus's own `userData`/secrets are denied by
  * the deny-first `.cursor/cli.json` rules — so this file only carries the
  * *widenings* (extra writable paths) and the network policy. The declarative
  * config is best-effort augmentation; the enforced floor remains the cli.json
@@ -23,7 +23,7 @@ import { dirname } from 'node:path';
 import { withSessionFile, safeParseObject, copySafeKeys } from './sessionFile';
 import type { EffectiveSandbox } from '../sandbox/policy';
 
-/** The `.cursor/sandbox.json` shape Limboo emits (repo keys preserved on merge). */
+/** The `.cursor/sandbox.json` shape Zeus emits (repo keys preserved on merge). */
 interface CursorSandboxConfig {
   additionalReadwritePaths?: string[];
   additionalReadonlyPaths?: string[];
@@ -45,7 +45,7 @@ export function sandboxArgv(eff: EffectiveSandbox): string[] {
  * The on-disk resources the per-run bridge needs from inside the jail. Without
  * these the sandbox starves the very mechanism that asks the user for
  * permission: `net.connect(PIPE)` fails in the hook child, the runner fails
- * closed, and EVERY tool call is denied with "Limboo bridge unreachable".
+ * closed, and EVERY tool call is denied with "Zeus bridge unreachable".
  */
 export interface CursorBridgePaths {
   /** Directory holding the unix socket (posix); empty on win32 named pipes. */
@@ -91,7 +91,7 @@ function buildSandboxConfig(
  * Materialize `.cursor/sandbox.json` for the duration of `fn`, restoring the
  * pre-run bytes (or removing the file) afterwards. When the OS jail is disabled
  * the write is skipped entirely (fn still runs). A repo-authored sandbox.json
- * keeps its own keys — Limboo's fields are layered on top defensively.
+ * keeps its own keys — Zeus's fields are layered on top defensively.
  */
 export async function withSessionSandboxJson<T>(
   root: string,
@@ -117,7 +117,7 @@ export async function withSessionSandboxJson<T>(
       };
       mergeList('additionalReadwritePaths', ours.additionalReadwritePaths ?? []);
       mergeList('additionalReadonlyPaths', ours.additionalReadonlyPaths ?? []);
-      // Limboo's network policy wins (it is the orchestration authority).
+      // Zeus's network policy wins (it is the orchestration authority).
       out.networkPolicy = ours.networkPolicy;
       // Never let a repo-authored `true` cut the bridge socket off.
       out.disableTmpWrite = false;

@@ -10,7 +10,7 @@
  * Every `AgentEvent` is applied to a per-session snapshot (messages / tool calls
  * / changes / tasks / activity) plus a global diagnostics ring buffer, so the UI
  * renders typed state and never scrapes raw output. All mutations go through
- * `window.limboo.agent.*`.
+ * `window.zeus.agent.*`.
  */
 import { create } from 'zustand';
 import type {
@@ -76,7 +76,7 @@ async function refetchPlan(
   sessionId: string,
   set: (fn: (state: AgentStoreState) => Partial<AgentStoreState>) => void,
 ): Promise<void> {
-  const plan = (await window.limboo?.agent?.getPlan?.(sessionId)) ?? null;
+  const plan = (await window.zeus?.agent?.getPlan?.(sessionId)) ?? null;
   set((state) => {
     const prev = state.bySession[sessionId];
     if (!prev) return {};
@@ -390,7 +390,7 @@ export const useAgentStore = create<AgentStoreState>((set, get) => {
 
     hydrate: async () => {
       if (get().hydrated) return;
-      const api = window.limboo?.agent;
+      const api = window.zeus?.agent;
       if (!api) {
         set({ hydrated: true });
         return;
@@ -464,7 +464,7 @@ export const useAgentStore = create<AgentStoreState>((set, get) => {
     },
 
     loadSession: async (sessionId) => {
-      const api = window.limboo?.agent;
+      const api = window.zeus?.agent;
       if (!api) return;
       // Reopening a session re-reads its plan from the DB, so any approval this
       // window still believes is in flight is stale by definition — and the
@@ -476,14 +476,14 @@ export const useAgentStore = create<AgentStoreState>((set, get) => {
     },
 
     loadDiagnostics: async (sessionId) => {
-      const api = window.limboo?.agent;
+      const api = window.zeus?.agent;
       if (!api?.getDiagnostics) return;
       const diagnostics = await api.getDiagnostics(sessionId ?? null);
       set({ diagnostics: diagnostics.slice(-MAX_DIAGNOSTICS) });
     },
 
     send: async (sessionId, prompt, mode, attachmentIds) => {
-      const api = window.limboo?.agent;
+      const api = window.zeus?.agent;
       if (!api) return;
       // Optimistic render: show the user's turn the instant Send is clicked,
       // using a client-generated id that main reuses for the persisted message.
@@ -534,7 +534,7 @@ export const useAgentStore = create<AgentStoreState>((set, get) => {
     },
 
     stop: (sessionId) => {
-      void window.limboo?.agent?.stop(sessionId);
+      void window.zeus?.agent?.stop(sessionId);
       // Stopping aborts any paused request/clarification for this session (main
       // resolves the canUseTool promise via the abort signal) — drop the cards
       // for THIS session only, leaving any other session's cards untouched.
@@ -545,7 +545,7 @@ export const useAgentStore = create<AgentStoreState>((set, get) => {
     },
 
     clear: (sessionId) => {
-      void window.limboo?.agent?.clearSession(sessionId);
+      void window.zeus?.agent?.clearSession(sessionId);
       set((state) => ({
         bySession: { ...state.bySession, [sessionId]: emptySnapshot() },
         pendingClarificationBySession: omitKey(state.pendingClarificationBySession, sessionId),
@@ -553,20 +553,20 @@ export const useAgentStore = create<AgentStoreState>((set, get) => {
     },
 
     clearRateLimit: () => {
-      void window.limboo?.agent?.clearRateLimit?.();
+      void window.zeus?.agent?.clearRateLimit?.();
     },
 
     retryAuth: () => {
-      void window.limboo?.agent?.retryAuth?.();
+      void window.zeus?.agent?.retryAuth?.();
     },
 
     cursorRefresh: () => {
-      void window.limboo?.agent?.cursor?.refreshAuth?.();
+      void window.zeus?.agent?.cursor?.refreshAuth?.();
     },
 
     cursorLoginStart: async (manual) => {
       try {
-        await window.limboo?.agent?.cursor?.loginStart?.(manual);
+        await window.zeus?.agent?.cursor?.loginStart?.(manual);
       } catch (err) {
         useUIStore.getState().addToast({
           title: 'Could not start Cursor sign-in',
@@ -577,12 +577,12 @@ export const useAgentStore = create<AgentStoreState>((set, get) => {
     },
 
     cursorLoginCancel: () => {
-      void window.limboo?.agent?.cursor?.loginCancel?.();
+      void window.zeus?.agent?.cursor?.loginCancel?.();
     },
 
     cursorLogout: async () => {
       try {
-        await window.limboo?.agent?.cursor?.logout?.();
+        await window.zeus?.agent?.cursor?.logout?.();
         useUIStore.getState().addToast({ title: 'Signed out of Cursor', tone: 'info' });
       } catch (err) {
         useUIStore.getState().addToast({
@@ -596,7 +596,7 @@ export const useAgentStore = create<AgentStoreState>((set, get) => {
     // Returns true on success so the card can clear its local input field.
     cursorSetApiKey: async (key) => {
       try {
-        await window.limboo?.agent?.cursor?.setApiKey?.(key);
+        await window.zeus?.agent?.cursor?.setApiKey?.(key);
         useUIStore.getState().addToast({ title: 'Cursor API key saved', tone: 'success' });
         return true;
       } catch (err) {
@@ -611,7 +611,7 @@ export const useAgentStore = create<AgentStoreState>((set, get) => {
 
     cursorRemoveApiKey: async () => {
       try {
-        await window.limboo?.agent?.cursor?.removeApiKey?.();
+        await window.zeus?.agent?.cursor?.removeApiKey?.();
         useUIStore.getState().addToast({ title: 'Cursor API key removed', tone: 'info' });
       } catch (err) {
         useUIStore.getState().addToast({
@@ -626,7 +626,7 @@ export const useAgentStore = create<AgentStoreState>((set, get) => {
       if (get().cursorUpdating) return;
       set({ cursorUpdating: true });
       try {
-        const result = await window.limboo?.agent?.cursor?.updateCli?.();
+        const result = await window.zeus?.agent?.cursor?.updateCli?.();
         if (!result) return;
         useUIStore.getState().addToast({
           title: result.ok ? 'Cursor CLI updated' : 'Cursor CLI update failed',
@@ -648,7 +648,7 @@ export const useAgentStore = create<AgentStoreState>((set, get) => {
       const { pendingBySession } = get();
       const entry = Object.values(pendingBySession).find((r) => r.id === id);
       if (!entry) return;
-      void window.limboo?.agent?.respondPermission({ id, behavior, remember });
+      void window.zeus?.agent?.respondPermission({ id, behavior, remember });
       set((state) => ({ pendingBySession: omitKey(state.pendingBySession, entry.sessionId) }));
     },
 
@@ -656,7 +656,7 @@ export const useAgentStore = create<AgentStoreState>((set, get) => {
       const { pendingClarificationBySession } = get();
       const entry = Object.values(pendingClarificationBySession).find((r) => r.id === id);
       if (!entry) return;
-      void window.limboo?.agent?.respondClarification?.({
+      void window.zeus?.agent?.respondClarification?.({
         id,
         answers,
         response,
@@ -672,7 +672,7 @@ export const useAgentStore = create<AgentStoreState>((set, get) => {
      * that has since been replaced.
      */
     planDecision: (sessionId, kind, opts) => {
-      const api = window.limboo?.agent;
+      const api = window.zeus?.agent;
       if (!api?.planDecision) return;
       const plan = get().bySession[sessionId]?.plan;
       if (!plan) return;
@@ -719,7 +719,7 @@ export const useAgentStore = create<AgentStoreState>((set, get) => {
     setPlanPinned: (sessionId, pinned) => {
       const plan = get().bySession[sessionId]?.plan;
       if (!plan) return;
-      window.limboo?.agent?.setPlanPinned?.(sessionId, plan.rev, pinned)?.catch((err: unknown) => {
+      window.zeus?.agent?.setPlanPinned?.(sessionId, plan.rev, pinned)?.catch((err: unknown) => {
         useUIStore.getState().addToast({
           title: 'Could not update the plan',
           description: err instanceof Error ? err.message : String(err),
@@ -729,7 +729,7 @@ export const useAgentStore = create<AgentStoreState>((set, get) => {
     },
 
     listPlanRevisions: async (sessionId) => {
-      const api = window.limboo?.agent;
+      const api = window.zeus?.agent;
       if (!api?.listPlanRevisions) return [];
       try {
         return await api.listPlanRevisions(sessionId);
@@ -741,7 +741,7 @@ export const useAgentStore = create<AgentStoreState>((set, get) => {
     restorePlanRevision: (sessionId, revisionId) => {
       const plan = get().bySession[sessionId]?.plan;
       if (!plan) return;
-      window.limboo?.agent
+      window.zeus?.agent
         ?.restorePlanRevision?.(sessionId, plan.rev, revisionId)
         ?.catch((err: unknown) => {
           void refetchPlan(sessionId, set);
@@ -754,7 +754,7 @@ export const useAgentStore = create<AgentStoreState>((set, get) => {
     },
 
     revertPreview: async (sessionId, messageId) => {
-      const api = window.limboo?.agent;
+      const api = window.zeus?.agent;
       if (!api?.revertPreview) return null;
       try {
         return await api.revertPreview(sessionId, messageId);
@@ -764,7 +764,7 @@ export const useAgentStore = create<AgentStoreState>((set, get) => {
     },
 
     revertToMessage: async (sessionId, messageId) => {
-      const api = window.limboo?.agent;
+      const api = window.zeus?.agent;
       const toast = useUIStore.getState().addToast;
       if (!api?.revertToMessage) return false;
       let result: ConversationRevertResult;

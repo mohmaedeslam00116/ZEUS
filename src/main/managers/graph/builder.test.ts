@@ -75,8 +75,8 @@ describe('nodeKindForTool — the provider-neutral tool→kind table', () => {
   });
 
   it('maps the internal MCP search/memory servers before the generic mcp kind', () => {
-    expect(nodeKindForTool(toolCall({ name: 'mcp__limboo_search__search' }))).toBe('search');
-    expect(nodeKindForTool(toolCall({ name: 'mcp__limboo_memory__remember' }))).toBe('memory');
+    expect(nodeKindForTool(toolCall({ name: 'mcp__zeus_search__search' }))).toBe('search');
+    expect(nodeKindForTool(toolCall({ name: 'mcp__zeus_memory__remember' }))).toBe('memory');
   });
 
   it('maps other MCP servers to the generic mcp kind', () => {

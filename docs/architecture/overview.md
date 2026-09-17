@@ -12,21 +12,21 @@ The deepest, code-level contract is [`CLAUDE.md`](../../CLAUDE.md); the product
 vision is [`project.md`](../../project.md). These pages explain why the system is
 shaped the way it is.
 
-## What Limboo is, architecturally
+## What Zeus is, architecturally
 
-Limboo is the environment around a coding agent. The agent reasons and writes code;
-Limboo owns everything else — workspaces, sessions, the filesystem, git, terminals,
+Zeus is the environment around a coding agent. The agent reasons and writes code;
+Zeus owns everything else — workspaces, sessions, the filesystem, git, terminals,
 the database, durable memory, and a strict security boundary. This separation is the
-core architectural bet: by not being the model, Limboo can be a clean, modular,
+core architectural bet: by not being the model, Zeus can be a clean, modular,
 local-first platform.
 
 ## The three-context model
 
-Limboo runs three Electron contexts with a hard boundary between them:
+Zeus runs three Electron contexts with a hard boundary between them:
 
 ```
  Renderer (Chromium + React)   src/renderer/**   UI only — it asks, never performs
-        |  window.limboo.*
+        |  window.zeus.*
         v
  Preload (contextBridge)        src/preload/index.ts   the only bridge
         |  ipcRenderer <-> ipcMain
@@ -37,7 +37,7 @@ Limboo runs three Electron contexts with a hard boundary between them:
 
 - The **renderer** holds no business logic; state lives in Zustand stores and data
   crosses via the preload bridge.
-- The **preload** is the single `contextBridge` surface (`window.limboo`).
+- The **preload** is the single `contextBridge` surface (`window.zeus`).
 - The **main** process owns all filesystem, git, shell, database, and agent work.
 
 `contextIsolation` is on, `nodeIntegration` is off, and the window runs with

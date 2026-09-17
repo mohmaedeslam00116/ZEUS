@@ -1,6 +1,6 @@
 /**
  * IPC handlers for the provider-independent MCP platform. Reached from the
- * renderer through `window.limboo.mcp.*`.
+ * renderer through `window.zeus.mcp.*`.
  *
  * Security (CLAUDE.md §6): renderer input is a plain object screened for
  * prototype-pollution keys before it reaches the manager (which further

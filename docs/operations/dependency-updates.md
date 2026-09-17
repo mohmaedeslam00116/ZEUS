@@ -1,6 +1,6 @@
 # Dependency updates
 
-Limboo's dependencies are coupled to a specific toolchain. Updating them carelessly
+Zeus's dependencies are coupled to a specific toolchain. Updating them carelessly
 breaks the build, so this page documents the constraints.
 
 ## The pinned core

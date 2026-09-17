@@ -24,7 +24,7 @@ import { CodeBlock } from './CodeBlock';
 
 function openExternal(href?: string) {
   if (!href) return;
-  void window.limboo?.system?.openExternal(href);
+  void window.zeus?.system?.openExternal(href);
 }
 
 function buildComponents(streaming: boolean): Components {
@@ -177,7 +177,7 @@ export const Markdown = memo(function Markdown({
   const split = useMemo(() => (streaming ? splitBlocks(text) : null), [streaming, text]);
 
   return (
-    <div className="limboo-md text-[13.5px] leading-relaxed text-fg">
+    <div className="zeus-md text-[13.5px] leading-relaxed text-fg">
       {split ? (
         split.blocks.map((block, i) => {
           const isTail = i === split.blocks.length - 1;

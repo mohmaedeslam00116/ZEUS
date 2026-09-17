@@ -1,14 +1,14 @@
 /**
  * Service store — the renderer-side mirror of the main-process ServiceManager
  * (Scripts & Services). Holds per-session service lists and mirrors live
- * `services:updated` pushes. All mutations go through `window.limboo.services`;
+ * `services:updated` pushes. All mutations go through `window.zeus.services`;
  * in a plain browser preview (no preload) it degrades to empty state.
  */
 import { create } from 'zustand';
 import type { ServiceInfo } from '@shared/types';
 import { useUIStore } from './useUIStore';
 
-/** Slim per-session view of limboo.json driving the strip (scripts + trust). */
+/** Slim per-session view of zeus.json driving the strip (scripts + trust). */
 export interface SessionRepoSummary {
   /** Declared on-demand script names (commands stay main-side). */
   scripts: string[];
@@ -30,7 +30,7 @@ interface ServiceState {
 }
 
 function svcApi() {
-  return window.limboo?.services;
+  return window.zeus?.services;
 }
 
 function toastError(title: string, err: unknown): void {
@@ -66,7 +66,7 @@ export const useServiceStore = create<ServiceState>((set, get) => ({
     // The scripts + trust state ride along so the strip can offer script runs
     // and the "Review commands…" (re-)acknowledgment affordance.
     try {
-      const state = await window.limboo?.worktree.getRepoConfig(sessionId);
+      const state = await window.zeus?.worktree.getRepoConfig(sessionId);
       if (!state) return;
       const summary: SessionRepoSummary = {
         scripts: Object.keys(state.config?.scripts ?? {}),

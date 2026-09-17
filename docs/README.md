@@ -42,12 +42,12 @@ architecture vision).
 
 ## Reference
 
-- [`window.limboo` API](reference/window-limboo-api.md) — the full preload bridge
+- [`window.zeus` API](reference/window-zeus-api.md) — the full preload bridge
   surface.
 - [IPC channels](reference/ipc-channels.md) — invoke and event channel names by
   domain.
 - [Settings](reference/settings.md) — the `AppSettings` shape, defaults, and clamps.
-- [limboo.json](reference/limboo-json.md) — the repo-authored hooks / scripts /
+- [zeus.json](reference/zeus-json.md) — the repo-authored hooks / scripts /
   services config and its trust model.
 - [Design tokens](reference/design-tokens.md) — the pure-black palette and usage.
 - [Commands](reference/commands.md) — the command registry and shortcuts.

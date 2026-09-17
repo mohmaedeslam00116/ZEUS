@@ -1,18 +1,18 @@
 /**
- * TrayManager — adds a system tray icon so Limboo can keep running background
+ * TrayManager — adds a system tray icon so Zeus can keep running background
  * work while the window is hidden. Tray support varies by Linux desktop, so all
  * operations are guarded and failures are logged rather than thrown.
  *
  * {@link isActive} is load-bearing, not a convenience: `settings.behavior
  * .minimizeToTray` swallows the window's `close` event, and doing that on a
- * desktop where the tray never appeared would leave Limboo running with no
+ * desktop where the tray never appeared would leave Zeus running with no
  * window, no icon, and no way to quit it. The close handler in `src/main/index.ts`
  * asks this class first and only hides when there is genuinely somewhere to hide.
  *
  * The show action goes through an injected callback rather than
  * {@link getMainWindow} alone, because the window can legitimately be GONE (the
  * user quit the last window on macOS, or `minimizeToTray` was off when they
- * closed it). "Show Limboo" that silently does nothing is the same class of bug
+ * closed it). "Show Zeus" that silently does nothing is the same class of bug
  * as an update button that installs nothing.
  */
 import { app, Menu, Tray, nativeImage } from 'electron';
@@ -93,7 +93,7 @@ export class TrayManager {
     return Menu.buildFromTemplate([
       visible
         ? { label: 'Hide to Tray', click: () => this.hideWindow() }
-        : { label: 'Show Limboo', click: () => this.showWindow() },
+        : { label: 'Show Zeus', click: () => this.showWindow() },
       { label: 'New Session', click: () => this.newSession() },
       { type: 'separator' },
       // Never bare `app.quit()`: the window's close handler vetoes a close while

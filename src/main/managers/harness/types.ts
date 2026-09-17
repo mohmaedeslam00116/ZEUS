@@ -113,10 +113,10 @@ export interface HarnessAgentOptions {
   stopWhen?: unknown;
   /**
    * Host-executed AI SDK tools. Declared because the option is real and
-   * supported — the framework runs them in Limboo's process and submits the
+   * supported — the framework runs them in Zeus's process and submits the
    * result back — but deliberately NOT used.
    *
-   * Limboo's own memory/search tools reach every agent through the existing
+   * Zeus's own memory/search tools reach every agent through the existing
    * stdio MCP bridge, which Cursor and the direct SDK path share. Re-exposing
    * them as host tools would fork one tool surface into two definitions, and
    * would change their identity: host tools arrive under a different `mcp__*`
@@ -189,7 +189,7 @@ export interface HarnessAdapterSettings {
  *
  * Read structurally off the object the factory returns — never imported — so
  * the no-`@ai-sdk`-imports rule holds. `supportsBuiltinToolApprovals` is the
- * load-bearing one: when it is not `true`, the adapter cannot ask Limboo for
+ * load-bearing one: when it is not `true`, the adapter cannot ask Zeus for
  * permission before a built-in tool edits a file or runs a command, and the run
  * must be refused rather than run ungated.
  */

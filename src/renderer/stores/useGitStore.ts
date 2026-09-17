@@ -104,7 +104,7 @@ interface GitState {
 }
 
 function gitApi() {
-  return window.limboo?.git;
+  return window.zeus?.git;
 }
 
 /** Surface a rejected git `invoke` as a toast (shared with the other stores). */
@@ -178,7 +178,7 @@ export const useGitStore = create<GitState>((set, get) => ({
     // Initial pull + follow active-workspace switches.
     void get().loadEnvironment();
     void get().refresh();
-    window.limboo?.workspace.onChanged(() => {
+    window.zeus?.workspace.onChanged(() => {
       get().cancelCommitMessage();
       set({ diffs: {}, log: [], branches: [], tags: [], commitMessage: '', generatingMessage: false });
       void get().refresh();
@@ -297,7 +297,7 @@ export const useGitStore = create<GitState>((set, get) => ({
       toast({ title: 'Nothing to copy', description: 'This file has no diff.', tone: 'warning' });
       return false;
     }
-    await window.limboo?.system.clipboardWrite(result.text);
+    await window.zeus?.system.clipboardWrite(result.text);
     toast({
       title: 'Patch copied',
       description: result.truncated ? 'Truncated — the diff exceeded the size cap.' : undefined,

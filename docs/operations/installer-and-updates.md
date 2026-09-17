@@ -1,6 +1,6 @@
 # Branded installer and auto-update
 
-Limboo treats installation as the first screen of the app: a branded, multi-page
+Zeus treats installation as the first screen of the app: a branded, multi-page
 Windows installer that reuses the app's pure-black (`#000000`) theme and the
 `#ff0066` pink blob brand mark, plus in-app auto-update. This document explains the
 hybrid build flow, how to regenerate the installer art, and how releases
@@ -17,7 +17,7 @@ branded installers plus the `latest*.yml` auto-update metadata.
 
 ```
 npm start            electron-forge start                       # dev (HMR)
-npm run package      electron-forge package                     # -> out/Limboo-<plat>-<arch>/
+npm run package      electron-forge package                     # -> out/Zeus-<plat>-<arch>/
 npm run dist         package + node scripts/dist.mjs            # -> dist/ (installers + latest*.yml)
 npm run dist:publish package + node scripts/dist.mjs --publish always
 ```
@@ -54,7 +54,7 @@ registry key) and is referenced from the `nsis.include` option.
 The NSIS wizard is configured for a guided experience: license page, custom install
 directory, desktop + Start Menu shortcuts, run-after-finish, and — importantly —
 `deleteAppDataOnUninstall: false`, so uninstalling **never** wipes the user's
-workspaces, `limboo.db`, memories, logs, or terminal history.
+workspaces, `zeus.db`, memories, logs, or terminal history.
 
 ## Auto-update
 
@@ -82,7 +82,7 @@ ever stored.
   ```bash
   npm run dist                     # build installers locally into dist/
   gh release create v1.2.3 \
-    --title "Limboo v1.2.3" --notes-file RELEASE_NOTES.md \
+    --title "Zeus v1.2.3" --notes-file RELEASE_NOTES.md \
     dist/*.exe dist/*.dmg dist/*.AppImage dist/*.deb dist/*.rpm dist/*.zip \
     dist/latest*.yml dist/*.blockmap
   ```

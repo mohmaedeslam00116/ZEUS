@@ -207,10 +207,10 @@ export function GlobalSearch() {
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={onKeyDown}
             placeholder={typedPlaceholder}
-            className="flex-1 bg-transparent py-3 text-[13px] text-fg placeholder:text-faint focus:outline-none"
+            className="flex-1 bg-transparent py-3 text-[13px] text-fg placeholder:text-muted focus:outline-none"
           />
           {(loading || progress) && <Spinner size={11} />}
-          {progress && <span className="text-[10px] text-faint">indexing {progress.percent}%</span>}
+          {progress && <span className="text-[10px] text-muted">indexing {progress.percent}%</span>}
           {searching && (
             <IconButton label="Save this search" size="sm" onClick={() => void promptSave(save)}>
               <BookmarkPlus size={14} />
@@ -241,7 +241,7 @@ export function GlobalSearch() {
         <div className="max-h-96 overflow-y-auto p-1.5">
           {searching ? (
             rows.length === 0 ? (
-              <div className="px-3 py-6 text-center text-[12px] text-faint">No matches</div>
+              <div className="px-3 py-6 text-center text-[12px] text-muted">No matches</div>
             ) : (
               rows.map((row, i) => {
                 const label = row.type === 'hit' ? row.groupLabel : 'Commands';
@@ -295,7 +295,7 @@ function EmptyBody({
 }) {
   if (saved.length === 0 && history.length === 0) {
     return (
-      <div className="px-3 py-6 text-center text-[12px] text-faint">
+      <div className="px-3 py-6 text-center text-[12px] text-muted">
         Type to search the whole workspace
       </div>
     );
@@ -412,7 +412,7 @@ export function openHit(hit: SearchHit): void {
     case 'symbol': {
       const wsId = useWorkspaceStore.getState().activeId;
       layout.setActiveTab('files');
-      if (wsId && hit.path) void window.limboo?.fs?.reveal(wsId, hit.path);
+      if (wsId && hit.path) void window.zeus?.fs?.reveal(wsId, hit.path);
       break;
     }
     case 'memory':

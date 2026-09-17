@@ -1,6 +1,6 @@
 /**
  * Compact Scripts & Services strip for the active session — rendered under the
- * session header only when the repo's limboo.json declares services or scripts.
+ * session header only when the repo's zeus.json declares services or scripts.
  * Each service shows a status dot, a clickable loopback (or *.localhost proxy)
  * URL, and start/stop/restart controls; scripts get one-click run buttons; logs
  * stream into the session's terminal. Until the workspace has acknowledged the
@@ -73,7 +73,7 @@ export function ServicesStrip({ sessionId }: { sessionId: string }) {
               <button
                 type="button"
                 title={url}
-                onClick={() => void window.limboo?.system.openExternal(url)}
+                onClick={() => void window.zeus?.system.openExternal(url)}
                 className="text-accent hover:underline"
               >
                 {url.replace(/^https?:\/\//, '')}

@@ -4,7 +4,7 @@ Agent entry point for this repository — applicable to any AI coding agent
 (Claude, Codex, Cursor, etc.).
 
 > **Read [`CLAUDE.md`](CLAUDE.md) first.** It is the full operational contract
-> for working here: what Limboo is, the tech stack, the renderer/preload/main
+> for working here: what Zeus is, the tech stack, the renderer/preload/main
 > process boundaries, theming rules, security invariants, the release process,
 > and what is and isn't built yet. When this file and `CLAUDE.md` disagree about
 > current reality, `CLAUDE.md` wins.
@@ -22,13 +22,13 @@ Agent entry point for this repository — applicable to any AI coding agent
   the specification phase.
 
 **Critical rule:** a closed ZEUS ADR must not be silently overridden by an
-inherited Limboo statement in `CLAUDE.md`, `project.md`, or older architecture
+inherited Zeus statement in `CLAUDE.md`, `project.md`, or older architecture
 documentation. If an inherited document conflicts with an accepted ZEUS ADR,
 treat the conflict as documentation drift to be resolved explicitly — not as
 permission to reopen the ADR.
 
 **Inherited UI content:** UI layout/content described in `project.md` and
-other Limboo-era documentation (left Sessions, center Conversation/Agent
+other Zeus-era documentation (left Sessions, center Conversation/Agent
 Output, right Activity/Files/Changes, and similar) is a reference for the
 current implementation only. It must be validated for ZEUS before being
 treated as an approved ZEUS design; the `## UI/UX Design` rule below remains

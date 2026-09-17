@@ -42,7 +42,7 @@ present in the environment, so a maintainer without a Store account still gets a
 normal Windows build:
 
 ```bash
-APPX_IDENTITY_NAME=12345Publisher.Limboo \
+APPX_IDENTITY_NAME=12345Publisher.Zeus \
 APPX_PUBLISHER='CN=00000000-0000-0000-0000-000000000000' \
 APPX_PUBLISHER_DISPLAY_NAME='Your Publisher Name' \
 npm run dist

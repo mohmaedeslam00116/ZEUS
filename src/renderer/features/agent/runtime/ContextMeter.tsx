@@ -113,7 +113,7 @@ function Segment({
   // The tooltip names the SUBSYSTEM that consumed the tokens, and states the
   // origin in words — a dashed border alone does not survive a screenshot.
   const originLine = estimated
-    ? `Estimated from ${segment.chars?.toLocaleString() ?? '?'} characters Limboo measured.`
+    ? `Estimated from ${segment.chars?.toLocaleString() ?? '?'} characters Zeus measured.`
     : 'Measured by the provider.';
   return (
     <span

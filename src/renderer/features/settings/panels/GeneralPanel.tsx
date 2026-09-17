@@ -31,7 +31,7 @@ export function GeneralPanel() {
     <div className="flex flex-col gap-5">
     <Section
       title="General"
-      hint="Limboo is local-first and private — the only network traffic is the coding agent talking to its provider."
+      hint="Zeus is local-first and private — the only network traffic is the coding agent talking to its provider."
     >
       <Field
         id="reset"

@@ -59,7 +59,7 @@ export function ExternalLink({
       href={href ?? undefined}
       onClick={(e) => {
         e.preventDefault();
-        void window.limboo?.system?.openExternal(href as string);
+        void window.zeus?.system?.openExternal(href as string);
       }}
       title={href ?? undefined}
       className={cn(

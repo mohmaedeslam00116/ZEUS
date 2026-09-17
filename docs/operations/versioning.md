@@ -6,7 +6,7 @@ version in `package.json`, and tracks two internal schema versions separately.
 ## Fresh ZEUS release history (#30)
 
 ZEUS release history starts at **`v0.1.0-alpha.1`** — the first ZEUS release
-tag. ZEUS inherits no Limboo releases: the Limboo `v1.x` tags were removed from
+tag. ZEUS inherits no Zeus releases: the Zeus `v1.x` tags were removed from
 this repository's development clone, none were ever pushed to the ZEUS remote,
 and none are recreated. The committed `package.json` version is the dev
 baseline `0.1.0-alpha.0` — a placeholder that real releases overwrite (see
@@ -53,8 +53,8 @@ Changelog format). The `Unreleased` section accumulates entries between releases
 
 The changelog carries two distinct histories: **ZEUS releases** as `## [<version>]`
 sections (the only ones the release-note generator and the in-app release
-document read), and the **Limboo heritage archive** — the complete pre-ZEUS
-Limboo release history, preserved verbatim with headings demoted to `### [` so
+document read), and the **Zeus heritage archive** — the complete pre-ZEUS
+Zeus release history, preserved verbatim with headings demoted to `### [` so
 the parser (`ci/scripts/lib/changelog.mjs`) never treats it as ZEUS release
 data. Do not promote heritage sections, do not rewrite them, and do not add
 ZEUS sections outside the `[Unreleased]` staging area.

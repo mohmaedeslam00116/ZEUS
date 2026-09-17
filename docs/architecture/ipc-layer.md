@@ -58,7 +58,7 @@ example workspace validation failures) are returned in a shape the UI can act on
 ## The preload side
 
 [`src/preload/index.ts`](../../src/preload/index.ts) maps each channel to a typed
-method on `window.limboo`. It uses a small `subscribe()` helper for the `on*` event
+method on `window.zeus`. It uses a small `subscribe()` helper for the `on*` event
 methods, which return an unsubscribe function. The preload is the only bridge; it
 exposes curated methods, never the raw `ipcRenderer`.
 

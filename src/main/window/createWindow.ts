@@ -26,7 +26,7 @@ export function getMainWindow(): BrowserWindow | null {
 }
 
 /**
- * Block `<webview>` tags entirely, app-wide. Registered once. Limboo never
+ * Block `<webview>` tags entirely, app-wide. Registered once. Zeus never
  * embeds web content, so a webview could only be an injection vector.
  */
 function installWebviewBlock(): void {

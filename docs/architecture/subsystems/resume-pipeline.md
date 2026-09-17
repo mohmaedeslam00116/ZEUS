@@ -177,8 +177,8 @@ argv-only execution. The algorithm:
    status wins on the same path). Capped at `RESUME_LIMITS.maxFilesInDelta`, with the
    true total kept separately.
 6. Each path is **categorized**: `manifest` (package.json, lockfiles, Cargo/Go/Python
-   manifests, and **`limboo.json`** — a change here matters because of the
-   [config trust gate](../../reference/limboo-json.md)), `migration` (any
+   manifests, and **`zeus.json`** — a change here matters because of the
+   [config trust gate](../../reference/zeus-json.md)), `migration` (any
    `/migrations/` segment), `config` (tsconfig, eslintrc, vite/forge configs),
    `doc`, or `source`/`other`. Manifest and migration paths are surfaced prominently.
 
@@ -261,8 +261,8 @@ surface.
   session in the main process.
 - Event: `resume:state-changed` pushes each `ResumeState` transition.
 
-Exposed on the preload bridge as the `window.limboo.resume` namespace; see the
-[`window.limboo` API](../../reference/window-limboo-api.md).
+Exposed on the preload bridge as the `window.zeus.resume` namespace; see the
+[`window.zeus` API](../../reference/window-zeus-api.md).
 
 ## User interface
 

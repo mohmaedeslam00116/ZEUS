@@ -72,13 +72,13 @@ export function ComposerBanner() {
     title = `${agentName} needs to be signed in again`;
     body = isCursor
       ? 'Your Cursor authentication expired. Sign in or update the API key under Settings › Agent › Providers. Then retry.'
-      : 'Your Claude Code authentication expired. Open a terminal, run `claude`, and sign in — Limboo reuses that login. Then retry.';
+      : 'Your Claude Code authentication expired. Open a terminal, run `claude`, and sign in — Zeus reuses that login. Then retry.';
     action = { label: 'Re-check sign-in', onClick: retryAuth };
   } else if (lifecycle === 'reconnecting') {
     tone = 'warning';
     Icon = Loader2;
     title = `Reconnecting to ${agentName}`;
-    body = 'A transient issue interrupted the run. Limboo is restoring the connection and will resume automatically.';
+    body = 'A transient issue interrupted the run. Zeus is restoring the connection and will resume automatically.';
   } else if (planReady) {
     tone = 'accent';
     Icon = ClipboardCheck;

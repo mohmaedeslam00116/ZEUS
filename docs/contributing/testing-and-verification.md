@@ -1,6 +1,6 @@
 # Testing and verification
 
-Limboo has a specific verification path because of its toolchain. This page explains
+Zeus has a specific verification path because of its toolchain. This page explains
 how to verify a change correctly and why the obvious command (`tsc`) is the wrong
 one.
 

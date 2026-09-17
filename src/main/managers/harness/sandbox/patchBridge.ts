@@ -61,7 +61,7 @@ export function patchBridgeBindHost(source: string): BridgePatchResult {
     throw new Error(
       'Refusing to start the agent bridge: its bind address could not be ' +
         'pinned to loopback. The harness adapter no longer contains the ' +
-        'expected `host: "0.0.0.0"` binding, so Limboo cannot prove the bridge ' +
+        'expected `host: "0.0.0.0"` binding, so Zeus cannot prove the bridge ' +
         'will not be reachable from the local network. This usually means ' +
         '@ai-sdk/harness-claude-code was upgraded — re-verify how its bridge ' +
         'binds before allowing runs again.',

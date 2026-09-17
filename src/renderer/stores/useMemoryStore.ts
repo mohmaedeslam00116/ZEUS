@@ -47,7 +47,7 @@ interface MemoryState {
 }
 
 function api() {
-  return window.limboo?.memory;
+  return window.zeus?.memory;
 }
 
 function activeWs(): string | null {
@@ -74,7 +74,7 @@ export const useMemoryStore = create<MemoryState>((set, get) => ({
 
     m.onChanged(() => void get().refresh());
     void get().refresh();
-    window.limboo?.workspace.onChanged(() => {
+    window.zeus?.workspace.onChanged(() => {
       set({ query: '', results: [], tierFilter: null });
       void get().refresh();
     });

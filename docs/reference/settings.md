@@ -1,6 +1,6 @@
 # Reference: settings
 
-Limboo persists one `AppSettings` object. The source of truth is
+Zeus persists one `AppSettings` object. The source of truth is
 [`src/shared/constants.ts`](../../src/shared/constants.ts) (`DEFAULT_SETTINGS` plus
 the `*_LIMITS` tables the main process clamps against) and
 [`src/shared/types.ts`](../../src/shared/types.ts) (the `AppSettings` shape). This
@@ -91,7 +91,7 @@ optional Cursor API key is safeStorage-encrypted in a main-only file under
 | ----- | ------- | ----- |
 | `enabled` | `true` | master switch for worktree sessions |
 | `root` | `''` | blank = `{userData}/worktrees` |
-| `branchPrefix` | `limboo` | new branches are `{prefix}/{slug}` |
+| `branchPrefix` | `zeus` | new branches are `{prefix}/{slug}` |
 | `autoSetup` | `true` | offer the repo's setup hooks after provisioning |
 | `confirmHooks` | `true` | always re-confirm hooks before running |
 | `teardownOnArchive` | `false` | reclaim the worktree directory on archive |
@@ -160,7 +160,7 @@ those knobs displayed is still stored and still exported.
 
 Other bounds enforced by the main process live in the same constants file:
 `AGENT_LIMITS`, `AGENT_CONNECTION_LIMITS`, `LAYOUT_LIMITS`, `TERMINAL_LIMITS`,
-`GIT_LIMITS`, `WORKTREE_LIMITS` (worktrees, limboo.json, service ports),
+`GIT_LIMITS`, `WORKTREE_LIMITS` (worktrees, zeus.json, service ports),
 `MEMORY_LIMITS`, `SEARCH_LIMITS`, `FS_LIMITS`,
 `GRAPH_LIMITS`, `TELEMETRY_LIMITS`,
 `SESSION_LIMITS`, `WORKSPACE_LIMITS`, `WINDOW_MIN` / `WINDOW_DEFAULT`, plus

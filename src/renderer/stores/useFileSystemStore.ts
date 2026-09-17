@@ -59,9 +59,9 @@ async function runMutation(op: () => Promise<unknown>, label: string): Promise<b
 }
 
 function fsApi() {
-  const api = window.limboo?.fs;
+  const api = window.zeus?.fs;
   if (!api && typeof console !== 'undefined') {
-    console.warn('[limboo] window.limboo.fs is unavailable — the preload bridge did not load.');
+    console.warn('[zeus] window.zeus.fs is unavailable — the preload bridge did not load.');
   }
   return api;
 }
@@ -73,7 +73,7 @@ export const useFileSystemStore = create<FileSystemState>((set, get) => ({
 
   hydrate: () => {
     if (get().hydrated) return;
-    const api = window.limboo?.fs;
+    const api = window.zeus?.fs;
     if (!api) {
       set({ hydrated: true });
       return;

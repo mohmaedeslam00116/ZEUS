@@ -1,6 +1,6 @@
 # Keyboard shortcuts
 
-Limboo is driven by a command registry. Every command can be run from the command
+Zeus is driven by a command registry. Every command can be run from the command
 palette, and the common ones have keyboard bindings. `Mod` is `Cmd` on macOS and
 `Ctrl` elsewhere. The registry lives in
 [`src/renderer/lib/commands.ts`](../../src/renderer/lib/commands.ts); the reference
