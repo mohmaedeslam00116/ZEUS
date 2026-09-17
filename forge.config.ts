@@ -35,18 +35,11 @@ const config: ForgeConfig = {
     // native dynamic import in the main process, and extracts/spawns its bundled
     // Claude Code runtime — none of which work from inside an asar archive.
     //
-    // Also unpack every sherpa-onnx package: `sherpa-onnx-node` requires the
-    // per-platform package (e.g. `sherpa-onnx-win-x64`), whose .node addon and
-    // sibling onnxruntime DLLs/dylibs/sos must be REAL files for the OS dynamic
-    // loader — the voice utilityProcess also puts that directory on the library
-    // search path (PATH / LD_LIBRARY_PATH / DYLD_LIBRARY_PATH) before forking.
-    //
     // The Cursor bridge scripts (.vite/build/*.cjs — hook runner + stdio MCP
     // bridge) are spawned by cursor-agent as separate processes, so they must
     // also be real on-disk files, never asar-internal paths.
     asar: {
-      unpack:
-        '{**/node_modules/@anthropic-ai/**,**/node_modules/sherpa-onnx-*/**,**/.vite/build/*.cjs}',
+      unpack: '{**/node_modules/@anthropic-ai/**,**/.vite/build/*.cjs}',
     },
     name: 'Limboo',
     icon: 'assets/icon',
@@ -129,10 +122,7 @@ const config: ForgeConfig = {
   // machine with no Visual Studio Build Tools installed. Excluding it here is
   // what actually avoids that requirement; better-sqlite3 (the only other
   // native dep) still rebuilds normally.
-  // `sherpa-onnx-node` (voice STT/TTS/VAD) is the same story: a Node-API addon
-  // shipped as an ABI-stable per-platform prebuilt (sherpa-onnx-win-x64 etc.) —
-  // no rebuild wanted or needed.
-  rebuildConfig: { ignoreModules: ['node-pty', 'sherpa-onnx-node'] },
+  rebuildConfig: { ignoreModules: ['node-pty'] },
   hooks: {
     // electron-updater reads `resources/app-update.yml` on every checkForUpdates()
     // to learn its feed + cache dir. Neither Forge nor `--prepackaged`
@@ -174,14 +164,6 @@ const config: ForgeConfig = {
           entry: 'src/preload/index.ts',
           config: 'vite.preload.config.ts',
           target: 'preload',
-        },
-        {
-          // The voice inference worker (utilityProcess entry). Built like a
-          // second main-process bundle; the output name is pinned to
-          // `voice-worker.js` (see the basename-collision note in the configs).
-          entry: 'src/main/voice/worker.ts',
-          config: 'vite.voiceworker.config.ts',
-          target: 'main',
         },
       ],
       renderer: [

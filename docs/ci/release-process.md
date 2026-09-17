@@ -1,5 +1,11 @@
 # Release process
 
+> **ZEUS status (#13, ADR-0006):** ZEUS does **not** publish releases yet. The
+> tag-driven publishing pipeline described below is the inherited Limboo
+> machinery, kept in-tree as reference for the future ZEUS-native release
+> design. None of it is wired to any active workflow; do not follow this
+> process against ZEUS infrastructure until a ZEUS release decision exists.
+
 A release is driven entirely by a version tag. **GitLab is the primary publisher** —
 its pipeline runs automatically on every `v*` tag and publishes the **same build** to
 both a GitLab Release and a GitHub Release. GitHub Actions' `release.yml` is a manual

@@ -29,7 +29,7 @@ export function GitBranches() {
   // Validate with the SAME rule table the main process enforces, so an illegal
   // name is explained here and never reaches IPC.
   const check = trimmed ? validateBranchName(trimmed) : null;
-  const reason = check && !check.ok ? check.reason : null;
+  const reason = check && check.ok === false ? check.reason : null;
   const canSubmit = !!trimmed && !reason && !submitting;
 
   const close = () => {

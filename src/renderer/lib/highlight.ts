@@ -1,6 +1,6 @@
 /**
  * Thin wrapper over a cached Shiki highlighter. We build the highlighter on
- * Shiki's **JavaScript RegExp engine** (`shiki/engine/javascript`) rather than
+ * Shiki's **JavaScript RegExp engine** (`shiki/engine-javascript`) rather than
  * the default WASM Oniguruma engine: the production CSP is `script-src 'self'
  * blob:` (no `unsafe-eval`, no `wasm-unsafe-eval`), so WASM instantiation is
  * blocked and the WASM engine silently fails — leaving code blocks unhighlighted
@@ -11,8 +11,14 @@
  * into gutter line numbers) or `null` when highlighting fails entirely — callers
  * fall back to plain text.
  */
-import { createHighlighter, type Highlighter } from 'shiki';
-import { createJavaScriptRegexEngine } from 'shiki/engine/javascript';
+// The engine factory comes from the ROOT export (re-exported by shiki's
+// index): the `shiki/engine-javascript` subpath has no resolution-compatible
+// typings under `moduleResolution: node`, and the root surface is identical.
+import {
+  createHighlighter,
+  createJavaScriptRegexEngine,
+  type Highlighter,
+} from 'shiki';
 
 /** Tuned to read well on the pure-black surface. */
 const THEME = 'github-dark-default';

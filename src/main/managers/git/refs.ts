@@ -34,6 +34,6 @@ export function sanitizeRef(ref: string): string {
  */
 export function sanitizeBranchName(name: string, label = 'Branch name'): string {
   const check = validateBranchName(name, label);
-  if (!check.ok) throw new Error(`git: ${check.reason}`);
+  if (check.ok === false) throw new Error(`git: ${check.reason}`);
   return name;
 }

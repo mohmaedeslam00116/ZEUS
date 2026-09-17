@@ -27,11 +27,17 @@ with `managers/memory/memoryTools.ts`.
 credentials file) and reports `AgentInstall`. Limboo stores no Anthropic
 credentials. `retryAuth()` forces a re-probe after the user signs in again.
 
+The agent provider seam is **frozen** — see the
+[provider boundary contract](../provider-boundary.md) for the frozen surface,
+the adapter checklist, and the renderer neutrality gate.
+
 ### Cursor authentication (Agent Adapter Architecture, Phase 1)
 
-Cursor is the second provider, currently **authentication only** — it cannot run
-yet (`AGENT_MODELS` has no Cursor entries, so it is structurally unselectable as
-the running agent). The code lives beside, not inside, this manager:
+> Note: this section predates the full adapter build-out. Cursor now runs
+> behind the provider seam (`CursorRuntime.start(spec, bridge)`); the
+> `AGENT_MODELS` table drives routability. Kept for the auth-flow detail.
+
+Cursor is the second provider. The code lives beside, not inside, this manager:
 
 - `src/main/managers/cursor/CursorAuthManager.ts` — lazy local classification
   (`not-installed` / `not-authenticated` / `authenticated-cli` /

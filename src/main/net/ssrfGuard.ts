@@ -1,9 +1,8 @@
 /**
  * Shared SSRF guard — the single implementation of "is this address safe to
  * connect to" used by every outbound-fetch site in the main process
- * (CLAUDE.md §6). Extracted from VoiceModelManager so the voice downloader and
- * the MCP remote-server probe classify private/loopback/link-local addresses
- * identically and can't drift.
+ * (CLAUDE.md §6). The MCP remote-server probe and fixed-endpoint downloaders
+ * classify private/loopback/link-local addresses identically and can't drift.
  *
  * The core primitive is {@link makeGuardedLookup}: a `net.LookupFunction` passed
  * to `https.request({ lookup })` so the address the socket ACTUALLY connects to
@@ -102,13 +101,13 @@ export function makeGuardedLookup(opts: { allowPrivate?: boolean } = {}): net.Lo
 
 /**
  * Strict lookup (private + loopback + link-local + metadata all blocked). This is
- * the default posture the voice downloader relies on.
+ * the default posture for fixed-endpoint downloaders.
  */
 export const guardedLookup: net.LookupFunction = makeGuardedLookup();
 
 /**
  * Reject a URL unless it is https, credential-free, and on an allowlisted host.
- * Used by fixed-endpoint downloaders (voice models). MCP remote servers are
+ * Used by fixed-endpoint downloaders. MCP remote servers are
  * user-configured and use a different, per-server policy (see mcp/validate.ts).
  */
 export function assertHttpsAllowlistedUrl(raw: string, allowedHosts: ReadonlySet<string>): URL {

@@ -118,7 +118,7 @@ added without amending this paragraph:
 | Shell / desktop  | **Electron 42** (via **Electron Forge 7**)  |
 | Bundler          | **Vite 5** (`@electron-forge/plugin-vite`)  |
 | UI framework     | **React 19**                                |
-| Language         | **TypeScript** (`~4.5`)                      |
+| Language         | **TypeScript** (`~5.1`)                      |
 | Styling          | **Tailwind CSS v4** (CSS-first, no config)  |
 | State            | **Zustand 5** (slice-per-domain stores)     |
 | Icons            | **lucide-react**                            |
@@ -133,11 +133,19 @@ Notes / gotchas:
   `postcss.config.js`**. All design tokens live in an `@theme` block inside
   [`src/renderer/styles/index.css`](src/renderer/styles/index.css). The Vite
   plugin (`@tailwindcss/vite`) handles PostCSS/autoprefixer internally.
-- TypeScript is old (`~4.5`). The renderer is transpiled by **esbuild via Vite**,
-  not `tsc`, so type errors do **not** block the dev/build run. **Do not** rely on
-  `tsc --noEmit` to verify — TS 4.5 cannot even parse the modern bundled
-  `@types/node`. Verify instead with `npx vite build --config
-  vite.renderer.config.mts` + `npm run lint` (and esbuild bundles for main/preload).
+- TypeScript 5.1. Builds still transpile via **esbuild via Vite**, so type
+  errors do not block a dev run — but `npm run typecheck` (`tsc --noEmit`) is
+  now the type gate and MUST pass for a change to count as verified, alongside
+  `npx vite build --config vite.renderer.config.mts` + `npm run lint` (and
+  esbuild bundles for main/preload).
+- **Unit tests** (`vitest 3.x`, pinned for Vite-5 peer compatibility) cover the
+  deliberately-pure modules: `@shared/refName`, git sanitize/parse, the Work
+  Graph builder, the telemetry accumulator, and `normalizeSettings`. Convention:
+  **adjacent `*.test.ts`** colocated with the module under test (`src/**/*.test.ts`,
+  picked up by `vitest.config.ts` with the same `@`/`@shared` aliases). Run with
+  `npm test`. ADR-0007: suites are for pure logic — no Electron/IPC/E2E here;
+  tests never invoke git at runtime (fixtures are committed and hermetic) and
+  must pass on Windows (no POSIX-only paths).
 - **Path aliases**: `@` → `src` and `@shared` → `src/shared`. Configured in all
   three Vite configs (`resolve.alias`) and `tsconfig.json` (`paths`). ESLint's
   `import/no-unresolved` is set to ignore `^@/` and `^@shared/` (the pinned
@@ -416,6 +424,7 @@ persists it). `ResizeHandle` is the 1px divider with a wider hover hit area.
 ```bash
 npm start              # run the app in dev (Electron + Vite HMR). Renderer on :5173
 npm run lint           # eslint over .ts/.tsx
+npm test               # vitest run — unit tests for the pure modules (see below)
 npm run package        # package the app (no installers)
 npm run dist           # package + electron-builder → branded installers in dist/
 npm run gen:notes      # regenerate the bundled release notes + manifest from CHANGELOG.md
@@ -424,29 +433,19 @@ npm run gen:icons      # regenerate runtime PNG icons from assets/icon.svg
 npm run gen:installer  # regenerate Windows installer art (.ico + NSIS BMPs)
 npm run gen:appx       # regenerate Microsoft Store (MSIX) tile art
 npm run make           # alias for `npm run dist` (Forge has no makers; builds the current-OS installer)
-npm run publish        # alias for `npm run dist:publish` (build + upload to the GitHub release feed)
 ```
 
 There is **no `npm run dev`** — use `npm start` (Electron Forge drives Vite).
-Releases: **GitLab is the single source of truth and primary publisher.** Pushing a
-`v*` tag triggers the GitLab `release` stage (`.gitlab-ci.yml`), which packages all-OS
-installers and publishes the same build to **both** a GitLab Release and a GitHub
-Release. The GitHub repo is kept in sync by GitLab push mirroring, and `git push
-origin` is configured to fan out to `github.com`, `gitlab.com/BotCoder254/limboo`,
-and `bitbucket.org/limboo_/limboo`. GitHub Actions' `release.yml` is a manual fallback
-only. **Bitbucket Pipelines** (`bitbucket-pipelines.yml`) mirrors the GitLab pipeline
-on the Bitbucket repo via the same `ci/scripts/*.mjs`: CI on every push/PR, and on
-`v*` tags a Linux packaging pass that co-publishes the GitHub Release (see
-`docs/ci/bitbucket-pipelines.md`). See `docs/ci/release-process.md` and
-`docs/ci/gitlab-ci.md`.
-
-One exception to "GitLab builds everything": its SaaS runner fleet has no Intel
-macOS, arm64 Linux or arm64 Windows machine, and native modules rule out
-cross-compiling. `.github/workflows/release-supplement.yml` fires on the same `v*`
-tag, waits for GitLab's release to exist, builds exactly those three, **merges** the
-update feeds (`ci/scripts/merge-update-metadata.mjs`) and uploads with `--clobber`.
-Merging is not optional — each runner's `latest*.yml` lists only its own artifacts,
-so a plain upload would delete an architecture from the feed rather than add one.
+Releases: **ZEUS publishes nothing (yet).** The inherited Limboo publishing
+machinery — `.gitlab-ci.yml`, `bitbucket-pipelines.yml`, and the GitHub
+`release.yml` / `release-supplement.yml` / `_package.yml` / `cd.yml` workflows —
+was removed in #13 per ADR-0006, along with the `publish` / `dist:publish`
+package scripts and the limboo-ai/limboo electron-builder publish target. No
+pipeline fires on `v*` tags and no active workflow can upload a release. Do not
+tag ZEUS commits until the future ZEUS release design exists. The tag-driven
+versioning scripts (`apply-tag-version.mjs`, `check-tag-unique.mjs`) and the
+release validators under `ci/scripts/` are kept in-tree as reference, together
+with the release docs under `docs/ci/` (each carries a ZEUS status banner).
 
 **Packaging invariants** (all asserted by `ci/scripts/verify-artifacts.mjs`, all
 learned from shipped bugs — see `docs/operations/auto-update.md`):
@@ -459,20 +458,23 @@ every Windows auto-update fails. Signing lives in Forge, not electron-builder �
 `--prepackaged` skips the pack step where electron-builder would sign
 (`scripts/signing.cjs`, `docs/ci/code-signing.md`).
 
-Every release also publishes **`release-manifest.json`** — the structured
-description of the release the in-app release document renders. Its ordering in
-the `secure` stage is load-bearing: `verify-artifacts` → `generate-release-manifest`
-→ `make-checksums` → `check-release-manifest`. Generated after the structural gate
-(a manifest describing a broken build is a correct description of something that
-cannot be installed), before the checksums (so `SHA256SUMS` covers it), and gated
-after (so the two are proved to agree). `verify-artifacts.mjs` deliberately does
-NOT require it — it runs first. See `docs/ci/release-process.md` §4b.
+**Release manifest (reference).** The in-app release document renders
+`releaseManifest.generated.ts`, regenerated from `CHANGELOG.md` by
+`npm run gen:notes` (CI gates drift via `gen:notes -- --check`). The inherited
+release pipeline also produced a published `release-manifest.json` per release,
+with a load-bearing ordering — `verify-artifacts` → `generate-release-manifest` →
+`make-checksums` → `check-release-manifest` (generated after the structural gate,
+before the checksums, and gated after so the two agree). That pipeline is gone;
+the ordering rule remains documented in `docs/ci/release-process.md` §4b as an
+invariant worth preserving in the future ZEUS release design.
 
-**Versioning is TAG-DRIVEN — never hand-bump `package.json` before tagging.** Every CI
-job that reads the version first runs `ci/scripts/apply-tag-version.mjs`, which stamps the
-`v*` tag's version into `package.json` (+ lockfile) at build time, so all artifacts
-(`app.getVersion()`, installers, `latest*.yml`) match the tag. The repo's `package.json`
-version is just a dev/baseline placeholder. To release: `git tag vX.Y.Z && git push origin vX.Y.Z`.
+**Versioning (reference):** the inherited pipeline was tag-driven — every release
+job ran `ci/scripts/apply-tag-version.mjs`, stamping the `v*` tag's version into
+`package.json` (+ lockfile) at build time so all artifacts (`app.getVersion()`,
+installers, `latest*.yml`) matched the tag, and `package.json`'s version was only
+a dev/baseline placeholder. That convention remains the recommended pattern for
+the future ZEUS release design; until one exists, do not tag ZEUS commits
+expecting a release.
 
 ---
 
@@ -622,7 +624,13 @@ the real (no-mock) UI. Each owns one responsibility:
   repos and plain sessions). UI: `WorktreeTabs` (editor-style tab strip,
   Ctrl+Tab cycling), `SessionDeleteDialog` (dependency summary),
   `HooksConfirmDialog` (verbatim command approval). Settings under
-  `settings.git.worktrees`; bounds in `WORKTREE_LIMITS`.
+  `settings.git.worktrees`; bounds in `WORKTREE_LIMITS`. **ZEUS default
+  posture (#14):** plain workspace sessions are the product default
+  (`worktree_path = null`, execution root = the workspace path); worktrees are
+  an explicit opt-in via the existing affordances, and
+  `git.worktrees.autoSetup` (the setup-hook auto-prompt) defaults to **false**.
+  Resolver behavior is unchanged: `resolveSessionRoot` falls back to the
+  workspace path for a plain session.
 - **Service Manager** (`managers/services/ServiceManager.ts` + `ProxyServer.ts`)
   — **Scripts & Services** from the repo's `limboo.json`
   (see `docs/reference/limboo-json.md`): on-demand scripts + supervised
@@ -1242,13 +1250,16 @@ being CREATED) and re-used by the renderer to validate before IPC. It matches
 an explicit ASCII class, **never JS `\s`** — `\s` matches NBSP/BOM/U+3000, which
 git accepts, and misses C0 controls and DEL, which it does not.
 
-### Agent Adapter Architecture (multi-agent: Claude + Cursor) — IN PROGRESS
+### Agent Adapter Architecture (multi-agent: Claude + Cursor) — seam frozen per ADR-0003
 
 **Build-order items (1) Authentication, (2) Runtime, (3) Permissions,
 (4) Context injection, (5) MCP reuse, and (6) Worktrees are ALL BUILT; Cloud
-Agents / ACP remain planned.** Limboo is evolving from "a Claude integration" into a
-multi-agent orchestration platform via an **Agent Adapter Architecture**: a thin
+Agents / ACP remain planned.** ZEUS is a multi-agent orchestration platform via
+an **Agent Adapter Architecture**: a thin
 translation layer per agent runtime, with **nothing above the adapters changing**.
+The adapter seam is FROZEN (see `docs/architecture/provider-boundary.md` and the
+renderer neutrality gate `scripts/check-provider-neutrality.mjs`, which runs in
+CI); remaining adapter ideas are deferred scope, not open architecture.
 The UI never knows which agent is running — it only knows "the current session has
 an active coding agent". Full research/design doc:
 [`docs/agents/cursor-integration.txt`](docs/agents/cursor-integration.txt).
@@ -1515,5 +1526,6 @@ tables are parser-agnostic) would sharpen the resume symbol delta.
    OS/logic → `src/main/**` (+ future managers); the bridge → `src/preload/index.ts`;
    shared contracts → `src/shared/**`.
 4. Keep the process boundary, dark-only theme, and no-gradient rule intact.
-5. Verify with `npx vite build --config vite.renderer.config.mts` + `npm run lint`
-   (not `tsc`). Prefer small, single-responsibility additions wired through IPC.
+5. Verify with `npm run typecheck` + `npx vite build --config
+   vite.renderer.config.mts` + `npm run lint`. Prefer small,
+   single-responsibility additions wired through IPC.

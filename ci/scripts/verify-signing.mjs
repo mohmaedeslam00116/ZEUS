@@ -3,7 +3,7 @@
  * verify-signing.mjs — verify code signatures on built artifacts where signing is
  * configured, and exit cleanly (skip) where it is not.
  *
- * Provider-neutral. Limboo stores NO signing credentials in the repo; signing is
+ * Provider-neutral. ZEUS stores NO signing credentials in the repo; signing is
  * opt-in and driven entirely by provider secrets (see docs/ci/code-signing.md).
  * This script therefore:
  *   - Always: asserts the `publisherName` invariant (see below) — the one check

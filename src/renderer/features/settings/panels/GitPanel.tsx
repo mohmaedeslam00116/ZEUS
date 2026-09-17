@@ -15,7 +15,7 @@ export function GitPanel() {
   const git = useSettingsStore((s) => s.settings.git);
   const update = useSettingsStore((s) => s.update);
 
-  const set = <K extends keyof typeof git>(key: K, value: (typeof git)[K]) =>
+  const set = <K extends keyof typeof git>(key: K, value: (typeof git)[K]): void =>
     void update({ git: { [key]: value } });
 
   return (

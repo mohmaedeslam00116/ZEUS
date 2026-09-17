@@ -31,10 +31,6 @@ This page mirrors that file. When in doubt, the source file is authoritative.
 | Search    | `search:global`, `search:files`, `search:symbols`, `search:reindex`, `search:getStatus`, `search:historyList`, `search:historyClear`, `search:savedList`, `search:savedCreate`, `search:savedDelete` |
 | Work Graph | `graph:get`, `graph:query`, `graph:nodeDetail`, `graph:export`, `graph:save`, `graph:findByRef`, `graph:prune`, `graph:clear`, `graph:exportSubgraph`, `graph:runStats`, `graph:saveBatch` |
 | Runtime telemetry | `runtime:getSnapshot`, `runtime:getHistory`, `runtime:setWatching`, `runtime:export`, `runtime:save`, `runtime:clearHistory` |
-| Voice     | `voice:getState`, `voice:start`, `voice:stop`, `voice:cancel`, `voice:stopSpeaking`, `voice:speak`, `voice:models:list`, `voice:models:download`, `voice:models:pause`, `voice:models:resume`, `voice:models:cancel`, `voice:models:remove`, `voice:models:verify`, `voice:models:reveal` |
-
-There is also one fire-and-forget renderer -> main channel (`IpcSends`, via
-`ipcRenderer.send` and the `on()` registry wrapper): `voice:audio-chunk`.
 
 ## `IpcEvents` (one-way main -> renderer)
 
@@ -67,12 +63,6 @@ There is also one fire-and-forget renderer -> main channel (`IpcSends`, via
 | `search:changed` | The search index / history / saved searches changed. |
 | `search:index-progress` | Progress of an in-flight search index pass. |
 | `update:status` | The auto-update lifecycle advanced. |
-| `voice:state` | The voice runtime state changed. |
-| `voice:transcript` | A finished utterance transcript. |
-| `voice:tts-chunk` | A chunk of synthesized PCM for playback. |
-| `voice:playback-cancel` | Stop all scheduled speech playback (barge-in). |
-| `voice:model-progress` | Progress of a voice model download / verify. |
-| `voice:models-changed` | The set of installed voice models changed. |
 
 ## Adding a channel
 

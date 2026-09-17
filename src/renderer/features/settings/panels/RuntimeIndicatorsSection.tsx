@@ -44,7 +44,7 @@ export function RuntimeIndicatorsSection() {
       .finally(() => setBusy(false));
   };
 
-  const set = <K extends keyof typeof rt>(key: K, value: (typeof rt)[K]) =>
+  const set = <K extends keyof typeof rt>(key: K, value: (typeof rt)[K]): void =>
     void update({ runtime: { [key]: value } });
 
   const T = TELEMETRY_LIMITS;

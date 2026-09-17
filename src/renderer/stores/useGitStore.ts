@@ -17,7 +17,7 @@ import type {
   GitStatus,
   GitTag,
 } from '@shared/types';
-import { guardIpc } from '@/renderer/lib/ipcError';
+import { cleanIpcError, guardIpc } from '@/renderer/lib/ipcError';
 import { agentDisplayName } from '@/renderer/features/agent/status';
 import { useWorkspaceStore } from './useWorkspaceStore';
 import { useSessionStore } from './useSessionStore';

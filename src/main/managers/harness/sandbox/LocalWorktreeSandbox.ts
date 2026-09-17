@@ -171,7 +171,7 @@ class LocalSandboxSession {
   readonly ports: number[] = [];
   private readonly reservations = new Map<number, PortReservation>();
   private readonly children = new Set<ReturnType<typeof spawn>>();
-  private readonly jail = resolveJail(this.eff);
+  private readonly jail: ReturnType<typeof resolveJail>;
   private stopped = false;
 
   constructor(
@@ -184,7 +184,12 @@ class LocalSandboxSession {
     /** Credential env vars this harness needs — forwarded only if already set. */
     private readonly envKeys: readonly string[],
     private readonly diag: NonNullable<LocalSandboxDeps['diag']>,
-  ) {}
+  ) {
+    // Initialized from the PARAMETER (not `this.eff`) in the constructor body:
+    // field initializers run before parameter-property assignment, so an
+    // initializer here would read `undefined`.
+    this.jail = resolveJail(eff);
+  }
 
   readonly description =
     'Local worktree sandbox: the agent operates directly on the session\'s git ' +
@@ -245,7 +250,7 @@ class LocalSandboxSession {
         // Staged attachments are a READ carve-out. Writes are refused under
         // the standing policy; reads always pass, which is the whole point of
         // mounting them.
-        if (forWrite && this.eff.readOnlyAttachments) {
+        if (forWrite && this.eff.readOnly.some((ro) => contains(realpathNearest(ro), real))) {
           throw new Error('Refused: staged attachments are read-only.');
         }
         return real;

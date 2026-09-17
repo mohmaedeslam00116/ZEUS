@@ -21,7 +21,7 @@ export function RuntimePanel() {
   const setConn = <K extends keyof typeof agent.connection>(
     key: K,
     value: (typeof agent.connection)[K],
-  ) => void update({ agent: { connection: { [key]: value } } });
+  ): void => void update({ agent: { connection: { [key]: value } } });
 
   return (
     <div className="flex flex-col gap-5">

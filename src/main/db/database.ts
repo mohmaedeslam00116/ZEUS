@@ -18,7 +18,7 @@ let db: Database.Database | null = null;
 export function getDb(): Database.Database {
   if (db) return db;
 
-  const file = path.join(app.getPath('userData'), 'limboo.db');
+  const file = path.join(app.getPath('userData'), 'zeus.db');
   db = new Database(file);
   db.pragma('journal_mode = WAL');
   db.pragma('foreign_keys = ON');

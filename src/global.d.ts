@@ -1,3 +1,4 @@
+/// <reference types="vite/client" />
 // Ambient types so the renderer is aware of the API exposed by the preload
 // script through `contextBridge` (see src/preload/index.ts).
 

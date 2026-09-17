@@ -56,7 +56,7 @@ export function McpPanel() {
     hydrate();
   }, [hydrate]);
 
-  const set = <K extends keyof typeof mcp>(key: K, value: (typeof mcp)[K]) =>
+  const set = <K extends keyof typeof mcp>(key: K, value: (typeof mcp)[K]): void =>
     void update({ mcp: { [key]: value } });
 
   const grouped = useMemo(() => {

@@ -15,7 +15,6 @@ import { useAgentStore } from '@/renderer/stores/useAgentStore';
 import { useSettingsStore } from '@/renderer/stores/useSettingsStore';
 import { useFileSystemStore } from '@/renderer/stores/useFileSystemStore';
 import { useTerminalStore } from '@/renderer/stores/useTerminalStore';
-import { useVoiceStore } from '@/renderer/stores/useVoiceStore';
 import { useDocumentStore } from '@/renderer/stores/useDocumentStore';
 import { useUpdateStore } from '@/renderer/stores/useUpdateStore';
 import { useReleaseStore } from '@/renderer/stores/useReleaseStore';
@@ -454,38 +453,6 @@ export const COMMANDS: Command[] = [
     section: 'View',
     inPalette: true,
     run: () => useLayoutStore.getState().toggleTab('tasks'),
-  },
-  {
-    id: 'voice.toggle',
-    title: 'Toggle voice input',
-    section: 'Agent',
-    keys: ['Mod', 'Shift', 'M'],
-    inPalette: true,
-    run: () => {
-      const voice = useVoiceStore.getState();
-      const phase = voice.state.phase;
-      if (phase === 'listening' || phase === 'recording') {
-        void voice.stopVoice();
-        return;
-      }
-      if (phase === 'speaking') {
-        void voice.stopSpeaking();
-        return;
-      }
-      const sessionId = useSessionStore.getState().selectedId;
-      if (!sessionId) {
-        useUIStore.getState().addToast({ title: 'No active session', tone: 'warning' });
-        return;
-      }
-      const mode = useSettingsStore.getState().settings.agent.plan.defaultMode;
-      void voice.startVoice(sessionId, mode).catch((err) => {
-        useUIStore.getState().addToast({
-          title: 'Voice unavailable',
-          description: err instanceof Error ? err.message : String(err),
-          tone: 'warning',
-        });
-      });
-    },
   },
   {
     id: 'search.open',

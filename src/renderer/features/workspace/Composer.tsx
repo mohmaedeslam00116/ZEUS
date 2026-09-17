@@ -14,7 +14,7 @@
  */
 import { useEffect, useRef, useState } from 'react';
 import type { ClipboardEvent, DragEvent, KeyboardEvent } from 'react';
-import { ArrowUp, CircleStop, Mic, Paperclip, Sparkles, Volume2 } from 'lucide-react';
+import { ArrowUp, CircleStop, Paperclip, Sparkles } from 'lucide-react';
 import type { SessionPermissionMode } from '@shared/types';
 import { resolveModelRouting } from '@shared/constants';
 import { cn } from '@/renderer/lib/cn';
@@ -25,8 +25,6 @@ import { isPlanBlocking } from '@shared/plan';
 import { useIsActivating } from './ActivationRibbon';
 import { useSettingsStore } from '@/renderer/stores/useSettingsStore';
 import { useWorkspaceStore } from '@/renderer/stores/useWorkspaceStore';
-import { useVoiceStore } from '@/renderer/stores/useVoiceStore';
-import { useUIStore } from '@/renderer/stores/useUIStore';
 import { useAttachmentStore, draftAttachments } from '@/renderer/stores/useAttachmentStore';
 import { useComposerStore } from '@/renderer/stores/useComposerStore';
 import { useFileDragActive } from '@/renderer/hooks/usePreventFileDrop';
@@ -37,11 +35,7 @@ import { RUNNING_PHASES } from '@/renderer/features/sessions/useSessionRunning';
 import { ComposerControls } from './ComposerControls';
 import { ComposerModeSwitch } from './ComposerModeSwitch';
 import { ComposerBanner } from './ComposerBanner';
-import { ComposerVoiceOverlay } from './ComposerVoiceOverlay';
 import { AttachmentStrip } from './AttachmentStrip';
-
-/** Voice phases during which the composer shows the recording overlay. */
-const VOICE_CAPTURE_PHASES = new Set(['starting', 'listening', 'recording', 'transcribing']);
 
 /** Max grow height before the editor scrolls internally (~40vh). */
 const MAX_HEIGHT = 320;
@@ -208,46 +202,6 @@ export function Composer({ disabled = false }: { disabled?: boolean }) {
     for (const img of images) void pasteImage(sessionId, img);
   };
 
-  // Voice — speech is another input for the SAME session (never a separate
-  // conversation). The mic is the DEFAULT primary button while the textarea is
-  // empty; typing morphs it into the send arrow (ChatGPT-style).
-  const voicePhase = useVoiceStore((s) => s.state.phase);
-  const voiceSessionId = useVoiceStore((s) => s.state.sessionId);
-  const modelsReady = useVoiceStore((s) => s.state.modelsReady);
-  const startVoice = useVoiceStore((s) => s.startVoice);
-  const stopSpeaking = useVoiceStore((s) => s.stopSpeaking);
-  const voiceEnabled = useSettingsStore((s) => s.settings.voice.enabled);
-  const voiceReady = voiceEnabled && modelsReady.stt && modelsReady.vad;
-  const voiceCapturing = VOICE_CAPTURE_PHASES.has(voicePhase) && voiceSessionId === sessionId;
-
-  // Warm the speech engine when the user reaches for the mic (hover/focus) so the
-  // click flips to listening instantly. No-op if models aren't installed.
-  const warmVoice = () => {
-    void window.limboo?.voice?.warm().catch(() => undefined);
-  };
-
-  const beginVoice = () => {
-    if (blocked || !sessionId) return;
-    if (!voiceReady) {
-      useUIStore.getState().addToast({
-        title: voiceEnabled ? 'Speech recognition not installed' : 'Voice is disabled',
-        description: voiceEnabled
-          ? 'Install the speech-recognition + voice-activity models in Settings › Voice to talk.'
-          : 'Enable voice in Settings › Voice.',
-        tone: 'warning',
-      });
-      useUIStore.getState().openModal('settings');
-      return;
-    }
-    void startVoice(sessionId, mode).catch((err) => {
-      useUIStore.getState().addToast({
-        title: 'Voice input failed',
-        description: err instanceof Error ? err.message : String(err),
-        tone: 'danger',
-      });
-    });
-  };
-
   const autoGrow = () => {
     const el = ref.current;
     if (!el) return;
@@ -318,9 +272,6 @@ export function Composer({ disabled = false }: { disabled?: boolean }) {
           >
             {sessionId && <AttachmentStrip sessionId={sessionId} drafts={drafts} />}
             <div className="flex items-end gap-2">
-            {voiceCapturing ? (
-              <ComposerVoiceOverlay phase={voicePhase} />
-            ) : (
               <>
                 <button
                   type="button"
@@ -360,32 +311,6 @@ export function Composer({ disabled = false }: { disabled?: boolean }) {
                     <CircleStop size={14} />
                     Stop
                   </button>
-                ) : value.trim().length === 0 && readyDraftIds.length === 0 ? (
-                  /* Default (empty) state: the voice button — typing (or a
-                     staged attachment) morphs it into the send arrow. */
-                  <button
-                    type="button"
-                    onClick={beginVoice}
-                    onPointerEnter={voiceReady ? warmVoice : undefined}
-                    onFocus={voiceReady ? warmVoice : undefined}
-                    disabled={blocked}
-                    title={
-                      voiceReady
-                        ? 'Voice input'
-                        : 'Install the local speech models in Settings › Voice'
-                    }
-                    className={cn(
-                      'mb-0.5 flex h-7 w-7 items-center justify-center rounded-full transition-opacity',
-                      blocked
-                        ? 'cursor-not-allowed bg-surface text-faint'
-                        : voiceReady
-                          ? 'bg-accent text-base hover:opacity-90'
-                          : 'bg-surface text-muted hover:text-fg',
-                    )}
-                    aria-label="Voice input"
-                  >
-                    <Mic size={15} />
-                  </button>
                 ) : (
                   <button
                     type="button"
@@ -403,7 +328,6 @@ export function Composer({ disabled = false }: { disabled?: boolean }) {
                   </button>
                 )}
               </>
-            )}
             </div>
           </div>
 
@@ -421,17 +345,6 @@ export function Composer({ disabled = false }: { disabled?: boolean }) {
             <span className="hidden h-3.5 w-px shrink-0 bg-line sm:block" />
             <ComposerControls disabled={disabled || !installed} />
             <span className="ml-auto flex min-w-0 shrink items-center gap-2 text-[11px] text-faint">
-              {voicePhase === 'speaking' && (
-                <button
-                  type="button"
-                  onClick={() => void stopSpeaking()}
-                  className="flex shrink-0 items-center gap-1 rounded-full bg-surface-2 px-2 py-0.5 text-[11px] text-accent transition-colors hover:bg-elevated"
-                  title="Stop speaking"
-                >
-                  <Volume2 size={11} />
-                  Speaking — tap to stop
-                </button>
-              )}
               {/* The runtime ring sits immediately beside the status hint and
                   renders nothing at all when telemetry is off or the provider
                   reports no metrics — so this row is unchanged for a Cursor

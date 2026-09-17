@@ -127,7 +127,11 @@ export function deriveFileDependencies(
   importsOf: (path: string) => string[],
 ): WorkGraphEdge[] {
   const out: WorkGraphEdge[] = [];
-  const fileNodes = nodes.filter((n) => n.kind === 'file');
+  // Type predicate (not a bare filter): with `strictNullChecks` off the
+  // compiler cannot infer the narrowing from `n.kind === 'file'` alone.
+  const fileNodes = nodes.filter(
+    (n): n is Extract<WorkGraphNode, { kind: 'file' }> => n.kind === 'file',
+  );
   if (fileNodes.length < 2) return out;
 
   // Only files touched in the SAME session can be related here; a dependency on

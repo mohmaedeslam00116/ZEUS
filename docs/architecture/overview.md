@@ -94,3 +94,7 @@ no stored credentials; the theme is dark-only; and the security hardening in
 4. [Data flow](data-flow.md) — the streaming timeline end to end.
 5. The [subsystem](subsystems/agent-manager.md) relevant to your change.
 6. [Security model](security-model.md) before you touch the main process.
+
+If your change touches the agent seam in any way, read the frozen
+[provider boundary contract](provider-boundary.md) first — its renderer
+neutrality gate runs in CI.

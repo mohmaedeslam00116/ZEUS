@@ -15,7 +15,7 @@
  * closed it). "Show Limboo" that silently does nothing is the same class of bug
  * as an update button that installs nothing.
  */
-import { Menu, Tray, nativeImage } from 'electron';
+import { app, Menu, Tray, nativeImage } from 'electron';
 import { assetPath } from '../paths';
 import { logger } from '../logger';
 import { sendCommand } from '../sendCommand';
@@ -41,7 +41,7 @@ export class TrayManager {
         return;
       }
       this.tray = new Tray(image);
-      this.tray.setToolTip('Limboo');
+      this.tray.setToolTip(app.getName());
       this.tray.setContextMenu(this.buildMenu());
       // Left-click does not fire under StatusNotifierItem (most modern Linux
       // desktops), which is why the context menu is the primary route. Harmless

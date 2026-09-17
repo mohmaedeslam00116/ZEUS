@@ -32,7 +32,6 @@ import {
   SEARCH_LIMITS,
   TELEMETRY_LIMITS,
   SETTINGS_VERSION,
-  VOICE_LIMITS,
   WORKTREE_LIMITS,
   clamp,
 } from '@shared/constants';
@@ -100,8 +99,40 @@ export class SettingsManager {
 
   /** Merge with defaults, run migrations, and clamp numeric ranges. */
   private normalize(input: Partial<AppSettings>): AppSettings {
-    const merged = deepMerge(DEFAULT_SETTINGS, (input ?? {}) as DeepPartial<AppSettings>);
+    return normalizeSettings(input);
+  }
+}
 
+/**
+ * Pure settings normalization: deep-merge with defaults, run migrations, and
+ * clamp every numeric range / whitelist every enum. Exported so the clamp /
+ * allowlist / migration rules are unit-testable without Electron (the only
+ * Electron-dependent piece, `screenExtraWritePath`, is mocked at the module
+ * boundary in tests). Kept behavior-identical to the former inline method —
+ * the class delegates here and nothing else changed.
+ */
+export function normalizeSettings(input: Partial<AppSettings>): AppSettings {
+  const merged = deepMerge(DEFAULT_SETTINGS, (input ?? {}) as DeepPartial<AppSettings>);
+
+    // Migration (SETTINGS_VERSION 30 -> 31): the voice subsystem was removed
+    // from ZEUS entirely. deepMerge can only add keys, never drop them, so a
+    // settings.json written by a v30 build would keep its stale `voice`
+    // category forever — delete it explicitly as part of the version bump.
+    delete (merged as { voice?: unknown }).voice;
+
+    // Migration (SETTINGS_VERSION 31 -> 32): ZEUS makes worktree setup hooks
+    // opt-in (#14) — plain workspace sessions are the product default, and
+    // worktree creation no longer auto-prompts the repo's limboo.json setup
+    // commands. The constructor of SettingsManager persists the FULL merged
+    // object back to disk, so a settings.json written during the #8–#13 window
+    // already carries `git.worktrees.autoSetup: true` as if explicitly chosen —
+    // byte-identical to a user's deliberate true. ZEUS is pre-release (no
+    // Limboo migration per ADR-0005), so every persisted `true` on a pre-32
+    // file is the old default, not an explicit choice: flip it. From v32 on,
+    // the only writer of `true` is the user's own Settings toggle.
+    if (merged.version < 32 && merged.git.worktrees.autoSetup === true) {
+      merged.git.worktrees.autoSetup = false;
+    }
     if (merged.version !== SETTINGS_VERSION) {
       logger.info(`Migrating settings v${merged.version} -> v${SETTINGS_VERSION}`);
       merged.version = SETTINGS_VERSION;
@@ -607,43 +638,6 @@ export class SettingsManager {
       .trim()
       .slice(0, 64);
 
-    // Voice — clamp the numeric tuning knobs, whitelist the enums, and coerce
-    // the boolean toggles (renderer-supplied strings must never reach the
-    // speech worker or the download pipeline unchecked).
-    const voice = merged.voice;
-    const V = VOICE_LIMITS;
-    voice.enabled = !!voice.enabled;
-    voice.input.sensitivity = clamp(voice.input.sensitivity, V.sensitivity.min, V.sensitivity.max);
-    voice.input.silenceMs = Math.round(
-      clamp(voice.input.silenceMs, V.silenceMs.min, V.silenceMs.max),
-    );
-    if (!['push-to-talk', 'toggle', 'auto'].includes(voice.input.activation)) {
-      voice.input.activation = 'auto';
-    }
-    voice.input.autoPunctuation = !!voice.input.autoPunctuation;
-    voice.input.deviceId = String(voice.input.deviceId ?? '').slice(0, 256);
-    voice.input.language = String(voice.input.language ?? 'en').slice(0, 16);
-    voice.output.enabled = !!voice.output.enabled;
-    voice.output.deviceId = String(voice.output.deviceId ?? '').slice(0, 256);
-    voice.output.speakerId = Math.round(
-      clamp(voice.output.speakerId, V.speakerId.min, V.speakerId.max),
-    );
-    voice.output.speed = clamp(voice.output.speed, V.speed.min, V.speed.max);
-    voice.output.volume = clamp(voice.output.volume, V.volume.min, V.volume.max);
-    voice.output.streamWhileGenerating = !!voice.output.streamWhileGenerating;
-    if (!['voice-initiated', 'always'].includes(voice.output.speakWhen)) {
-      voice.output.speakWhen = 'voice-initiated';
-    }
-    for (const key of Object.keys(voice.playbackEvents) as (keyof typeof voice.playbackEvents)[]) {
-      voice.playbackEvents[key] = !!voice.playbackEvents[key];
-    }
-    if (!['stop', 'pause', 'ignore'].includes(voice.interruption)) {
-      voice.interruption = 'stop';
-    }
-    voice.models.autoDownload = !!voice.models.autoDownload;
-    voice.models.autoUpdate = !!voice.models.autoUpdate;
-    voice.models.offlineOnly = !!voice.models.offlineOnly;
-
     // MCP platform — coerce the toggles, clamp the probe/heartbeat cadence, and
     // whitelist the enums. These are only the GLOBAL platform preferences; the
     // per-server definitions (with their own validated caps) live in the DB, and
@@ -668,7 +662,6 @@ export class SettingsManager {
     if (!['quiet', 'normal', 'verbose'].includes(mcp.logVerbosity)) mcp.logVerbosity = 'normal';
 
     return merged;
-  }
 }
 
 /* ------------------------------------------------------------------ */

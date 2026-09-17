@@ -1,5 +1,12 @@
 # CI/CD
 
+> **ZEUS status (#13, ADR-0006):** ZEUS runs **validation only** — the CI layer
+> (lint, typecheck, tests, build) on every push/PR. The inherited Limboo release
+> machinery (GitLab/Bitbucket pipelines, GitHub release workflows, publish
+> entrypoints) was deliberately removed; no publishing exists yet. The release
+> documentation below is retained **as reference material** for the future
+> ZEUS-native release design.
+
 Limboo ships a **provider-agnostic** CI/CD platform. One logical pipeline is defined
 once in [`ci/pipeline.yml`](../../ci/pipeline.yml) and implemented identically for
 three providers — GitLab CI, GitHub Actions, and Bitbucket Pipelines — so an

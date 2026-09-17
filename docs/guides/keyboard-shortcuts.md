@@ -22,7 +22,6 @@ run against the Zustand stores, so they work from anywhere in the UI.
 | `Mod+Shift+N` | New session in worktree | Sessions  |
 | `Ctrl+Tab` | Next worktree tab          | Sessions  |
 | `Ctrl+Shift+Tab` | Previous worktree tab | Sessions |
-| `Mod+Shift+M` | Toggle voice input      | Agent     |
 | `Mod+B`    | Toggle activity drawer     | View      |
 | `` Mod+` `` | Toggle terminal           | View      |
 | `Mod+,`    | Open settings              | General   |

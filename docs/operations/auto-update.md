@@ -1,5 +1,11 @@
 # Auto-update
 
+> **ZEUS status (#13, ADR-0006):** ZEUS inherits the auto-update *client*
+> implementation and its packaging invariants, but there is **no update feed
+> and no release publishing yet** — the inherited Limboo feed is intentionally
+> not served to ZEUS users. The invariants below are preserved as reference
+> for the future ZEUS release design; the feed remains unset until then.
+
 How Limboo updates itself, what differs per platform, and the invariants that
 must not be broken. Implementation:
 [`src/main/managers/AutoUpdateManager.ts`](../../src/main/managers/AutoUpdateManager.ts).

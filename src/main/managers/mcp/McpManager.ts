@@ -19,6 +19,26 @@ import { randomUUID, createHash } from 'node:crypto';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { IpcEvents } from '@shared/ipc-channels';
+
+/** Mirrors the Claude SDK's `McpStdioServerConfig` / `McpSSEServerConfig` /
+ * `McpHttpServerConfig` (the SDK type is not importable without an `exports`-
+ * map-aware moduleResolution, which this project does not use). */
+interface StdioConfig {
+  type?: 'stdio';
+  command: string;
+  args?: string[];
+  env?: Record<string, string>;
+}
+interface SseConfig {
+  type: 'sse';
+  url: string;
+  headers?: Record<string, string>;
+}
+interface HttpConfig {
+  type: 'http';
+  url: string;
+  headers?: Record<string, string>;
+}
 import { MCP_LIMITS, MCP_RESERVED_NAMES } from '@shared/constants';
 import type {
   McpLogLine,
@@ -55,7 +75,8 @@ import { importProviderConfigs } from './import';
 
 /** Config the Claude Agent SDK consumes (options.mcpServers). */
 export interface ClaudeMcpInjection {
-  servers: Record<string, unknown>;
+  /** SDK-shaped server configs: `command` for stdio, `{type,url,headers}` for remote. */
+  servers: Record<string, StdioConfig | SseConfig | HttpConfig>;
   allowedTools: string[];
 }
 
@@ -400,11 +421,14 @@ export class McpManager {
   claudeServersFor(sessionId: string, scope?: string | null): ClaudeMcpInjection {
     const s = this.settings.getAll().mcp;
     if (!s.enabled || !s.injectIntoClaude) return { servers: {}, allowedTools: [] };
-    const servers: Record<string, unknown> = {};
+    // Typed as the SDK's stdio/sse/http config map: these literals are exactly
+    // the shapes the Claude SDK's `Options.mcpServers` accepts, and the single
+    // consumer spreads them into `options.mcpServers` verbatim.
+    const servers: Record<string, StdioConfig | SseConfig | HttpConfig> = {};
     const allowedTools: string[] = [];
     for (const cfg of this.injectable('claude', sessionId, scope)) {
       if (cfg.transport === 'stdio') {
-        servers[cfg.name] = { command: cfg.command, args: cfg.args, env: this.resolveEnv(cfg) };
+        servers[cfg.name] = { type: 'stdio', command: cfg.command, args: cfg.args, env: this.resolveEnv(cfg) };
       } else {
         servers[cfg.name] = { type: cfg.transport, url: cfg.url, headers: this.resolveHeaders(cfg) };
       }

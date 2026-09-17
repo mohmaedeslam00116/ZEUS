@@ -61,7 +61,7 @@ export function registerAttachmentHandlers(attachments: AttachmentManager): void
     },
   );
 
-  handle<[string, string, string, ArrayBuffer], AttachmentMeta>(
+  handle<[string, string, string, ArrayBuffer | ArrayBufferView], AttachmentMeta>(
     IpcChannels.attachmentAddPasted,
     (_event, sessionId, name, mime, bytes) => {
       const id = assertSessionId(sessionId);

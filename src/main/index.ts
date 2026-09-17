@@ -36,8 +36,6 @@ import {
 import { HookEngine } from './managers/hooks/HookEngine';
 import { GhManager } from './managers/gh/GhManager';
 import { AutoUpdateManager, isQuittingForUpdate } from './managers/AutoUpdateManager';
-import { VoiceManager } from './managers/voice/VoiceManager';
-import { VoiceModelManager } from './managers/voice/VoiceModelManager';
 import { AttachmentManager } from './managers/attachments/AttachmentManager';
 import { SecretStore } from './secrets/SecretStore';
 import { CursorAuthManager } from './managers/cursor/CursorAuthManager';
@@ -64,6 +62,26 @@ declare const MAIN_WINDOW_VITE_DEV_SERVER_URL: string | undefined;
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (started) {
   app.quit();
+}
+
+// ZEUS storage identity (ADR-0005): pin the INTERNAL app name so
+// `app.getPath('userData')` resolves to `%APPDATA%/zeus` — deliberately
+// independent of the visible branding in productName/appId, which stays
+// inherited until the deferred rebrand decision. There is intentionally NO
+// migration from the old `%APPDATA%/Limboo` root: Limboo's data is never read.
+// Must run before ANY persistence-touching code resolves a path: no module in
+// src/ reads `userData` at import time (audited), managers are constructed
+// lazily inside `whenReady`, so the top of this entry module is early enough.
+app.setName('zeus');
+
+// Boot assertion: fail fast rather than silently writing into a wrong root
+// (e.g. if a future import-order change resolves `userData` before the line
+// above executes).
+const expectedUserData = path.join(app.getPath('appData'), 'zeus');
+if (path.resolve(app.getPath('userData')) !== path.resolve(expectedUserData)) {
+  throw new Error(
+    `ZEUS storage identity violated: userData resolved to ${app.getPath('userData')} instead of ${expectedUserData}`,
+  );
 }
 
 // One stable Windows identity for the taskbar, notifications, and the installer
@@ -114,8 +132,6 @@ function bootstrap(): void {
   let gh: GhManager;
   let hooks: HookEngine;
   let updates: AutoUpdateManager;
-  let voiceModels: VoiceModelManager;
-  let voice: VoiceManager;
   let cursorAuth: CursorAuthManager;
   let cursorRuntime: CursorRuntime;
   let harnessRuntime: HarnessRuntime;
@@ -461,13 +477,6 @@ function bootstrap(): void {
     // be read against its own checkout — the same seam GitManager uses.
     gh.setActiveRootResolver((workspaceId) => worktrees.resolveActiveRoot(workspaceId));
     search.setActiveRootResolver((workspaceId) => worktrees.resolveActiveRoot(workspaceId));
-    // The Voice subsystem — local speech (sherpa-onnx) as another input/output
-    // modality of the SAME agent session. The model store owns downloads; the
-    // manager orchestrates capture/TTS and taps the agent event stream.
-    voiceModels = new VoiceModelManager();
-    voice = new VoiceManager(settings, agent, voiceModels);
-    // Spoken desktop notifications (gated by voice.playbackEvents.notifications).
-    notifications.setSpeaker((text) => voice.speakNotification(text));
 
     hardenSession();
     registerAllIpc({
@@ -487,8 +496,6 @@ function bootstrap(): void {
       resume,
       gh,
       updates,
-      voice,
-      voiceModels,
       cursorAuth,
       mcp,
       graph: workGraph,
@@ -514,8 +521,6 @@ function bootstrap(): void {
     // the stdio bridge dispatcher (Cursor). Enrichment only — these calls
     // already arrive as tool events, so this adds real durations, not nodes.
     setMcpObserver(workGraph.mcpObserver());
-    // Wire the voice agent-event tap + honor the auto-download preference.
-    voice.start();
     // Begin the auto-update check + hourly poll (packaged builds only).
     updates.start();
 
@@ -709,8 +714,6 @@ function bootstrap(): void {
     safeDispose('services', () => services?.dispose());
     safeDispose('terminal', () => terminal?.dispose());
     safeDispose('updates', () => updates?.dispose());
-    safeDispose('voice', () => voice?.dispose());
-    safeDispose('voiceModels', () => voiceModels?.dispose());
     safeDispose('memorySweep', () => {
       if (memorySweepTimer) clearInterval(memorySweepTimer);
     });
@@ -772,19 +775,11 @@ function hardenSession(): void {
       "worker-src 'self' blob:; " +
       "connect-src 'self' ws: http: https:; img-src 'self' data: blob:;"
     : "default-src 'self'; " +
-      // blob: on script-src is what actually permits the voice capture
-      // AudioWorklet: Chromium checks worklet module loads against
-      // script-src-elem, which falls back to script-src. The worklet source is
-      // inlined (see capture.ts) and loaded from a same-origin Blob URL; page/
-      // script loading otherwise stays locked to 'self'. worker-src is kept as
-      // defensive, spec-compliant coverage.
-      "script-src 'self' blob:; " +
+      "script-src 'self'; " +
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
       "font-src 'self' https://fonts.gstatic.com; " +
       "worker-src 'self' blob:; " +
-      // media-src is defensive: voice playback uses Web Audio AudioBuffers (no
-      // <audio> element), but a blob-backed fallback must never be CSP-broken.
-      "img-src 'self' data:; media-src 'self' blob:; connect-src 'self';";
+      "img-src 'self' data:; connect-src 'self';";
 
   session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
     callback({
@@ -795,75 +790,14 @@ function hardenSession(): void {
     });
   });
 
-  // Deny every web-platform permission with ONE narrow exception: the Voice
-  // subsystem needs the microphone, so `media` is granted only when ALL hold —
-  //   1. the request comes from our own renderer origin (dev server / file://),
-  //   2. it comes from the main window's webContents (never a webview/popup;
-  //      those are already blocked in createWindow.ts, this is defense in depth),
-  //   3. it asks for AUDIO only — any request including video is refused.
-  // Camera, geolocation, USB, notifications-via-web, etc. all stay denied.
-  // (OS notifications go through the NotificationManager, not this API.)
-  const isOwnOrigin = (origin: string | undefined): boolean => {
-    // Dev: the renderer is served from the Vite dev-server origin. Normalize
-    // BOTH sides through `URL` before comparing — Electron 42 hands the check
-    // handler the origin as `http://localhost:5173/` (with a trailing slash),
-    // while `new URL(devUrl).origin` yields `http://localhost:5173` (no slash),
-    // so a strict `===` silently denied the mic in dev. Parsing both to their
-    // canonical `.origin` makes the trailing-slash (and any other serialization)
-    // form match, and keeps this consistent with the request handler below.
-    if (devUrl) {
-      if (!origin) return false;
-      if (origin.startsWith('file:')) return true;
-      try {
-        return new URL(origin).origin === new URL(devUrl).origin;
-      } catch {
-        return false;
-      }
-    }
-    // Packaged: the renderer is the ONLY content that can ever load — every
-    // navigation, redirect, window.open and <webview> is blocked in
-    // createWindow.ts — and it loads over file://. Chromium serializes a
-    // sandboxed file:// page's origin inconsistently across platforms/versions:
-    // it can arrive as 'file://', 'file:///…', a full 'file:///C:/…' URL, the
-    // opaque 'null', an empty string, or undefined. In dev these all matched a
-    // real origin; in a packaged build none of them matched, so the permission
-    // CHECK handler silently denied the mic (this was the "works in dev, not in
-    // the built app" bug). Accept every file-protocol / opaque form here; the
-    // request handler still gates on audio-only + the main-window webContents
-    // identity, which is what keeps this safe.
-    if (origin === undefined || origin === '' || origin === 'null') return true;
-    return origin.startsWith('file:');
-  };
-
-  session.defaultSession.setPermissionRequestHandler((wc, permission, callback, details) => {
-    if (permission === 'media') {
-      const requestOrigin = (() => {
-        try {
-          const raw = details.requestingUrl ?? wc.getURL();
-          return raw.startsWith('file:') ? 'file://' : new URL(raw).origin;
-        } catch {
-          return undefined;
-        }
-      })();
-      const mediaTypes = (details as { mediaTypes?: string[] }).mediaTypes ?? [];
-      const audioOnly = mediaTypes.length > 0 && mediaTypes.every((t) => t === 'audio');
-      if (audioOnly && isOwnOrigin(requestOrigin) && wc === getMainWindow()?.webContents) {
-        callback(true);
-        return;
-      }
-      logger.warn('Denied media permission request', { requestOrigin, mediaTypes });
-    }
+  // Deny every web-platform permission, unconditionally. ZEUS ships no
+  // microphone/camera surface (the voice subsystem was removed from the
+  // product), so the former audio-only `media` carve-out and its origin
+  // matching are gone with it. Camera, geolocation, USB, notifications-via-web,
+  // etc. all stay denied. (OS notifications go through the NotificationManager,
+  // not this API.)
+  session.defaultSession.setPermissionRequestHandler((_wc, _permission, callback) => {
     callback(false);
   });
-  session.defaultSession.setPermissionCheckHandler((_wc, permission, requestingOrigin, details) => {
-    if (permission !== 'media') return false;
-    const mediaType = (details as { mediaType?: string }).mediaType;
-    if (mediaType === 'video') return false;
-    const ok = isOwnOrigin(requestingOrigin);
-    // This handler is consulted synchronously before getUserMedia's request
-    // handler; returning false rejects the mic outright. It used to be silent —
-    // log denials so a future permission mismatch is diagnosable from the main log.
-    if (!ok) logger.warn('Denied media permission check', { requestingOrigin, mediaType });
-    return ok;
-  });
+  session.defaultSession.setPermissionCheckHandler(() => false);
 }

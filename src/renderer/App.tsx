@@ -28,7 +28,6 @@ import { useGitStore } from '@/renderer/stores/useGitStore';
 import { useMemoryStore } from '@/renderer/stores/useMemoryStore';
 import { useSearchStore } from '@/renderer/stores/useSearchStore';
 import { useUpdateStore } from '@/renderer/stores/useUpdateStore';
-import { useVoiceStore } from '@/renderer/stores/useVoiceStore';
 import { useAttachmentStore } from '@/renderer/stores/useAttachmentStore';
 import { useResumeStore } from '@/renderer/stores/useResumeStore';
 import { useGhStore } from '@/renderer/stores/useGhStore';
@@ -72,8 +71,6 @@ export function App() {
     useSearchStore.getState().hydrate();
     // Subscribe to the in-app updater's lifecycle (drives the UpdateBanner).
     useUpdateStore.getState().hydrate();
-    // Subscribe to voice state / model progress / TTS playback pushes.
-    void useVoiceStore.getState().hydrate();
     // Subscribe to supervised-service lifecycle pushes (Services strip).
     useServiceStore.getState().hydrate();
     // Subscribe to attachment set + staging-progress pushes (composer chips).

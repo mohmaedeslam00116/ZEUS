@@ -61,8 +61,8 @@ export function runGit(
         },
       },
       (err, stdout, stderr) => {
-        const out = typeof stdout === 'string' ? stdout : stdout?.toString() ?? '';
-        const errOut = typeof stderr === 'string' ? stderr : stderr?.toString() ?? '';
+        const out = stdout ?? '';
+        const errOut = stderr ?? '';
         if (!err) {
           resolve({ ok: true, stdout: out, stderr: errOut, code: 0 });
           return;

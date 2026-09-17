@@ -118,11 +118,10 @@ optional Cursor API key is safeStorage-encrypted in a main-only file under
 | `expiry.enabled` | `true` | |
 | `expiry.staleDays` | `180` | clamped 7 - 3650 |
 
-## search / voice
+## search
 
-The `search` (Search Engine indexing + federation) and `voice` (local
-speech-to-text / text-to-speech) categories also live in `DEFAULT_SETTINGS`;
-their defaults and clamps are in `SEARCH_LIMITS` / `VOICE_LIMITS` in the same
+The `search` (Search Engine indexing + federation) category also lives in
+`DEFAULT_SETTINGS`; its defaults and clamps are in `SEARCH_LIMITS` in the same
 constants file.
 
 ## runtime
@@ -162,7 +161,7 @@ those knobs displayed is still stored and still exported.
 Other bounds enforced by the main process live in the same constants file:
 `AGENT_LIMITS`, `AGENT_CONNECTION_LIMITS`, `LAYOUT_LIMITS`, `TERMINAL_LIMITS`,
 `GIT_LIMITS`, `WORKTREE_LIMITS` (worktrees, limboo.json, service ports),
-`MEMORY_LIMITS`, `SEARCH_LIMITS`, `VOICE_LIMITS`, `FS_LIMITS`,
+`MEMORY_LIMITS`, `SEARCH_LIMITS`, `FS_LIMITS`,
 `GRAPH_LIMITS`, `TELEMETRY_LIMITS`,
 `SESSION_LIMITS`, `WORKSPACE_LIMITS`, `WINDOW_MIN` / `WINDOW_DEFAULT`, plus
 `DEFAULT_WORKSPACE_CONFIG`, `DEFAULT_IGNORED_DIRS`, and

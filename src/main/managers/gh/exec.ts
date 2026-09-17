@@ -106,8 +106,8 @@ export function runGh(
         },
       },
       (err, stdout, stderr) => {
-        const out = redactGh(typeof stdout === 'string' ? stdout : stdout?.toString() ?? '');
-        const errOut = redactGh(typeof stderr === 'string' ? stderr : stderr?.toString() ?? '');
+        const out = redactGh(stdout ?? '');
+        const errOut = redactGh(stderr ?? '');
         if (!err) {
           resolve({ ok: true, stdout: out, stderr: errOut, code: 0 });
           return;

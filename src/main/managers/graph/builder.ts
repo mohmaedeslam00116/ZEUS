@@ -30,6 +30,7 @@ import type {
   AgentToolCall,
   FileChange,
   MemoryTier,
+  ServiceStatus,
   SessionPlan,
   TaskItem,
   WorkGraphEdge,
@@ -167,7 +168,7 @@ export interface BuilderContext {
    * model was selected at the time it was built, so switching models mid-session
    * silently relabelled the run's history and made `nodeColoring: 'provider'` lie.
    */
-  provider(): 'anthropic' | 'cursor';
+  provider(): 'anthropic' | 'cursor' | 'openai' | 'pi';
   /** Composer permission mode of the run's OWN session, not the foreground one. */
   mode(sessionId: string): string;
   /** Currently selected model id, for the objective node's metadata. */
@@ -244,7 +245,7 @@ interface SessionState {
    * node in the run is stamped from here, so the run's history stays internally
    * consistent even if the user picks a different model while it is streaming.
    */
-  provider: 'anthropic' | 'cursor';
+  provider: 'anthropic' | 'cursor' | 'openai' | 'pi';
   /** The last node on the structural spine, which the next node `follows`. */
   spineTip: string | null;
   /** tool-call id -> node id, so `tool-end` patches the right node. */
@@ -286,7 +287,7 @@ interface SessionState {
   runStartedAt: number;
 }
 
-function freshState(provider: 'anthropic' | 'cursor'): SessionState {
+function freshState(provider: 'anthropic' | 'cursor' | 'openai' | 'pi'): SessionState {
   return {
     runId: null,
     provider,
@@ -656,7 +657,7 @@ export class WorkGraphBuilder {
           endedAt: status === 'running' ? undefined : at,
           meta: {
             ...existing.meta,
-            state: svc.status,
+            state: svc.status as ServiceStatus,
             port: svc.port ?? undefined,
             url: svc.url ?? undefined,
           },

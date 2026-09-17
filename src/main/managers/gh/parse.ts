@@ -11,7 +11,7 @@
 import { GH_LIMITS } from '@shared/constants';
 import type { GhHost, GhIssue, GhPullRequest } from '@shared/types';
 
-function str(v: unknown, max = GH_LIMITS.titleMax): string | undefined {
+function str(v: unknown, max: number = GH_LIMITS.titleMax): string | undefined {
   return typeof v === 'string' && v.length > 0 ? v.slice(0, max) : undefined;
 }
 

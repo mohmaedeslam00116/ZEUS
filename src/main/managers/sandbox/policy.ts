@@ -15,7 +15,7 @@
  *
  * Two things are ALWAYS enforced regardless of user settings (the floor):
  *  - the effective writable root is the session's execution root (the worktree);
- *  - Limboo's own crown jewels — the safeStorage `secrets/` store, `limboo.db`,
+ *  - Limboo's own crown jewels — the safeStorage `secrets/` store, `zeus.db`,
  *    and the `settings.json` / `window-state.json` config files — are denied for
  *    read and write.
  * We deny those SPECIFIC paths rather than the whole `userData` root because the
@@ -79,7 +79,7 @@ export function crownJewelPaths(): string[] {
   const root = app.getPath('userData');
   return [
     path.join(root, 'secrets'),
-    path.join(root, 'limboo.db'),
+    path.join(root, 'zeus.db'),
     path.join(root, 'settings.json'),
     path.join(root, 'window-state.json'),
   ];
@@ -209,7 +209,7 @@ export function mapClaudeSandbox(eff: EffectiveSandbox): ClaudeSandbox | undefin
     // the belt-and-braces the docs recommend for secret directories).
     credentials: {
       files: eff.denyRead
-        .filter((p) => p.endsWith('secrets') || p.endsWith('limboo.db'))
+        .filter((p) => p.endsWith('secrets') || p.endsWith('zeus.db'))
         .map((p) => ({ path: p, mode: 'deny' as const })),
     },
   };

@@ -1,38 +1,45 @@
 version: 2
 
-# ZEUS: Dependabot is INTENTIONALLY PAUSED (open-pull-requests-limit: 0 on both
-# ecosystems) while ZEUS completes its CI/release cleanup (ADR-0006: inherited
-# Limboo release publishing is being neutralized) and its bounded infrastructure
-# work with a real verification strategy (ADR-0007: Vitest foundation + bounded
-# TypeScript 5 migration). No dependency upgrades happen in this window; the
-# current package-lock.json is the frozen baseline the infrastructure work will
-# be validated against. The pre-existing configuration below is preserved so
-# re-enabling is a one-line change — or, preferably, replacement by the future
-# ZEUS-native monthly/security-driven policy, planned as part of the CI-cleanup
-# infrastructure work (not before).
+# ZEUS-native dependency policy (#12) — the deliberate pause from commit a9e2d97
+# ends here, now that CI runs lint + typecheck + tests on every PR (ADR-0007)
+# and the release pipeline is being isolated under ADR-0006 (ticket #13).
+#
+# Policy:
+#   - Monthly cadence, max 3 open PRs per ecosystem: small, reviewable waves
+#     instead of the old grouped backlogs.
+#   - NO grouping: every update is a single-dependency PR.
+#   - Deliberate pins below are ignored by automation; they move only through
+#     bounded, reviewed decisions (e.g. the #10 TypeScript migration), never
+#     through automated churn.
+#
+# Urgent security fixes bypass this file: handle them deliberately via the
+# deliberate-pin exception, not by widening automation.
 
 updates:
-  # npm dependencies. Pinned to versions compatible with Vite 5 / Electron 42 —
-  # review peer warnings on any bump (especially anything touching Vite).
+  # npm dependencies.
   - package-ecosystem: "npm"
     directory: "/"
     schedule:
-      interval: "weekly"
-    open-pull-requests-limit: 0 # PAUSED for ZEUS (was 10) — see header comment
-    groups:
-      dev-dependencies:
-        dependency-type: "development"
-      production-dependencies:
-        dependency-type: "production"
+      interval: "monthly"
+    open-pull-requests-limit: 3
     ignore:
-      # Electron and Vite are intentionally pinned; bump them deliberately, not via
-      # automated PRs, because of the toolchain coupling documented in CLAUDE.md.
+      # Toolchain coupling (CLAUDE.md): Electron 42 + Vite 5 + TypeScript ~5.1.6
+      # move only as bounded decisions.
       - dependency-name: "electron"
       - dependency-name: "vite"
+      - dependency-name: "typescript"
+      # node-pty is pinned to the 1.2.0-beta line — a deliberate choice, not a
+      # staleness signal.
+      - dependency-name: "node-pty"
+      # @vitejs/plugin-react stays on the v4 line, coupled to the pinned Vite 5.
+      - dependency-name: "@vitejs/plugin-react"
+      # better-sqlite3 is ABI-coupled to the pinned Electron; bumps require an
+      # Electron-rebuild validation pass, not an automated PR.
+      - dependency-name: "better-sqlite3"
 
   # GitHub Actions used by the workflows in this repository.
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
-      interval: "weekly"
-    open-pull-requests-limit: 0 # PAUSED for ZEUS (was 5) — see header comment
+      interval: "monthly"
+    open-pull-requests-limit: 3

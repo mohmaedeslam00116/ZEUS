@@ -13,7 +13,7 @@ export function PlanTasksPanel() {
   const plan = useSettingsStore((s) => s.settings.agent.plan);
   const update = useSettingsStore((s) => s.update);
 
-  const setPlan = <K extends keyof typeof plan>(key: K, value: (typeof plan)[K]) =>
+  const setPlan = <K extends keyof typeof plan>(key: K, value: (typeof plan)[K]): void =>
     void update({ agent: { plan: { [key]: value } } });
 
   return (

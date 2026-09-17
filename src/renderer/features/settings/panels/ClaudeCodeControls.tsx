@@ -96,7 +96,7 @@ export function ClaudeCodeControls() {
         <Toggle
           checked={harness.legacyClaudeSdk}
           onChange={(v) => set('legacyClaudeSdk', v)}
-          label="Legacy SDK path"
+          aria-label="Legacy SDK path"
         />
       </Field>
 
@@ -207,7 +207,7 @@ export function ClaudeCodeControls() {
         <Toggle
           checked={harness.debug}
           onChange={(v) => set('debug', v)}
-          label="Forward adapter logs"
+          aria-label="Forward adapter logs"
         />
       </Field>
     </div>

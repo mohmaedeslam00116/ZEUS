@@ -17,8 +17,6 @@ import type { SearchManager } from '../managers/search/SearchManager';
 import type { ResumeManager } from '../managers/resume/ResumeManager';
 import type { GhManager } from '../managers/gh/GhManager';
 import type { AutoUpdateManager } from '../managers/AutoUpdateManager';
-import type { VoiceManager } from '../managers/voice/VoiceManager';
-import type { VoiceModelManager } from '../managers/voice/VoiceModelManager';
 import type { CursorAuthManager } from '../managers/cursor/CursorAuthManager';
 import type { McpManager } from '../managers/mcp/McpManager';
 import type { WorkGraphManager } from '../managers/graph/WorkGraphManager';
@@ -41,7 +39,6 @@ import { registerResumeHandlers } from './resumeHandlers';
 import { registerGhHandlers } from './ghHandlers';
 import { registerUpdateHandlers } from './updateHandlers';
 import { registerReleaseHandlers } from './releaseHandlers';
-import { registerVoiceHandlers } from './voiceHandlers';
 import { registerCursorHandlers } from './cursorHandlers';
 import { registerMcpHandlers } from './mcpHandlers';
 import { registerGraphHandlers } from './graphHandlers';
@@ -64,8 +61,6 @@ export interface IpcDeps {
   resume: ResumeManager;
   gh: GhManager;
   updates: AutoUpdateManager;
-  voice: VoiceManager;
-  voiceModels: VoiceModelManager;
   cursorAuth: CursorAuthManager;
   mcp: McpManager;
   graph: WorkGraphManager;
@@ -126,7 +121,6 @@ export function registerAllIpc(deps: IpcDeps): void {
   // Takes no dependency: the release manifest is compiled into the bundle, so
   // the only thing main owns here is the save dialog.
   registerReleaseHandlers();
-  registerVoiceHandlers(deps.voice, deps.voiceModels, deps.settings);
   registerCursorHandlers(deps.cursorAuth, () => deps.agent.hasActiveRuns());
   registerMcpHandlers(deps.mcp);
   registerGraphHandlers(deps.graph);

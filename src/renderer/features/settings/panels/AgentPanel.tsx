@@ -82,12 +82,12 @@ export function AgentPanel() {
     </HarnessCard>,
   ];
   if (cursorActive) harnessCards.reverse();
-  const set = <K extends keyof typeof agent>(key: K, value: (typeof agent)[K]) =>
+  const set = <K extends keyof typeof agent>(key: K, value: (typeof agent)[K]): void =>
     void update({ agent: { [key]: value } });
   const setSandbox = <K extends keyof typeof agent.sandbox>(
     key: K,
     value: (typeof agent.sandbox)[K],
-  ) => void update({ agent: { sandbox: { [key]: value } } });
+  ): void => void update({ agent: { sandbox: { [key]: value } } });
 
   return (
     <div className="flex flex-col gap-5">

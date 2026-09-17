@@ -306,36 +306,7 @@ export const IpcChannels = {
   attachmentAddPasted: 'attachment:addPasted',
   attachmentRemove: 'attachment:remove',
   attachmentReveal: 'attachment:reveal',
-
-  // Voice subsystem — local STT/TTS as another modality for the agent session.
-  voiceGetState: 'voice:getState',
-  voiceWarm: 'voice:warm',
-  voiceStart: 'voice:start',
-  voiceStop: 'voice:stop',
-  voiceCancel: 'voice:cancel',
-  voiceStopSpeaking: 'voice:stopSpeaking',
-  voiceSpeak: 'voice:speak',
-  voiceModelsList: 'voice:models:list',
-  voiceModelDownload: 'voice:models:download',
-  voiceModelPause: 'voice:models:pause',
-  voiceModelResume: 'voice:models:resume',
-  voiceModelCancel: 'voice:models:cancel',
-  voiceModelRemove: 'voice:models:remove',
-  voiceModelVerify: 'voice:models:verify',
-  voiceModelsReveal: 'voice:models:reveal',
 } as const;
-
-/**
- * One-way renderer -> main channels (`ipcRenderer.send`) for high-frequency
- * fire-and-forget payloads that don't want invoke round-trip overhead. Handled
- * through the `on()` wrapper in main/ipc/registry.ts (same sender validation).
- */
-export const IpcSends = {
-  /** A chunk of 16 kHz mono Int16 PCM from the renderer's mic worklet. */
-  voiceAudioChunk: 'voice:audio-chunk',
-} as const;
-
-export type IpcSend = (typeof IpcSends)[keyof typeof IpcSends];
 
 export type IpcChannel = (typeof IpcChannels)[keyof typeof IpcChannels];
 
@@ -419,18 +390,6 @@ export const IpcEvents = {
   attachmentProgress: 'attachment:progress',
   /** The auto-update lifecycle advanced (checking / available / progress / ready). */
   updateStatus: 'update:status',
-  /** The voice runtime state changed (idle / listening / transcribing / speaking). */
-  voiceState: 'voice:state',
-  /** A finished utterance transcript (about to be sent to the agent). */
-  voiceTranscript: 'voice:transcript',
-  /** A chunk of synthesized Int16 PCM for Web Audio playback. */
-  voiceTtsChunk: 'voice:tts-chunk',
-  /** Stop all scheduled speech playback immediately (barge-in / stop). */
-  voicePlaybackCancel: 'voice:playback-cancel',
-  /** Progress of an in-flight voice model download / verify / extract. */
-  voiceModelProgress: 'voice:model-progress',
-  /** The set of installed voice models changed (installed / removed). */
-  voiceModelsChanged: 'voice:models-changed',
 } as const;
 
 export type IpcEvent = (typeof IpcEvents)[keyof typeof IpcEvents];

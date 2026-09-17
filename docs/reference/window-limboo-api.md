@@ -15,7 +15,7 @@ The API has 18 namespaces:
 ```
 window.limboo.{ window, settings, system, app, events,
                workspace, session, agent, fs, terminal, git,
-               worktree, services, memory, search, updates, voice,
+               worktree, services, memory, search, updates,
                attachment }
 ```
 
@@ -242,13 +242,6 @@ section hides itself (with a reason) when the provider cannot measure it.
 
 Auto-update lifecycle (packaged builds): `getState`, `check`, `download`,
 `install`, and the `onStatus` subscription.
-
-## voice
-
-Local voice subsystem: runtime controls (`getState`, `start`, `stop`,
-`cancel`, `speak`, `stopSpeaking`), model management (`models.*`), and the
-`voice:*` event subscriptions. Mic audio streams main-ward over the
-fire-and-forget `voice:audio-chunk` send channel.
 
 ## attachment
 

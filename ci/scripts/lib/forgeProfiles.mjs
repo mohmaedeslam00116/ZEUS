@@ -4,7 +4,7 @@
  *
  * WHY THIS IS A BUILD-TIME CONCERN. The app's production CSP is
  * `img-src 'self' data:` and `connect-src 'self'` — the renderer cannot reach
- * github.com at all, by design (Limboo is local-first; the only network traffic
+ * github.com at all, by design (ZEUS is local-first; the only network traffic
  * in the product is the coding agent talking to its provider). So the release
  * document cannot fetch an avatar, and a `https://avatars.…` URL in the manifest
  * would be a broken image on every row. The image has to arrive as BYTES, at the

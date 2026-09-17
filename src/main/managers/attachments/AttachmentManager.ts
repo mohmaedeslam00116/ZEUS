@@ -4,7 +4,7 @@
  * Files attached in the composer (picker / drag-drop / paste) become
  * session-owned workspace resources: validated, hashed (SHA-256), MIME-sniffed,
  * copied into a per-session staging directory under
- * `userData/attachments/<sessionId>/`, and recorded in `limboo.db`. The agent
+ * `userData/attachments/<sessionId>/`, and recorded in `zeus.db`. The agent
  * never receives raw attachment bytes in the prompt — it gets a compact
  * manifest plus read access to the staging dir and pulls content on demand
  * through its tool loop (images may additionally ride as vision blocks).

@@ -13,7 +13,9 @@ import type {
   McpPlanAccess,
   McpServerInfo,
   McpServerInput,
+  McpStartup,
   McpTransport,
+  McpTrust,
 } from '@shared/types';
 import { cn } from '@/renderer/lib/cn';
 import {
@@ -302,7 +304,7 @@ export function McpServerForm({
       <StackedField label="Trust" hint="Trusted servers auto-approve their tool calls (still gated by mode).">
         <SegmentedControl
           value={trust}
-          onChange={setTrust}
+          onChange={(v) => setTrust(v as McpTrust)}
           options={[
             { value: 'ask', label: 'Ask each time' },
             { value: 'trusted', label: 'Trusted' },
@@ -315,7 +317,7 @@ export function McpServerForm({
       >
         <SegmentedControl
           value={planAccess}
-          onChange={setPlanAccess}
+          onChange={(v) => setPlanAccess(v as McpPlanAccess)}
           options={[
             { value: 'block', label: 'Blocked' },
             { value: 'annotated', label: 'Read-only tools' },
@@ -363,7 +365,7 @@ export function McpServerForm({
       <StackedField label="Startup">
         <SegmentedControl
           value={startup}
-          onChange={setStartup}
+          onChange={(v) => setStartup(v as McpStartup)}
           options={[
             { value: 'on-demand', label: 'On demand' },
             { value: 'eager', label: 'Probe on activate' },
@@ -380,7 +382,7 @@ export function McpServerForm({
         </label>
       </div>
       <StackedField label="Tool timeout">
-        <Select value={timeoutMs} onChange={setTimeoutMs} options={TIMEOUT_OPTIONS} />
+        <Select value={timeoutMs} onChange={(v) => setTimeoutMs(Number(v))} options={TIMEOUT_OPTIONS} />
       </StackedField>
       <StackedField label="Category">
         <Select value={category} onChange={(v) => setCategory(v as McpCategory)} options={CATEGORY_OPTIONS} />

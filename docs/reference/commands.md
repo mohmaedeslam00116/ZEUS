@@ -25,7 +25,6 @@ commands.
 | `agent.planMode` | Switch to Plan mode | Agent | |
 | `agent.implementMode` | Switch to Ask-before-edits mode | Agent | |
 | `plan.approve` | Approve plan & execute | Agent | |
-| `voice.toggle` | Toggle voice input | Agent | `Mod+Shift+M` |
 | `sidebar.toggle` | Toggle activity drawer | View | `Mod+B` |
 | `terminal.toggle` | Toggle terminal | View | `` Mod+` `` |
 | `terminal.new` | New terminal | View | |

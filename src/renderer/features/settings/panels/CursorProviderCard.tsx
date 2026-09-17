@@ -106,7 +106,7 @@ export function CursorAuthControls() {
     void update({ agent: { cursor: { executablePath: next } } });
   };
 
-  const openExternal = (url: string) => void window.limboo?.system?.openExternal?.(url);
+  const openExternal = (url: string): void => void window.limboo?.system?.openExternal?.(url);
   // The status pill is rendered by HarnessCard via useCursorStatus().
   const login = auth?.login ?? { phase: 'idle' as const };
   const loginBusy = login.phase !== 'idle' && login.phase !== 'failed';

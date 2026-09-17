@@ -90,7 +90,7 @@ export function AgentTroubleshooting() {
   const addToast = useUIStore((s) => s.addToast);
 
   const meta = cursorStatusMeta(auth?.status ?? 'unknown');
-  const openExternal = (url: string) => void window.limboo?.system?.openExternal?.(url);
+  const openExternal = (url: string): void => void window.limboo?.system?.openExternal?.(url);
   const copyDiagnostics = () => {
     void window.limboo?.system?.clipboardWrite?.(
       cursorDiagnosticText(auth, install, bridge, interactive),

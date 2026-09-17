@@ -491,22 +491,20 @@ const RESOURCE_READ_TOOLS = new Set(['ReadMcpResource', 'ReadMcpResourceDir']);
  * no — still points at the setting.
  */
 function mcpDenyReason(verdict: McpPlanVerdict, toolName: string): string {
-  if (verdict.ok) return '';
+  if (verdict.ok === true) return '';
   const server = mcpVerdictServer(verdict);
-  switch (verdict.reason) {
-    case 'mcp-disabled':
-      return 'MCP is disabled in Settings › MCP.';
-    case 'unknown-server':
-      return `No configured MCP server matches ${toolName}.`;
-    case 'out-of-scope':
-      return `The MCP server "${server}" is not configured for this session's workspace.`;
-    case 'blocked':
-      return `"${server}" is set to Blocked for these modes. To allow it, open Settings › MCP, expand ${server}, and change "Plan & Ask access".`;
-    case 'not-annotated':
-      return `If this tool only reads, allow it under Settings › MCP › ${server} › "Plan & Ask access".`;
-    default:
-      return '';
-  }
+  // Chained literal comparisons (not a `switch` on the discriminant): with
+  // `strictNullChecks` off the compiler does not narrow the union through a
+  // switch subject, but it does through the discriminant's literal comparison.
+  if (verdict.reason === 'mcp-disabled') return 'MCP is disabled in Settings › MCP.';
+  if (verdict.reason === 'unknown-server') return `No configured MCP server matches ${toolName}.`;
+  if (verdict.reason === 'out-of-scope')
+    return `The MCP server "${server}" is not configured for this session's workspace.`;
+  if (verdict.reason === 'blocked')
+    return `"${server}" is set to Blocked for these modes. To allow it, open Settings › MCP, expand ${server}, and change "Plan & Ask access".`;
+  if (verdict.reason === 'not-annotated')
+    return `If this tool only reads, allow it under Settings › MCP › ${server} › "Plan & Ask access".`;
+  return '';
 }
 
 /**
@@ -2871,6 +2869,10 @@ export class AgentManager {
       memory: memoryContext?.length ?? 0,
       search: searchContext?.length ?? 0,
       resume: resumeContext?.length ?? 0,
+      // The harness path composes no attachment manifest (attachments ride the
+      // native payload path); the composed prompt is the measured total.
+      attachments: 0,
+      prompt: prompt.length,
     });
 
     const sandbox = this.resolveSandboxFor(sessionId, cwd, 'anthropic', agent);
@@ -3146,6 +3148,9 @@ export class AgentManager {
     // Adding a provider must be a compile-visible change here, not a silent
     // inheritance of the Anthropic branch.
     const routing = resolveModelRouting(agent.model);
+    if ('reason' in routing) {
+      throw new Error(`${routing.reason}. Pick a model in the composer.`);
+    }
     switch (routing.provider) {
       case 'cursor':
         try {
@@ -3193,12 +3198,12 @@ export class AgentManager {
           this.settleOrphanedToolCalls(sessionId);
         }
         return;
-      case null:
-        throw new Error(`${routing.reason}. Pick a model in the composer.`);
-      default: {
-        const never: never = routing.provider;
-        throw new Error(`Unhandled agent provider: ${String(never)}`);
-      }
+      default:
+        // Unreachable: the null routing case is thrown above and every
+        // AgentProvider member has a case here — the compiler narrows
+        // `routing` to `never` in this branch, so the message carries the
+        // model id instead of the (untypable) provider value.
+        throw new Error(`Unhandled agent provider for model: ${agent.model.slice(0, 80)}`);
     }
 
     try {
@@ -3852,7 +3857,7 @@ export class AgentManager {
         pipe = await startBridgeServer({
           onHook: (event, payload) => {
             const result = mapHookEvent(event, payload);
-            if (!result.ok) {
+            if (result.ok === false) {
               // Unmappable GATE events fail closed; Cursor also has failClosed
               // set. The reason is NAMED (which key was missing, which event was
               // unrecognised) and surfaced as a diagnostic — a silent universal
@@ -6108,7 +6113,7 @@ export class AgentManager {
     const routing = resolveModelRouting(agent.model);
     if (routing.provider !== 'anthropic') {
       throw new Error(
-        routing.provider === null
+        'reason' in routing
           ? `${routing.reason}. Pick a model in the composer.`
           : `"${agent.model.slice(0, 80)}" is served by ${routing.provider}, not Claude Code.`,
       );
@@ -6399,10 +6404,10 @@ export class AgentManager {
         }
       }
 
-      // Crown-jewel guard (defense in depth): the agent must never reach Limboo's own
+      // Crown-jewel guard (defense in depth): the agent must never reach the app's own
       // database, config, or safeStorage secrets directly — the memory tools are the
       // only sanctioned read path. Checked before any auto-allow so a Bash
-      // `sqlite3 …/limboo.db` can't slip past. Scoped to those specific paths, NOT
+      // `sqlite3 …/zeus.db` can't slip past. Scoped to those specific paths, NOT
       // the whole userData root — the session worktree and attachment staging dir
       // live under it (see protectedPaths / sandbox/policy.ts).
       if (touchesCrownJewel(toolName, input)) {
@@ -7338,7 +7343,7 @@ export class AgentManager {
 
   /**
    * In-process subscribers to the same structured event stream the renderer
-   * receives (e.g. the VoiceManager's sentence segmenter). Listener failures
+   * receives (work graph, runtime telemetry). Listener failures
    * are swallowed — a consumer must never be able to break a run.
    */
   private readonly eventListeners = new Set<(event: AgentEvent) => void>();
@@ -7618,7 +7623,7 @@ function protectedPaths(): string[] {
       const base = crownJewelPaths();
       // The DB's WAL/SHM siblings are the same secret by another name; derive
       // them here rather than widening the Layer 3 sandbox floor's contract.
-      const db = base.find((p) => p.endsWith('limboo.db'));
+      const db = base.find((p) => p.endsWith('zeus.db'));
       const named = db ? [...base, `${db}-wal`, `${db}-shm`] : base;
       // Cover the realpath of the userData root too (a symlinked `~/.config`
       // is common), so a resolved target still matches. NOT `isInside` per
@@ -7660,7 +7665,7 @@ function resolveLoosely(target: string): string {
  * True when a tool call would touch one of the crown jewels — either a path-bearing
  * tool resolving to (or inside) one, or a `Bash`/command tool whose command string
  * names one by absolute path. The shell check is intentionally absolute-path only:
- * a bare-name match blocked innocent commands like `grep limboo.db src/` that never
+ * a bare-name match blocked innocent commands like `grep zeus.db src/` that never
  * leave the workspace.
  */
 function touchesCrownJewel(toolName: string, input: Record<string, unknown>): boolean {

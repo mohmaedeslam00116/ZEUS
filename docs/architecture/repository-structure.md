@@ -48,7 +48,7 @@ src/
 |   |-- window/            createWindow.ts (frameless, sandbox) + windowState.ts
 |   |-- db/                database.ts (SQLite schema + migrations)
 |   |-- managers/          one manager per responsibility (+ git/, fs/, memory/,
-|   |                      search/, voice/, workspace/, worktree/ (worktree
+|   |                      search/, workspace/, worktree/ (worktree
 |   |                      lifecycle + limboo.json), services/ (Scripts &
 |   |                      Services supervisor + localhost proxy) submodules;
 |   |                      git/refs.ts sanitizes user-supplied refs)

@@ -86,7 +86,7 @@ export class HookEngine {
    * need to know the provider or repeat redaction. Never throws.
    */
   emit(sessionId: string, phase: HookPhase, opts: HookEmit = {}): void {
-    let provider: 'anthropic' | 'cursor';
+    let provider: 'anthropic' | 'cursor' | 'openai' | 'pi';
     try {
       provider = providerForModel(this.settings.getAll().agent.model);
     } catch {

@@ -19,7 +19,7 @@ import {
   X,
 } from 'lucide-react';
 import { GRAPH_LIMITS, clamp } from '@shared/constants';
-import type { WorkGraphNodeKind } from '@shared/types';
+import type { GraphExportFormat, WorkGraphNodeKind } from '@shared/types';
 import { cn } from '@/renderer/lib/cn';
 import { EmptyState } from '@/renderer/components/ui/EmptyState';
 import { IconButton } from '@/renderer/components/ui/IconButton';
@@ -242,7 +242,9 @@ export function WorkGraphPanel() {
         // of the layout, and there is no partial layout to render.
         const res = await window.limboo?.graph.save(
           sessionId,
-          format,
+          // svg/png were materialized into `image` above and never reach the
+          // main-process data exporter — narrow the target to the data formats.
+          format as GraphExportFormat,
           image,
           // Scope applies to the data formats only: the image formats ARE the
           // canvas, and there is no partial layout to render.
@@ -261,7 +263,11 @@ export function WorkGraphPanel() {
       // used to turn a large JSON export into invalid JSON behind a success
       // toast — so the size is checked here and the user is sent to the file
       // path instead of being handed something broken.
-      const text = image ?? (scoped ? await exportSubgraph(format) : await exportGraph(format));
+      const text =
+        image ??
+        (scoped
+          ? await exportSubgraph(format as GraphExportFormat)
+          : await exportGraph(format as GraphExportFormat));
       if (!text) throw new Error('export failed');
       if (text.length > CLIPBOARD_MAX) {
         throw new Error(

@@ -5,7 +5,7 @@
  */
 import { ipcMain } from 'electron';
 import type { IpcMainEvent, IpcMainInvokeEvent } from 'electron';
-import type { IpcChannel, IpcSend } from '@shared/ipc-channels';
+import type { IpcChannel } from '@shared/ipc-channels';
 import { logger } from '../logger';
 
 // Injected by Electron Forge's Vite plugin. In dev it is the Vite dev-server URL
@@ -63,23 +63,3 @@ export function handle<TArgs extends unknown[], TResult>(
 }
 
 export type IpcListener<TArgs extends unknown[]> = (event: IpcMainEvent, ...args: TArgs) => void;
-
-/**
- * One-way counterpart of {@link handle} for high-frequency fire-and-forget
- * messages (`ipcRenderer.send`) — e.g. mic audio chunks — that don't want the
- * invoke round-trip. Same sender validation; errors are logged, never thrown
- * (there is no reply to reject).
- */
-export function on<TArgs extends unknown[]>(channel: IpcSend, listener: IpcListener<TArgs>): void {
-  ipcMain.on(channel, (event, ...args) => {
-    if (!isTrustedSender(event)) {
-      logger.warn(`Rejected IPC from untrusted sender on ${channel}`, event.senderFrame?.origin);
-      return;
-    }
-    try {
-      listener(event, ...(args as TArgs));
-    } catch (err) {
-      logger.error(`IPC listener failed: ${channel}`, err);
-    }
-  });
-}

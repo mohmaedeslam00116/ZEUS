@@ -22,7 +22,7 @@ export function TerminalPanel() {
   const term = useSettingsStore((s) => s.settings.agent.terminal);
   const update = useSettingsStore((s) => s.update);
 
-  const set = <K extends keyof typeof term>(key: K, value: (typeof term)[K]) =>
+  const set = <K extends keyof typeof term>(key: K, value: (typeof term)[K]): void =>
     void update({ agent: { terminal: { [key]: value } } });
 
   return (

@@ -16,9 +16,11 @@ import type { ActivityTab, AppSettings, WorkspaceConfig } from './types';
  * again no data migration. **29 is deliberately skipped**: installs in the
  * wild already carry a settings.json stamped 29 from a parallel build, and
  * reusing the number would make "already migrated" and "written by something
- * else" indistinguishable.
+ * else" indistinguishable. **31 removes the voice subsystem entirely**: the
+ * `voice` settings category no longer exists, and migration v30 → v31 deletes
+ * the persisted `voice` key from settings files written by older builds.
  */
-export const SETTINGS_VERSION = 30;
+export const SETTINGS_VERSION = 32;
 
 /**
  * Every valid right-drawer tab id, in display order. The renderer's
@@ -33,6 +35,7 @@ export const ACTIVITY_TAB_IDS: readonly ActivityTab[] = [
   'memory',
   'tasks',
   'console',
+  'terminal',
   'graph',
 ];
 
@@ -944,32 +947,6 @@ export const TELEMETRY_LIMITS = {
   exportBytesMax: 8_000_000,
 } as const;
 
-/** Bounds + caps for the Voice subsystem (main + renderer both clamp). */
-export const VOICE_LIMITS = {
-  /** VAD speech-probability threshold. */
-  sensitivity: { min: 0.1, max: 0.95, default: 0.5 },
-  /** Trailing silence (ms) ending an utterance in auto mode. */
-  silenceMs: { min: 300, max: 5_000, default: 1_200 },
-  /** TTS speech-rate multiplier. */
-  speed: { min: 0.5, max: 2, default: 1 },
-  /** Playback volume (renderer gain). */
-  volume: { min: 0, max: 1, default: 1 },
-  /** Kokoro speaker id (kokoro-en-v0_19 ships 11 voices). */
-  speakerId: { min: 0, max: 10, default: 0 },
-  /** Max bytes accepted per `voice:audio-chunk` message from the renderer. */
-  audioChunkBytesMax: 16_384,
-  /** Max buffered utterance audio (bytes of 16 kHz Int16 ≈ 5 minutes). */
-  utteranceBytesMax: 9_600_000,
-  /** Text cap for a single TTS synthesis job (one sentence/segment). */
-  ttsTextMax: 2_000,
-  /** Hard ceiling on a model archive download (bytes). */
-  downloadBytesMax: 2_147_483_648,
-  /** Max entries accepted while extracting a model archive. */
-  extractEntryMax: 4_096,
-  /** Min interval (ms) between download-progress pushes to the renderer. */
-  progressThrottleMs: 150,
-} as const;
-
 /**
  * Bounds + caps for the Attachment Manager (main + renderer both clamp).
  * Attachments are session-owned staged copies under
@@ -1184,7 +1161,12 @@ export const DEFAULT_SETTINGS: AppSettings = {
       enabled: true,
       root: '',
       branchPrefix: 'limboo',
-      autoSetup: true,
+      // ZEUS (#14): setup hooks are opt-in. Plain workspace sessions are the
+      // product default, and even an explicitly created worktree does not
+      // auto-prompt the repo's limboo.json setup commands — the user runs them
+      // via the existing ServicesStrip "Review commands…" affordance. The
+      // v31→32 settings migration flips previously-defaulted `true` values.
+      autoSetup: false,
       confirmHooks: true,
       teardownOnArchive: false,
     },
@@ -1351,43 +1333,6 @@ export const DEFAULT_SETTINGS: AppSettings = {
     // Stable by default: a prerelease is opt-in, never the path of least
     // resistance.
     channel: 'stable',
-  },
-  voice: {
-    enabled: true,
-    input: {
-      deviceId: '',
-      activation: 'auto',
-      sensitivity: VOICE_LIMITS.sensitivity.default,
-      silenceMs: VOICE_LIMITS.silenceMs.default,
-      language: 'en',
-      autoPunctuation: true,
-    },
-    output: {
-      enabled: true,
-      deviceId: '',
-      speakerId: VOICE_LIMITS.speakerId.default,
-      speed: VOICE_LIMITS.speed.default,
-      volume: VOICE_LIMITS.volume.default,
-      streamWhileGenerating: true,
-      speakWhen: 'voice-initiated',
-    },
-    playbackEvents: {
-      finalAnswers: true,
-      whileToolsRun: false,
-      planningUpdates: false,
-      taskCompletion: true,
-      notifications: false,
-    },
-    interruption: 'stop',
-    shortcuts: {
-      toggle: 'Mod+Shift+M',
-      pushToTalk: 'Mod+Space',
-    },
-    models: {
-      autoDownload: false,
-      autoUpdate: false,
-      offlineOnly: false,
-    },
   },
 };
 

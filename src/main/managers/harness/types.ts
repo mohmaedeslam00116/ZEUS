@@ -4,7 +4,8 @@
  *
  * WHY NOT `import type { HarnessAgent } from '@ai-sdk/harness/agent'`:
  * `import/no-unresolved` is an ESLint ERROR in this repo and there is no TS
- * resolver plugin (CLAUDE.md §2), while TypeScript is pinned at ~4.5 with
+ * resolver plugin (CLAUDE.md §2), while `moduleResolution` stays `node` (the
+ * pre-5.x layout choice, see Issue #10) with
  * `moduleResolution: node`, which cannot read an `exports` map. The harness
  * packages are exports-map-only ESM, so a direct type import fails
  * `npm run lint` — the exact command CLAUDE.md names as the verifier. Declaring
@@ -71,9 +72,17 @@ export interface HarnessApprovalRequest {
   abortSignal?: AbortSignal;
 }
 
-export type HarnessToolApproval = (
-  req: HarnessApprovalRequest,
-) => Promise<HarnessApprovalDecision>;
+/**
+ * Per-tool approval configuration, mirroring the adapter's
+ * `HarnessAgentToolApprovalConfiguration` (a tool-name → status map, NOT a
+ * callback): `'not-applicable'` and `'approved'` run the tool, `'user-approval'`
+ * pauses the turn for a user decision, `'denied'` immediately submits an
+ * execution-denied result.
+ */
+export type HarnessToolApproval = Record<
+  string,
+  'not-applicable' | 'approved' | 'denied' | 'user-approval'
+>;
 
 /** A live session; the framework owns its lifecycle across turns. */
 export interface HarnessSession {

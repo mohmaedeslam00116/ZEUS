@@ -1,4 +1,12 @@
 ================================================================================
+ZEUS STATUS NOTE (#15, ADR-0003): this research/design document is HISTORICAL.
+Everything marked "planned" below for the runtime, permissions, hooks, MCP and
+worktree integration is now BUILT behind the frozen provider seam
+(docs/architecture/provider-boundary.md, scripts/check-provider-neutrality.mjs).
+Read this file for background research only — not for the current architecture.
+================================================================================
+
+================================================================================
 WHAT CURSOR ADDS — DEEP INTEGRATION RESEARCH FOR THE LIMBOO AGENT ADAPTER
 ARCHITECTURE
 ================================================================================

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * check-electron-security.mjs — assert Limboo's Electron security invariants are
+ * check-electron-security.mjs — assert ZEUS's Electron security invariants are
  * still in place. These mirror CLAUDE.md §6 and Electron's own hardening
  * recommendations; the point is that a careless edit can never silently weaken
  * the security boundary without turning CI red.
