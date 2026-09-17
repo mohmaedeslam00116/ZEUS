@@ -50,6 +50,12 @@ jobs:
         run: node ci/scripts/check-licenses.mjs
       - name: Electron security invariants
         run: node ci/scripts/check-electron-security.mjs
+      - name: Crown-jewel consistency (three permission layers, ADR-0004/0005)
+        # Added in #16: the AgentManager decision core, the Cursor declarative
+        # deny rules, and the sandbox floor must resolve the SAME logical
+        # crown-jewel set from crownJewelPaths() — no second hard-coded copy,
+        # no legacy limboo.db reference (docs/security/invariants.md, SEC-14).
+        run: node scripts/check-crown-jewels.mjs
       - name: Provider neutrality (renderer boundary, ADR-0003)
         # Added in #15: renderer code must consume the normalized agent state
         # via the preload bridge + @shared contract — never provider

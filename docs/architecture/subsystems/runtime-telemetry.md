@@ -122,7 +122,7 @@ figure so this state is brief and does not recur every launch.
 
 ## Storage (schema v18)
 
-Three tables in `limboo.db`. **The schema is the redaction policy** — there is no
+Three tables in `zeus.db`. **The schema is the redaction policy** — there is no
 column that can hold a prompt, a message, a path, a tool input or a title, so an
 export cannot leak conversation data: not because a filter strips it, but because
 there is nowhere for it to have been stored.

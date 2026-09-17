@@ -11,7 +11,7 @@ Source: [`src/main/db/database.ts`](../../../src/main/db/database.ts).
 
 ## Engine and configuration
 
-- `better-sqlite3` at `{userData}/limboo.db`.
+- `better-sqlite3` at `{userData}/zeus.db`.
 - Opened once as a singleton (`getDb()`), closed on quit (`closeDb()`).
 - Pragmas: `journal_mode = WAL` (write-ahead logging) and `foreign_keys = ON`.
 

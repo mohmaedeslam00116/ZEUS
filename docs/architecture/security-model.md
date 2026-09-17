@@ -16,7 +16,10 @@ machine — the privacy/local-first model is unchanged. The realistic threats ar
 compromised or buggy renderer trying to reach the OS; malicious input crossing IPC;
 path traversal escaping the workspace; injection through SQL or a spawned shell;
 prototype pollution through merged objects; and secrets leaking into logs. Each has a
-specific, implemented defense.
+specific, implemented defense. The operational form — every invariant mapped
+to its enforcement anchor and verification method, plus the Security-impact
+contract and the ADR-0004 regression protocol — is
+[`docs/security/invariants.md`](../security/invariants.md).
 
 ## The eleven hardening patterns
 

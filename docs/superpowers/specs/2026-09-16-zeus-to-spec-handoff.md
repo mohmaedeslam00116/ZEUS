@@ -118,7 +118,7 @@ Every `to-spec` output contains, in this order:
 - Detailed behavior
 - Files/modules affected
 - Data/migration impact
-- Security impact
+- Security impact (mandatory content — see the Security-impact contract below)
 - Windows-specific behavior
 - UI/UX impact
 - Impeccable review requirements, when applicable
@@ -126,6 +126,25 @@ Every `to-spec` output contains, in this order:
 - Acceptance criteria
 - Dependencies
 - Known risks
+
+#### Security-impact contract (mandatory)
+
+Every `Security impact` section must do both of the following:
+
+1. **Enumerate the security-relevant surfaces the change touches**, checking
+   each of: IPC channels added/changed; process spawn argv construction; SQL
+   statements; path joins/resolution; merges/keying of renderer-supplied
+   objects; secrets handling; outbound network; permission/sandbox posture.
+2. **Map each touched surface to the governing invariant ID** in
+   `docs/security/invariants.md` (the canonical operational reference), stating
+   how the change preserves it.
+
+If nothing is touched, the section must literally declare
+`no security-relevant surface touched` plus a one-line justification — a bare
+"none" is not acceptable, and the declaration is a positive claim reviewers may
+contest. Any change that weakens an invariant is a **release blocker** under
+the regression protocol in `docs/security/invariants.md` — not a follow-up
+ticket.
 
 ## Deferred scope — future work requiring future decisions/specifications
 

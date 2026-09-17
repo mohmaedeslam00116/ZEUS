@@ -74,6 +74,6 @@ weakened.
 
 Persistent state lives in the main process and on disk: settings
 (`settings.json`), window geometry (`window-state.json`), and the SQLite database
-(`limboo.db`) holding workspaces, sessions, transcripts, memories, and checkpoints.
+(`zeus.db`) holding workspaces, sessions, transcripts, memories, and checkpoints.
 On boot, the renderer hydrates from main through the bridge. See
 [the main process](main-process.md) and [the database](subsystems/database.md).

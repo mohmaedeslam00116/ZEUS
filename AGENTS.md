@@ -34,6 +34,11 @@ current implementation only. It must be validated for ZEUS before being
 treated as an approved ZEUS design; the `## UI/UX Design` rule below remains
 authoritative for any ZEUS UI/UX decision.
 
+**Security:** [`docs/security/invariants.md`](docs/security/invariants.md) is
+the canonical invariant list. Every ticket's Security-impact section follows
+the Security-impact contract there, and the regression protocol applies: any
+change that weakens an invariant is a release blocker, not a follow-up ticket.
+
 ## Agent skills
 
 ### Issue tracker
