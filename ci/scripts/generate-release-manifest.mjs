@@ -110,12 +110,12 @@ function classify(name) {
  * Signing posture, stated from what this repository actually does rather than
  * probed.
  *
- * Deliberately conservative: `docs/ci/code-signing.md` records that Windows is
- * self-signed and that the packaging invariants depend on it staying declared
- * that way (`win.verifyUpdateCodeSignature: false`). Claiming "signed" here
- * because a file exists would be the release document lying about the one thing
- * it exists to be honest about. Update this table when signing changes — and
- * `verify-signing.mjs` is what checks the claim.
+ * Deliberately conservative: `docs/ci/code-signing.md` records the Windows
+ * posture, and until a certificate is configured at all the alpha is UNSIGNED
+ * (ADR-0008: no signing; #29: no publisher identity). Claiming "signed" or
+ * "self-signed" here because a file exists would be the release document lying
+ * about the one thing it exists to be honest about. Update this table when
+ * signing changes — and `verify-signing.mjs` is what checks the claim.
  */
 function signingPosture(files) {
   const has = (pred) => files.some((f) => pred(basename(f).toLowerCase()));
@@ -123,8 +123,8 @@ function signingPosture(files) {
   if (has((n) => n.endsWith('.exe') || n.endsWith('.msi'))) {
     out.push({
       platform: 'windows',
-      status: 'self-signed',
-      detail: 'Self-signed certificate; SmartScreen will warn until reputation builds.',
+      status: 'unsigned',
+      detail: 'Unsigned build; SmartScreen will warn. Verify the installer against SHA256SUMS before running it.',
     });
   }
   if (has((n) => n.endsWith('.dmg') || (n.endsWith('.zip') && n.includes('mac')))) {

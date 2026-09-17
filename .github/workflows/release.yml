@@ -183,6 +183,30 @@ jobs:
       #    publishes: the maintainer reviews the draft (artifact, notes,
       #    checksums) and performs the Publish click (#28 approval gate).
       # ---------------------------------------------------------------------
+      # A previous dispatch with the same tag may have left a draft behind
+      # (superseded by a fix, or a failed run that got as far as drafting).
+      # Two same-tag drafts make both the `gh release` CLI and the maintainer's
+      # Publish click ambiguous — the stale one must not survive to publish
+      # time. PUBLISHED releases keep their hard duplicate refusal upstream in
+      # the validation stage; only drafts are replaced here.
+      # ---------------------------------------------------------------------
+      - name: Replace stale same-tag draft
+        run: |
+          set -e
+          TAG='${{ inputs.tag }}'
+          STALE=$(gh api "repos/$GITHUB_REPOSITORY/releases" --paginate \
+            --jq "[.[] | select(.tag_name == \"$TAG\" and .draft == true) | .id] | join(\" \")")
+          if [ -n "$STALE" ]; then
+            for id in $STALE; do
+              echo "deleting stale same-tag draft: release id $id"
+              gh api -X DELETE "repos/$GITHUB_REPOSITORY/releases/$id"
+            done
+          else
+            echo "no stale same-tag draft"
+          fi
+        env:
+          GH_TOKEN: ${{ github.token }}
+
       - name: Create draft prerelease
         run: |
           set -e
