@@ -1,9 +1,9 @@
 /**
- * Shared helper: write `resources/app-update.yml` into a packaged Limboo app dir.
+ * Shared helper: write `resources/app-update.yml` into a packaged ZEUS app dir.
  *
  * electron-updater reads `<resources>/app-update.yml` on every checkForUpdates()
  * to learn its feed + cache dir. electron-builder normally writes this file during
- * its own app-packaging step — but Limboo's hybrid flow never uses that step:
+ * its own app-packaging step — but ZEUS's hybrid flow never uses that step:
  * Electron Forge packages the app, and electron-builder only runs `--prepackaged`
  * (installers only, no re-pack). So the file is emitted by neither tool and must
  * be written manually.
@@ -30,20 +30,20 @@ const APP_UPDATE_YML =
  * Resources live directly under the packaged dir on win/linux, but inside the
  * `.app` bundle on macOS.
  *
- * @param {string} appDir  packaged app directory (e.g. out/Limboo-win32-x64)
+ * @param {string} appDir  packaged app directory (e.g. out/Zeus-win32-x64)
  * @param {NodeJS.Platform} platform  target platform (win32 | darwin | linux)
  * @returns {string}
  */
 export function resourcesDirFor(appDir, platform) {
   return platform === 'darwin'
-    ? join(appDir, 'Limboo.app', 'Contents', 'Resources')
+    ? join(appDir, 'Zeus.app', 'Contents', 'Resources')
     : join(appDir, 'resources');
 }
 
 /**
  * Write `app-update.yml` into the packaged app's resources dir.
  *
- * @param {string} appDir  packaged app directory (e.g. out/Limboo-win32-x64)
+ * @param {string} appDir  packaged app directory (e.g. out/Zeus-win32-x64)
  * @param {NodeJS.Platform} platform  target platform (win32 | darwin | linux)
  * @returns {string}  the path written
  */

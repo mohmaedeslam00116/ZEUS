@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Regenerate the branded Windows-installer art from the single source of truth,
- * assets/icon.svg (the Limboo pink "blob" mark, fill #ff0066 on transparent).
+ * assets/icon.svg (the ZEUS interim bolt mark, fill #ededed on transparent — no pink).
  *
  * Cross-platform replacement for the old gen-installer-assets.sh: everything is
  * pure Node — `sharp` rasterizes composed SVGs (same as scripts/gen-icons.mjs),
@@ -38,7 +38,7 @@ const FONTS = path.join(OUT, 'fonts');
 
 // Theme tokens (kept in lockstep with src/renderer/styles/index.css @theme).
 const BLACK = '#000000'; // --color-base
-const BRAND = '#ff0066'; // --color-brand (the blob mark + footer wordmark)
+const FOOT = '#9a9a9a'; // --color-muted (footer wordmark) — no inherited pink (ADR-0009)
 const FG = '#ededed'; //    --color-fg    (heading wordmark)
 const MUTED = '#9a9a9a'; // --color-muted (tagline)
 
@@ -66,7 +66,7 @@ function mark(x, y, size) {
   const s = size / 200;
   return (
     `<g transform="translate(${x} ${y}) scale(${s})">` +
-    `<path fill="${BRAND}" d="${blobPath}" transform="translate(100 100)"/>` +
+    `<path fill="${FG}" d="${blobPath}" transform="translate(100 100)"/>` +
     `</g>`
   );
 }
@@ -107,17 +107,17 @@ const SIDEBAR = svgDoc(
   164,
   314,
   mark((164 - 96) / 2, 40, 96) +
-    text(semiBold, 'Limboo', 22, 82, 174, FG, 'center') +
+    text(semiBold, 'ZEUS', 22, 82, 174, FG, 'center') +
     text(regular, 'AI software', 10, 82, 194, MUTED, 'center') +
     text(regular, 'development', 10, 82, 208, MUTED, 'center') +
-    text(regular, 'limboo', 9, 82, 296, BRAND, 'center'),
+    text(regular, 'zeus', 9, 82, 296, FOOT, 'center'),
 );
 
 // Header strip (150×57): small mark + wordmark, vertically centered.
 const HEADER = svgDoc(
   150,
   57,
-  mark(12, 8.5, 40) + text(semiBold, 'Limboo', 15, 60, 34, FG),
+  mark(12, 8.5, 40) + text(semiBold, 'ZEUS', 15, 60, 34, FG),
 );
 
 // --- Rasterization ----------------------------------------------------------------

@@ -41,7 +41,7 @@ const config: ForgeConfig = {
     asar: {
       unpack: '{**/node_modules/@anthropic-ai/**,**/.vite/build/*.cjs}',
     },
-    name: 'Limboo',
+    name: 'Zeus',
     icon: 'assets/icon',
     // @electron-forge/plugin-vite installs a default `packagerConfig.ignore` that
     // keeps ONLY the `.vite` build output and excludes everything else —

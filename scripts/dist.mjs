@@ -63,8 +63,8 @@ const archArg = process.argv.find((a) => a.startsWith('--arch='));
 const targetArch = archArg ? archArg.slice('--arch='.length) : process.arch;
 const forwardedArgs = process.argv.slice(2).filter((a) => !a.startsWith('--arch='));
 
-// Forge names the packaged dir from packagerConfig.name ('Limboo') + platform/arch.
-const forgeOutDir = resolve(process.cwd(), 'out', `Limboo-${process.platform}-${targetArch}`);
+// Forge names the packaged dir from packagerConfig.name ('Zeus') + platform/arch.
+const forgeOutDir = resolve(process.cwd(), 'out', `Zeus-${process.platform}-${targetArch}`);
 
 if (!existsSync(forgeOutDir)) {
   console.error(
@@ -77,16 +77,16 @@ if (!existsSync(forgeOutDir)) {
 // `--prepackaged` means different things per platform, and getting this wrong is
 // silent: `macPackager.packMacTargets` treats the value AS the `.app` bundle
 // path, so handing it the containing directory produced a dmg/zip whose root
-// entry was `Limboo-darwin-arm64/` instead of `Limboo.app/`. Squirrel.Mac only
+// entry was `Zeus-darwin-arm64/` instead of `Zeus.app/`. Squirrel.Mac only
 // accepts a zip rooted at the .app, so every macOS auto-update failed — and the
 // dmg wrapped a folder. Windows and Linux DO want the directory.
 const prepackaged =
-  process.platform === 'darwin' ? join(forgeOutDir, 'Limboo.app') : forgeOutDir;
+  process.platform === 'darwin' ? join(forgeOutDir, 'Zeus.app') : forgeOutDir;
 
 if (process.platform === 'darwin' && !existsSync(prepackaged)) {
   console.error(
     `[dist] Expected the app bundle at "${prepackaged}" but it does not exist.\n` +
-      `       Forge should have produced Limboo.app inside ${forgeOutDir}.`,
+      `       Forge should have produced Zeus.app inside ${forgeOutDir}.`,
   );
   process.exit(1);
 }

@@ -11,9 +11,9 @@
 #
 # Regenerate the branded art with: npm run gen:installer
 
-appId: dev.limboo.app
-productName: Limboo
-copyright: Copyright © 2026 BotCoder254
+appId: io.github.mohmaedeslam00116.zeus
+productName: ZEUS
+copyright: Copyright © 2026 ZEUS Project
 
 # Branded NSIS art + custom include live here (not the electron-builder default
 # `build/`), keeping all installer assets under assets/.
@@ -47,7 +47,6 @@ win:
     - nsis
   icon: assets/installer/icon.ico
   # Match the running app's identity so taskbar / notifications / installer agree.
-  legalTrademarks: Limboo
   # `publisherName` is INTENTIONALLY ABSENT, and `verifyUpdateCodeSignature` is
   # INTENTIONALLY false. Both guard the same failure.
   #
@@ -84,13 +83,13 @@ nsis:
   license: LICENSE
   createDesktopShortcut: true
   createStartMenuShortcut: true
-  shortcutName: Limboo
+  shortcutName: ZEUS
   # Root-level Start-menu shortcut (no vendor subfolder) — the modern Windows
   # standard, and it keeps "Recently added" from resolving into a stale
   # subfolder entry left by older installs (installer.nsh scrubs those).
   menuCategory: false
   runAfterFinish: true
-  # Preserve the user's workspaces / limboo.db / memories / logs / terminal
+  # Preserve the user's workspaces / zeus.db / memories / logs / terminal
   # history on uninstall — never wipe userData automatically.
   deleteAppDataOnUninstall: false
   # Detect previous installs and upgrade cleanly without data loss.
@@ -118,7 +117,7 @@ mac:
     - zip
   artifactName: ${productName}-${version}-${arch}.${ext}
 dmg:
-  title: Limboo ${version}
+  title: ZEUS ${version}
 
 # ---------------------------------------------------------------------------
 # Linux — AppImage (required for electron-updater self-update) + deb + rpm +
@@ -133,14 +132,14 @@ linux:
   category: Development
   icon: assets/icon.png
   synopsis: The operating system for AI software development
-  # MUST match the binary Forge produces (packagerConfig.name = 'Limboo'), which
+  # MUST match the binary Forge produces (packagerConfig.name = 'Zeus'), which
   # `--prepackaged` hands over as-is. electron-builder does NOT read that name:
-  # it defaults executableName to package.json `name` ('limboo', lowercase) and
+  # it defaults executableName to package.json `name` ('zeus', lowercase) and
   # writes every Linux launcher path from it. Without this, v1.5.0 shipped an
   # AppRun that exec'd a non-existent `limboo` (the AppImage could not start at
   # all), a .desktop `Exec=/opt/Limboo/limboo`, and a dangling
   # /usr/bin/limboo symlink. Case matters on Linux — keep these two in sync.
-  executableName: Limboo
+  executableName: Zeus
   target:
     - AppImage
     - deb
@@ -204,8 +203,8 @@ pacman:
 # git and node-pty PTYs works as it does outside the package.
 # ---------------------------------------------------------------------------
 appx:
-  applicationId: Limboo
-  displayName: Limboo
+  applicationId: io.github.mohmaedeslam00116.zeus
+  displayName: ZEUS
   backgroundColor: "#000000"
   showNameOnTiles: true
   languages: [en-US]

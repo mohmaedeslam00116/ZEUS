@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Rasterize the app icon PNGs the main process loads at runtime, from the single
- * source of truth: assets/icon.svg (the Limboo pink blob mark).
+ * source of truth: assets/icon.svg (the ZEUS interim bolt mark).
  *
  * Cross-platform (uses `sharp`, which ships prebuilt binaries), so it works on the
  * Windows dev box where rsvg-convert / ImageMagick are unavailable. It only
@@ -17,7 +17,7 @@
  *   assets/tray.png        32x32   (system tray)
  *   assets/icon.ico       multi-res (16→256) — the WINDOWS APP/EXE icon.
  *                          Forge's `packagerConfig.icon: 'assets/icon'` needs
- *                          this .ico to embed into Limboo.exe (rcedit); without
+ *                          this .ico to embed into Zeus.exe (rcedit); without
  *                          it the exe/taskbar/desktop shortcut fall back to the
  *                          default Electron logo.
  */

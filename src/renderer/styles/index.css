@@ -33,7 +33,7 @@
   --color-danger: #f85149;
 
   /* Brand mark color — the Zeus pink blob logo (text-brand / fill-brand). */
-  --color-brand: #ff0066;
+  /* --color-brand removed: the inherited pink had no remaining consumers (ADR-0009 forbids it in the mark). */
 
   /* Typography */
   --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI",

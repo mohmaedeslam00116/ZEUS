@@ -86,7 +86,7 @@ if (path.resolve(app.getPath('userData')) !== path.resolve(expectedUserData)) {
 
 // One stable Windows identity for the taskbar, notifications, and the installer
 // (must match electron-builder.yml `appId`). Harmless on other platforms.
-app.setAppUserModelId('dev.zeus.app');
+app.setAppUserModelId('io.github.mohmaedeslam00116.zeus'); // ADR-0009 appId
 
 installGlobalErrorHandlers();
 

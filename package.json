@@ -1,6 +1,6 @@
 {
-  "name": "limboo",
-  "productName": "Limboo",
+  "name": "zeus",
+  "productName": "ZEUS",
   "version": "0.1.0-alpha.0",
   "description": "My Electron application description",
   "main": ".vite/build/main.js",
