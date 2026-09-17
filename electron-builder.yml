@@ -22,13 +22,13 @@ directories:
   buildResources: assets/installer
 
 # ---------------------------------------------------------------------------
-# ZEUS (#13, ADR-0006): inherited Limboo publishing was deliberately removed.
-# The legacy block pointed at limboo-ai/limboo — that target must never fire
-# again, and no ZEUS-native publishing exists yet (future decision + ADR).
-# A `publish:` block here would both enable `electron-builder --publish` and
-# alter the electron-updater feed baked into packaged builds, so none is set.
+# ZEUS: inherited Limboo publishing was removed (#13, ADR-0006); ZEUS-native
+# publishing is dispatch-only through .github/workflows/release.yml (ADR-0008),
+# which ends at a draft prerelease; the maintainer's Publish click is the
+# approval gate. A publish: block here remains BANNED — it would re-enable
+# electron-builder --publish and alter the feed baked into packaged builds.
 # The feed file every packaged build carries is written by
-# scripts/write-app-update-yml.mjs, which remains the future feed's template.
+# scripts/write-app-update-yml.mjs, now pointing at the ZEUS repository.
 # ---------------------------------------------------------------------------
 
 # ---------------------------------------------------------------------------

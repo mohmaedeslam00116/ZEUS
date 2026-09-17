@@ -61,7 +61,7 @@ const { AppImageUpdater, DebUpdater, MacUpdater, NsisUpdater, PacmanUpdater, Rpm
   electronUpdater;
 
 /** The GitHub project that serves releases — must match electron-builder.yml. */
-const FEED = { provider: 'github', owner: 'limboo-ai', repo: 'limboo' } as const;
+const FEED = { provider: 'github', owner: 'mohmaedeslam00116', repo: 'ZEUS' } as const;
 
 /** Re-check cadence once the app has settled (ms). */
 const POLL_INTERVAL = 60 * 60 * 1000; // hourly

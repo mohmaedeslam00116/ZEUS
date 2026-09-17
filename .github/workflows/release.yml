@@ -1,0 +1,183 @@
+name: Release
+
+# ZEUS-native release pipeline (ADR-0008 / Spec 14 / #40).
+#
+# ADR-0008 reinstates publishing SOLELY as a manual-dispatch draft-prerelease
+# flow and amends ADR-0006's "no publishing" consequence. The structural bans
+# remain in force and this workflow must never reintroduce them:
+#   - no tag-push trigger (dispatch is the ONLY trigger);
+#   - no automatic publishing — the job ENDS at a draft prerelease; the
+#     maintainer's Publish click is the approval gate;
+#   - no signing, no multi-OS feeds, no delta/blockmap downloads, no staged
+#     rollout, no environment-based CD.
+#
+# Flow: dispatch with an explicit validated tag → CI gates re-run → existing
+# hybrid packaging (Forge fuses + asar → electron-builder --prepackaged → NSIS)
+# → notes/checksums/manifest assembly → draft prerelease. Human review happens
+# on the draft, not in this workflow.
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag, e.g. v0.1.0-alpha.1 (#30 scheme: vMAJOR.MINOR.PATCH[-pre])'
+        required: true
+        type: string
+      prerelease-title:
+        description: 'Optional override for the release title (defaults to the tag)'
+        required: false
+        type: string
+
+permissions:
+  contents: write
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  release:
+    name: Release ${{ inputs.tag }} (draft prerelease)
+    runs-on: windows-2022
+    timeout-minutes: 60
+    env:
+      # The workflow's standard ephemeral token. No PATs, no added secrets
+      # (ADR-0008: no credentials in workflow artifacts or configuration).
+      RELEASE_REPOSITORY: ${{ github.repository }}
+
+    steps:
+      # ---------------------------------------------------------------------
+      # 1. Checkout + toolchain — same assumptions as ci.yml (Node 22, npm).
+      # ---------------------------------------------------------------------
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # check-tag-unique compares the released commit against the full tag
+          # namespace and apply-tag-version reads tags for the previous version;
+          # single-tag checkouts don't fetch the tag namespace.
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Setup Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # ---------------------------------------------------------------------
+      # 2. Tag validation — FAIL FAST, before any packaging work.
+      # ---------------------------------------------------------------------
+      - name: Validate release tag
+        id: tag
+        run: |
+          set -e
+          TAG='${{ inputs.tag }}'
+          # #30 scheme: vX.Y.Z with optional SemVer prerelease/build suffix.
+          if ! printf '%s' "$TAG" | grep -Eq '^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$'; then
+            echo "::error::tag input '$TAG' is not a vX.Y.Z[-pre] SemVer tag (#30 versioning scheme)"
+            exit 1
+          fi
+          # Duplicate-release protection: the tag must not already exist on the
+          # remote. (GH CLI sees the tag namespace even though the checkout
+          # doesn't include it.)
+          if git ls-remote --exit-code --tags origin "refs/tags/$TAG" >/dev/null 2>&1; then
+            echo "::error::tag $TAG already exists on the remote — refusing a duplicate release (#30)"
+            exit 1
+          fi
+          # Commit-level uniqueness: refuse re-tagging a commit that already
+          # carries another v* tag (the inherited v1.2.8/v1.2.9 empty-release
+          # failure mode this script exists to prevent).
+          node ci/scripts/check-tag-unique.mjs "$TAG"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+
+      # ---------------------------------------------------------------------
+      # 3. Validation gates — the SAME gates ci.yml's Validate job runs,
+      #    re-run here so packaging never starts from an unverified tree.
+      #    Order preserved; nothing weakened or skipped.
+      # ---------------------------------------------------------------------
+      - name: Lint sources
+        run: npm run lint
+      - name: Typecheck
+        run: npm run typecheck
+      - name: Unit tests
+        run: npm test
+      - name: License compliance
+        run: node ci/scripts/check-licenses.mjs
+      - name: Electron security invariants
+        run: node ci/scripts/check-electron-security.mjs
+      - name: Crown-jewel consistency (three permission layers, ADR-0004/0005)
+        run: node scripts/check-crown-jewels.mjs
+      - name: Provider neutrality (renderer boundary, ADR-0003)
+        run: node scripts/check-provider-neutrality.mjs
+      - name: Manifest + docs integrity
+        run: node ci/scripts/check-manifest.mjs
+      - name: Bundled release notes in sync with CHANGELOG.md
+        run: npm run gen:notes -- --check
+      - name: Union-record exhaustiveness
+        run: npm run check:unions
+      - name: Dependency audit (high+)
+        run: npm audit --audit-level=high || echo "::warning::npm audit reported advisories"
+
+      # ---------------------------------------------------------------------
+      # 4. Packaging — the existing hybrid flow, unchanged: Forge applies the
+      #    renderer build, security fuses and asar; electron-builder only wraps
+      #    the already-packaged dir (--prepackaged) into the NSIS installer and
+      #    emits latest.yml. NSIS is the alpha's only target (Windows-only,
+      #    #28); the multi-OS branches in dist.mjs stay dormant.
+      # ---------------------------------------------------------------------
+      - name: Stamp version from tag
+        run: node ci/scripts/apply-tag-version.mjs "${{ inputs.tag }}"
+
+      - name: Package app (Forge fuses + asar)
+        run: npm run package
+
+      - name: Build NSIS installer (electron-builder --prepackaged)
+        run: npm run dist
+
+      # ---------------------------------------------------------------------
+      # 5. Release assembly — notes, checksums, manifest, artifact verification.
+      #    SHA-512 lives inside latest.yml (electron-builder) and the provenance
+      #    manifest carries the digests; SHA256SUMS covers the publish set.
+      # ---------------------------------------------------------------------
+      - name: Assemble publish set (checksums, manifest, update metadata)
+        run: |
+          set -e
+          TAG='${{ inputs.tag }}'
+          node ci/scripts/make-checksums.mjs dist
+          node ci/scripts/merge-update-metadata.mjs dist dist
+          node ci/scripts/generate-release-manifest.mjs dist "$TAG"
+          # Structural verification of the assembled publish set: installer
+          # present, feeds sane, SHA256SUMS describes exactly what is here, no
+          # builder-debug/effective-config leakage. Fails the job before any
+          # draft is created.
+          node ci/scripts/verify-artifacts.mjs dist --publish-set
+
+      - name: Generate release notes (from canonical CHANGELOG.md)
+        # Written OUTSIDE dist/ so the dist/* upload glob stays exactly the
+        # publish set (notes ride the release body, not the asset list).
+        run: node ci/scripts/generate-release-notes.mjs "${{ inputs.tag }}" release-notes.md
+
+      # ---------------------------------------------------------------------
+      # 6. Draft prerelease — the workflow's FINAL action. Nothing auto-
+      #    publishes: the maintainer reviews the draft (artifact, notes,
+      #    checksums) and performs the Publish click (#28 approval gate).
+      # ---------------------------------------------------------------------
+      - name: Create draft prerelease
+        run: |
+          set -e
+          TAG='${{ inputs.tag }}'
+          # Draft + prerelease flags are structural: the release is INVISIBLE
+          # until a maintainer publishes it, and the updater treats it as a
+          # prerelease under the beta channel (#28).
+          gh release create "$TAG" \
+            --draft \
+            --prerelease \
+            --target "$GITHUB_SHA" \
+            --title "${{ inputs.prerelease-title || inputs.tag }}" \
+            --notes-file release-notes.md \
+            dist/*
+        env:
+          GH_TOKEN: ${{ github.token }}

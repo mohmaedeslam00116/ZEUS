@@ -1,10 +1,10 @@
 # Branded installer and auto-update
 
-Zeus treats installation as the first screen of the app: a branded, multi-page
+ZEUS treats installation as the first screen of the app: a branded, multi-page
 Windows installer that reuses the app's pure-black (`#000000`) theme and the
-`#ff0066` pink blob brand mark, plus in-app auto-update. This document explains the
-hybrid build flow, how to regenerate the installer art, and how releases
-authenticate.
+interim ZEUS bolt mark, plus in-app auto-update. This document explains the
+hybrid build flow, how the updater is fed, and how releases are published and
+authenticated.
 
 ## Hybrid build flow (Forge + electron-builder)
 
@@ -18,84 +18,77 @@ branded installers plus the `latest*.yml` auto-update metadata.
 ```
 npm start            electron-forge start                       # dev (HMR)
 npm run package      electron-forge package                     # -> out/Zeus-<plat>-<arch>/
-npm run dist         package + node scripts/dist.mjs            # -> dist/ (installers + latest*.yml)
-npm run dist:publish package + node scripts/dist.mjs --publish always
+npm run dist         node scripts/dist.mjs                      # hybrid wrap -> dist/ (NSIS on Windows)
 ```
 
-`scripts/dist.mjs` resolves the Forge output dir, maps the current OS to the
-electron-builder target flag (`--win` / `--mac` / `--linux`), and forwards any
-extra args (e.g. `--publish never`). It is cross-platform (works under Windows
-cmd.exe in CI).
+`electron-builder.yml` deliberately carries **no `publish:` block** — it would
+re-enable `electron-builder --publish` and alter the feed baked into packaged
+builds. Publishing happens exclusively through the release workflow (below).
 
-Targets (see `electron-builder.yml`):
-
-- **Windows** — branded NSIS wizard (`*-Setup-*.exe`).
-- **macOS** — `dmg` + `zip` (zip is required for electron-updater self-update).
-- **Linux** — `AppImage` (required for self-update) + `deb` + `rpm`.
-
-## Regenerating the installer art
-
-All NSIS art derives from `assets/icon.svg`. After editing the SVG, regenerate:
-
-```bash
-npm run gen:installer   # cross-platform Node (sharp + resvg + opentype.js)
-```
-
-The generator ([`scripts/gen-installer-assets.mjs`](../../scripts/gen-installer-assets.mjs))
-works on Windows/macOS/Linux with no system tools: wordmark text is outlined into
-SVG paths from the vendored Inter TTFs (`assets/installer/fonts/`, SIL OFL), so the
-output is byte-deterministic on any machine. Outputs to `assets/installer/`:
-`icon.ico` (multi-res 16→256), `installerSidebar.bmp` and `uninstallerSidebar.bmp`
-(164×314, BMP3), and `installerHeader.bmp` (150×57, BMP3) — pure-black canvas,
-`#ff0066` brand mark, `#ededed` wordmark, `#9a9a9a` tagline.
-`assets/installer/installer.nsh` layers on brand identity (finish-page text, brand
-registry key) and is referenced from the `nsis.include` option.
-
-The NSIS wizard is configured for a guided experience: license page, custom install
-directory, desktop + Start Menu shortcuts, run-after-finish, and — importantly —
-`deleteAppDataOnUninstall: false`, so uninstalling **never** wipes the user's
+During the Windows-only closed alpha, **NSIS is the only distributable target**
+(#28); the macOS/Linux packaging branches remain in the config and scripts but
+are dormant. Both the app and the auto-update are per-user (no elevation), and
+`deleteAppDataOnUninstall: false` so uninstalling **never** wipes the user's
 workspaces, `zeus.db`, memories, logs, or terminal history.
 
 ## Auto-update
 
 `AutoUpdateManager` (`src/main/managers/AutoUpdateManager.ts`) wraps
 `electron-updater`. It configures the GitHub feed programmatically and reads the
-`latest*.yml` published to GitHub Releases. It is active **only** in a packaged
-build (and only the AppImage on Linux); it is a no-op in dev. Status flows to the
-renderer over the `update:status` IPC event and surfaces as the `UpdateBanner` plus
-the **Settings → Updates** panel (auto-check / auto-download toggles + "Check now").
-The feed is HTTPS and host-fixed (no renderer-supplied URLs), and the downloaded
-installer is signature-verified before it is applied — no update credentials are
-ever stored.
+`latest*.yml` published to ZEUS's GitHub Releases. It is active **only** in a
+packaged build; it is a no-op in dev. Status flows to the renderer over the
+`update:status` IPC event and surfaces as the `UpdateBanner` plus the
+**Settings → Updates** panel (auto-check / auto-download toggles + "Check now").
 
-## Release authentication: GH_TOKEN vs the `gh` CLI
+**Feed destination (ADR-0008):** `github` provider, repository
+`mohmaedeslam00116/ZEUS`, cache dir `zeus-updater`. The values live in exactly
+two places — `AutoUpdateManager.FEED` (runtime) and
+`scripts/write-app-update-yml.mjs` (the feed file written into every packaged
+build's `resources/app-update.yml`), which is pinned by unit tests.
 
-- **Automated CI releases** use **`GH_TOKEN`**. On GitLab (the primary publisher —
-  the `release:github` job in `.gitlab-ci.yml`), store a fine-grained PAT with
-  `contents:write` as a **Masked + Protected** CI/CD variable named `GH_TOKEN`
-  (never in the YAML); the job feeds it to a pinned `gh` CLI. The GitLab Release
-  itself (`release:gitlab`) uses the built-in `CI_JOB_TOKEN`. On the GitHub Actions
-  fallback (`release.yml`, manual dispatch), the built-in `GITHUB_TOKEN` (with
-  `contents: write`) is sufficient via `softprops/action-gh-release`.
-- **Manual / local releases** use your authenticated **`gh` CLI**:
+**Channel semantics (unchanged):** settings expose `stable | beta`; the
+alpha-era **default is `beta`** so invited testers track prereleases out of the
+box. `allowPrerelease = (channel === 'beta')`; the beta channel forces
+auto-download **off** (every update is explicit per-version consent); a
+prerelease update never auto-resumes after an interruption. Update checks are
+governed outbound fetches (SEC-18: host-fixed feed, no renderer-supplied URLs,
+resolve-before-connect).
 
-  ```bash
-  npm run dist                     # build installers locally into dist/
-  gh release create v1.2.3 \
-    --title "Zeus v1.2.3" --notes-file RELEASE_NOTES.md \
-    dist/*.exe dist/*.dmg dist/*.AppImage dist/*.deb dist/*.rpm dist/*.zip \
-    dist/latest*.yml dist/*.blockmap
-  ```
+**Integrity (SEC-21, honest unsigned posture):** the alpha is **unsigned**.
+Update integrity rests on the **sha512 digests electron-builder embeds in
+`latest.yml`**, which electron-updater verifies before applying an update. No
+`publisherName` is declared anywhere — declaring one would make electron-updater
+demand a valid Authenticode signature and break every update. Code signing is a
+post-alpha decision; SmartScreen handling for testers is documented in the
+[alpha program](alpha-program.md).
 
-  The `latest*.yml` and `*.blockmap` files **must** be attached or auto-update will
-  not detect/verify new versions.
+## Release flow (manual dispatch, ADR-0008)
 
-CI never uses the local `gh` login; it always uses the token from the CI/CD variable.
+Releases are cut by dispatching [`.github/workflows/release.yml`](../../.github/workflows/release.yml)
+with an explicit `vX.Y.Z[-pre]` tag:
 
-## Release environments (GitLab)
+1. The workflow validates the tag (SemVer shape, no duplicate remote tag, no
+   re-tagged commit) and re-runs the full CI gate set.
+2. It stamps the tag's version into `package.json`
+   (`ci/scripts/apply-tag-version.mjs`), packages via the hybrid flow, and
+   assembles the publish set: NSIS installer, `latest.yml`, `SHA256SUMS`, the
+   provenance release manifest (`ci/scripts/generate-release-manifest.mjs`), and
+   structural artifact verification (`ci/scripts/verify-artifacts.mjs`).
+3. It generates the release notes from `CHANGELOG.md` (the single source of
+   truth) and creates a **draft prerelease** — and stops there.
+4. **The maintainer reviews the draft (artifact, notes, checksums) and clicks
+   Publish.** That click is the human approval gate. Nothing auto-publishes;
+   tag-push triggers are structurally banned (#13, ADR-0006, ADR-0008).
 
-The GitLab pipeline publishes to both hosts from a single tagged build. Track and
-gate releases with **Settings -> CI/CD -> Environments** (optionally requiring a
-protected environment / manual approval on the release jobs) rather than CI-specific
-deploy markers. The `v*` tag must be a **Protected tag** so the protected `GH_TOKEN`
-variable is exposed to `release:github`.
+A broken published alpha is handled by delete-and-republish plus a
+higher-version forward fix; testers on the broken build manually reinstall —
+there is no downgrade or channel-pinning machinery. The operational runbook
+lives in the [alpha program](alpha-program.md).
+
+## Release authentication
+
+The workflow uses only the **built-in ephemeral `GITHUB_TOKEN`**
+(`contents: write`). No PATs, no added repository secrets, no credentials in
+artifacts or configuration (ADR-0008). Local release builds (`npm run dist`)
+produce the same publish set without any token; publishing from a local
+machine is not part of the alpha flow.

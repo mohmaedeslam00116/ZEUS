@@ -20,10 +20,10 @@ import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 const APP_UPDATE_YML =
-  'owner: limboo-ai\n' +
+  'owner: mohmaedeslam00116\n' +
   'provider: github\n' +
-  'repo: limboo\n' +
-  'updaterCacheDirName: limboo-updater\n';
+  'repo: ZEUS\n' +
+  'updaterCacheDirName: zeus-updater\n';
 
 /**
  * Resolve the `resources` dir inside a packaged app directory.

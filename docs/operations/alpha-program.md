@@ -153,28 +153,20 @@ ZEUS is ready to publish an alpha when ALL of the following hold:
 Publishing is then the maintainer's human approval click on the draft — the
 #28 gate.
 
-## 6. Prerequisites / blockers (as of this decision)
+## 6. Prerequisite status (updated 2026-09-17, Ticket 4)
 
-**Verified 2026-09-17: the #26–#29 implementation decisions are CLOSED but
-their product changes are NOT yet applied to the code.** Verified current
-state: `package.json` still `limboo`/`Limboo`; `permissions.ts` still carries
-`limboo_memory`; `Kbd` still renders "Mod P" on Windows (#27 B1);
-`release.yml` does not exist; `FEED` and `app-update.yml` still target
-`limboo-ai/limboo`; `appId` is still `dev.limboo.app`; the inherited pink
-mark (`assets/icon.svg` `#ff0066`) is still present. #30's changes are
-implemented but uncommitted.
+All blockers recorded at decision time have now been **implemented and
+landed on `origin/main`**: the functional rename (#37) and alpha UX fixes
+(#38, `Ctrl P` + AA state copy) in `cbebd1c`; the identity package (#39) in
+`81f3509`; the ZEUS-native release pipeline, feed repoint, and beta-channel
+default (#40, this runbook's referenced machinery) in its ticket commit.
+The inherited 44 Limboo tags are deleted; the first ZEUS tag is
+`v0.1.0-alpha.1`.
 
-**Blockers before any Publish, in dependency order:**
-
-1. Commit the #30 + #27-artifact changes (pending review).
-2. Implement #26 (functional + internal rename, clean-cut) and #29 (identity
-   package, interim mark, installer metadata) — coordinated per #29's handoff.
-3. Implement #28 (release workflow, FEED/app-update repoint, beta channel
-   default).
-4. Implement #27's alpha-gating rows B1/B2 and the identity rows A1–A5 (the
-   visual bar: ZEUS strings everywhere, no Limboo mark, "Ctrl P", AA state
-   copy).
-5. Only then: cut `v0.1.0-alpha.1` through the §3 bar.
+**Remaining before any Publish (per §3, unverifiable in a dev environment):**
+the packaged-build L3 Windows checklist, the clean-machine boot smoke, and
+the draft review itself. These are performed on the real packaged build at
+release time, not before.
 
 ## 7. Explicitly NOT part of the go/no-go bar
 
