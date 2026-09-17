@@ -188,8 +188,13 @@ function emit(file, contents) {
 function main() {
   const sections = recentSections(KEEP, CHANGELOG_PATH);
   if (sections.length === 0) {
-    console.error('gen-release-notes: no released sections found in CHANGELOG.md');
-    process.exit(1);
+    // Fresh ZEUS history (#30): before the first tagged release the changelog's
+    // only `## [` section is `[Unreleased]`, so an empty release list is the
+    // correct state. Emit empty generated modules instead of failing — the
+    // Limboo heritage block sits above Unreleased with demoted `### [` headings
+    // and is deliberately invisible to the parser. The first tagged release
+    // populates these files via the normal flow.
+    console.log('gen-release-notes: no released sections yet (fresh history) — emitting empty release data.');
   }
 
   const { manifests, index } = buildManifests(sections, CHANGELOG_PATH);

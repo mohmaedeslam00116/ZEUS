@@ -93,6 +93,7 @@ See also the root [CONTRIBUTING.md](../CONTRIBUTING.md) and
 For maintainers:
 [release process](operations/release-process.md),
 [versioning](operations/versioning.md),
+[alpha program](operations/alpha-program.md),
 [CI/CD](operations/ci-cd.md),
 [packaging and signing](operations/packaging-and-signing.md),
 [installer and updates](operations/installer-and-updates.md),

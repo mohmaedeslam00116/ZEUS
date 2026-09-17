@@ -1,13 +1,25 @@
 # Changelog
 
-All notable changes to Limboo are documented here. The format is based on
+All notable changes to ZEUS are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html). See
 [docs/operations/versioning.md](docs/operations/versioning.md).
 
-## [Unreleased]
+ZEUS release history starts fresh at `v0.1.0-alpha.1`. The Limboo archive below is
+preserved heritage, not ZEUS history.
 
-## [1.20.0] - 2026-08-31
+## Limboo heritage (archived)
+
+The versioned sections in this block are the inherited **Limboo** release history
+(pre-ZEUS), preserved verbatim for reference. They are **not** ZEUS releases and
+must not be interpreted as such: no ZEUS release, tag, or in-app release note is
+derived from them. ZEUS release sections live under `[Unreleased]` below and are
+the only sections the release-note generator reads. This block sits above the
+Unreleased section deliberately: the changelog parser (`ci/scripts/lib/changelog.mjs`)
+only recognizes `## [` headings, so the demoted `### [` headings here are invisible
+to it without any parser modification.
+
+### [1.20.0] - 2026-08-31
 
 Limboo 1.20.0 makes the agent harness actually run. 1.19.0 repaired its
 packaging; this release fixes the three separate reasons a run still could not
@@ -59,7 +71,7 @@ harness runtime somewhere it belongs.
   their internals — where the runtime is installed, how the bridge binds, which
   harnesses can be permission-gated — was re-checked against the new versions.
 
-## [1.19.0] - 2026-08-30
+### [1.19.0] - 2026-08-30
 
 Limboo 1.19.0 repairs the agent harness, which could not install itself in any
 packaged build, and gives workspaces a way out of the app.
@@ -115,7 +127,7 @@ packaged build, and gives workspaces a way out of the app.
   of it repeated what the name already said. It remains in the launcher and the
   remove dialog, where a workspace has to be picked out of a set at a glance.
 
-## [1.18.2] - 2026-08-13
+### [1.18.2] - 2026-08-13
 
 ### Fixed
 
@@ -125,7 +137,7 @@ packaged build, and gives workspaces a way out of the app.
   agent. Unknown model ids now display as unknown and stay blocked rather than
   falling back to Claude labels.
 
-## [1.18.1] - 2026-08-13
+### [1.18.1] - 2026-08-13
 
 ### Fixed
 
@@ -134,7 +146,7 @@ packaged build, and gives workspaces a way out of the app.
   threw `ReferenceError: Settings2 is not defined`. The icon is now wired through
   the same lucide import as the rest of the tab strip.
 
-## [1.18.0] - 2026-08-13
+### [1.18.0] - 2026-08-13
 
 Limboo 1.18.0 stabilizes the Cursor fixes from the beta, adds the swappable
 harness layer, opens Settings as a workspace tab, and ships the beta update
@@ -262,7 +274,7 @@ channel as an opt-in path for future prereleases.
 - **Codex is unavailable.** Its adapter cannot ask for permission before running
   shell commands. It is listed with that reason rather than hidden.
 
-## [1.18.0-beta.2] - 2026-08-12
+### [1.18.0-beta.2] - 2026-08-12
 
 The first beta. Two bugs that made Cursor sessions unusable are fixed, agents can
 now run through a swappable harness layer instead of one hardcoded integration,
@@ -396,7 +408,7 @@ installing it over a working copy.
 - **Codex is unavailable.** Its adapter cannot ask for permission before running
   shell commands. It is listed with that reason rather than hidden.
 
-## [1.17.0] - 2026-08-01
+### [1.17.0] - 2026-08-01
 
 Plan Mode now stops. A plan waits for your decision instead of sliding into
 implementation, and the plan you are shown is the plan the agent actually wrote —
@@ -475,7 +487,7 @@ rather than something that happened in a side panel.
 - **Settings could be hand-edited into a dead drawer tab or an unbounded panel
   width**; both are now validated and clamped on load.
 
-## [1.16.0] - 2026-07-30
+### [1.16.0] - 2026-07-30
 
 A tighter follow-up to the runtime ring. The panel it opens now answers one
 question instead of four, and the conversation beneath it reads as one reply
@@ -518,7 +530,7 @@ again rather than a stack of cards.
   run in between. Copy and Copy as Markdown are unchanged and still copy the one
   message, as their labels say.
 
-## [1.15.0] - 2026-07-29
+### [1.15.0] - 2026-07-29
 
 You can now see what a long session is actually costing you. A small ring beside
 the composer status fills as the conversation consumes the model's context
@@ -608,7 +620,7 @@ when the agent starts forgetting.
   spreadsheet formula injection was also catching negative numbers and turning
   them into text.
 
-## [1.14.0] - 2026-07-29
+### [1.14.0] - 2026-07-29
 
 When the agent hands work to a specialist, you can finally watch it happen.
 Delegated work used to arrive as an anonymous pile of tool calls mixed into the
@@ -693,7 +705,7 @@ afterwards — without ever leaving the conversation.
   delegation says so — and when it cannot be attributed with certainty, it says
   nothing rather than guessing.
 
-## [1.13.2] - 2026-07-28
+### [1.13.2] - 2026-07-28
 
 A plan you left waiting can be approved again.
 
@@ -740,7 +752,7 @@ A plan you left waiting can be approved again.
   instead of inside a tinted card, matching how the same controls already read in
   the conversation.
 
-## [1.13.1] - 2026-07-28
+### [1.13.1] - 2026-07-28
 
 Stopping the agent mid-task no longer breaks your next message.
 
@@ -776,7 +788,7 @@ Stopping the agent mid-task no longer breaks your next message.
 Cursor sessions get the same handling: both providers share one classifier, so an
 interrupted turn behaves and reads identically whichever agent is running.
 
-## [1.13.0] - 2026-07-28
+### [1.13.0] - 2026-07-28
 
 The conversation stops being something you only read. Every message now carries
 its own actions on hover, and any turn can be rolled back — the workspace returns
@@ -836,7 +848,7 @@ same thing three times.
   tasks as they appear", "auto-expand new tasks", "collapse completed tasks", and
   "show task durations").
 
-## [1.12.0] - 2026-07-27
+### [1.12.0] - 2026-07-27
 
 Sessions run in a git worktree, and Limboo puts that worktree inside its own
 application data folder. A safety rule meant to keep the agent out of Limboo's
@@ -877,7 +889,7 @@ also stops appearing before there is a plan to read.
   appears with the proposal it is asking you to approve. Progress while planning
   reads where the rest of the run does — in the conversation.
 
-## [1.11.0] - 2026-07-27
+### [1.11.0] - 2026-07-27
 
 1.10.0 set out to stop Plan and Ask blocking the MCP servers you had connected.
 It gave every server a **Plan & Ask access** setting and then defaulted it to
@@ -932,7 +944,7 @@ composer forever.
   been connected to anything, and with finished plans now hidden by rule it would
   read as the control for that.
 
-## [1.10.0] - 2026-07-27
+### [1.10.0] - 2026-07-27
 
 Plan and Ask are read-only modes, and they enforced that by refusing anything
 they could not prove safe. Because nothing could prove a third-party tool safe,
@@ -1005,7 +1017,7 @@ the side drawer and appears in the conversation, where the work is.
   and recorded in the timeline, alongside the existing audit for shell commands
   that do the same.
 
-## [1.9.0] - 2026-07-27
+### [1.9.0] - 2026-07-27
 
 Fixes the Linux updater, which could never finish. On Arch and Manjaro the
 published package declared dependencies that no longer exist, so `pacman -U`
@@ -1089,7 +1101,7 @@ appear with their real profile picture and name.
 - **The privileged Linux install passes no shell.** The package manager is
   invoked with an argument vector rather than a quoted `/bin/bash -c` string.
 
-## [1.8.0] - 2026-07-26
+### [1.8.0] - 2026-07-26
 
 Turns an update from a maintenance task into a workspace document. The release
 notes added in 1.7.0 were one blob of Markdown; they are now a structured release
@@ -1170,7 +1182,7 @@ describe a release from the same file.
   raw HTML), the document performs no writes, and the export handler bounds its
   input and owns its own path.
 
-## [1.7.0] - 2026-07-26
+### [1.7.0] - 2026-07-26
 
 Adds the **Work Graph** — a typed, queryable graph of what a session actually
 did, built from both coding agents' event streams and owned entirely by Limboo —
@@ -1293,7 +1305,7 @@ and an in-app **What's New** tab so an update can finally tell you what changed.
   export results are byte-capped, and edge reads are limited instead of unbounded
   table scans.
 
-## [1.6.0] - 2026-07-25
+### [1.6.0] - 2026-07-25
 
 Repairs in-app updating, which has never worked on macOS and could fail to
 install or restart anywhere; adds code signing and a Microsoft Store channel;
@@ -1411,7 +1423,7 @@ and arm64 builds for all three platforms.
   roughly Electron 29's ABI, so it didn't actually fix the problem; superseded
   by this change.) See [installation](docs/getting-started/installation.md).
 
-## [1.5.1] - 2026-07-25
+### [1.5.1] - 2026-07-25
 
 ### Fixed
 
@@ -1426,7 +1438,7 @@ and arm64 builds for all three platforms.
   `/usr/bin/limboo` symlink. Windows and macOS were unaffected. The application
   itself was never broken — only the launchers around it.
 
-## [1.5.0] - 2026-07-25
+### [1.5.0] - 2026-07-25
 
 Restores boot after a regression that made the app unlaunchable, and adds
 conversation navigation plus visible file reads.
@@ -1488,7 +1500,7 @@ conversation navigation plus visible file reads.
   persistence and runtime, and Strict mode closes the
   `dangerouslyDisableSandbox` escape hatch.
 
-## [1.0.0]
+### [1.0.0]
 
 The first consolidated release. The desktop foundation and platform services are
 operational.
@@ -1542,3 +1554,5 @@ operational.
 [1.5.1]: https://github.com/limboo-ai/limboo/compare/v1.5.0...v1.5.1
 [1.5.0]: https://github.com/limboo-ai/limboo/compare/v1.0.0...v1.5.0
 [1.0.0]: https://github.com/limboo-ai/limboo/releases/tag/v1.0.0
+
+## [Unreleased]

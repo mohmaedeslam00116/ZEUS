@@ -342,7 +342,10 @@ export function isEmbeddedAvatar(value: string | null | undefined): boolean {
 export function channelForTag(tag: string): ReleaseChannel {
   const suffix = /-([0-9A-Za-z.-]+)$/.exec(tag.trim())?.[1]?.toLowerCase() ?? '';
   if (!suffix) return 'stable';
-  if (suffix.startsWith('beta') || suffix.startsWith('rc')) return 'beta';
+  // `alpha` maps to the beta branch (#30): the alpha-era default settings channel
+  // IS beta (#28), so the release-document label must agree with the channel a
+  // tester actually runs. No new channel is introduced.
+  if (suffix.startsWith('alpha') || suffix.startsWith('beta') || suffix.startsWith('rc')) return 'beta';
   if (suffix.startsWith('nightly')) return 'nightly';
   return 'preview';
 }

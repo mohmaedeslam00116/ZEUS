@@ -1,0 +1,67 @@
+name: ZEUS alpha feedback
+description: Feedback from invited closed-alpha testers (bugs, UX notes, confusion, data-handling concerns).
+title: "[Alpha]: "
+labels: ["alpha"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Invited alpha testers: this is the canonical feedback channel for the
+        ZEUS closed alpha. One form for every kind of feedback — pick the
+        category below. Do not use this form for security vulnerabilities; see
+        SECURITY.md.
+
+        Safety reminder: before attaching anything, remove secrets, tokens,
+        credentials, and private source code from logs, screenshots, and text.
+        ZEUS is local-first — your workspace data stays on your machine — but
+        anything you paste into a GitHub issue is published to this repository.
+  - type: dropdown
+    id: category
+    attributes:
+      label: Category
+      description: What kind of feedback is this?
+      options:
+        - Bug (something broke or behaves wrongly)
+        - UX feedback (confusing layout, interaction, or visual issue)
+        - Confusion (I could not figure out how to do something)
+        - Data-handling concern (something about local data/storage worries me)
+    validations:
+      required: true
+  - type: input
+    id: build-version
+    attributes:
+      label: ZEUS build version
+      description: From Settings → About (exactly as shown).
+      placeholder: e.g. 0.1.0-alpha.1
+    validations:
+      required: true
+  - type: dropdown
+    id: install-source
+    attributes:
+      label: Install source
+      options:
+        - Fresh installer download
+        - In-app update from a previous alpha
+    validations:
+      required: true
+  - type: input
+    id: windows-version
+    attributes:
+      label: Windows version
+      description: e.g. Windows 11 24H2, Windows 10 22H2
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What you did, what you expected, and what actually happened.
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant log paths or excerpts
+      description: |
+        Log files live under %APPDATA%\zeus\logs\. Paste short excerpts, or
+        name the file and describe the time it happened. Scrub secrets first.

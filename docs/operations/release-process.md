@@ -1,7 +1,12 @@
 # Release process
 
-This page is for maintainers cutting a release. Limboo is packaged with Electron
+This page is for maintainers cutting a release. ZEUS is packaged with Electron
 Forge; releases are driven from the `main` branch.
+
+## Fresh ZEUS history
+
+ZEUS releases start at `v0.1.0-alpha.1` (#30). No Limboo tag or release is part
+of ZEUS history — see [versioning](versioning.md) for the heritage boundary.
 
 ## Prerequisites
 
@@ -18,8 +23,12 @@ Forge; releases are driven from the `main` branch.
    committed version is a dev placeholder, and `ci/scripts/check-manifest.mjs`
    verifies the stamped value matches the tag.
 2. **Update the changelog.** Move the `Unreleased` items in
-   [CHANGELOG.md](../../CHANGELOG.md) into a new version section with the date, and
-   refresh the compare links.
+   [CHANGELOG.md](../../CHANGELOG.md) into a new `## [<version>]` section with
+   the date. ZEUS release sections always live **below** the `## Limboo heritage
+   (archived)` block and the `[Unreleased]` staging area; never add release
+   sections above them, and never touch the heritage headings (see
+   [versioning](versioning.md)). The Limboo compare links at the file's foot
+   belong to the heritage archive and stay as-is.
 
    This file is the **single source of the release notes**. The section you write
    here becomes the GitHub/GitLab release body verbatim —
@@ -56,13 +65,12 @@ Forge; releases are driven from the `main` branch.
    git diff src/shared/releaseManifest.generated.ts   # inspect
    git checkout src/shared/releaseManifest.generated.ts   # then discard
    ```
-4. **Commit and tag.** Commit the changelog, then tag `vX.Y.Z` and
-   `git push origin vX.Y.Z` (fans out to GitLab — the source of truth — and the
-   GitHub mirror). The tag triggers the GitLab release pipeline, and separately
-   the GitHub Actions `release-supplement.yml` workflow, which adds the
-   architectures GitLab's runners cannot build (macOS Intel, arm64 Linux, arm64
-   Windows) to the same release. Tagging a commit that already carries a `v*` tag
-   is rejected by `ci/scripts/check-tag-unique.mjs`.
+4. **Commit and dispatch.** Commit the changelog. Releases are **manual-dispatch**
+   through the ZEUS release pipeline (#28): the tag is an explicit workflow
+   input, nothing auto-publishes, and a draft prerelease awaits human approval.
+   Tag-push release triggers were removed with the inherited pipeline (#13,
+   ADR-0006) and must not be reintroduced. Tagging a commit that already carries
+   a `v*` tag is rejected by `ci/scripts/check-tag-unique.mjs`.
 5. **Build artifacts.**
    ```bash
    npm run package   # runnable bundle (no installers)
@@ -73,11 +81,10 @@ Forge; releases are driven from the `main` branch.
    `latest*.yml` auto-update metadata. See
    [installer and updates](installer-and-updates.md) and
    [packaging and signing](packaging-and-signing.md).
-6. **Publish.** The GitLab pipeline publishes automatically on a `v*` tag — an
-   identical GitLab Release and GitHub Release (see
-   [release-process](../ci/release-process.md)). For a manual fallback use
-   `npm run dist:publish` (with `GH_TOKEN` set) or attach `dist/*` — installers,
-   `latest*.yml`, and `*.blockmap` — to the GitHub release with the `gh` CLI.
+6. **Publish.** The release workflow uploads a **draft prerelease**; the
+   maintainer reviews the draft (artifact, notes, checksums) and clicks Publish
+   — that click is the approval gate (#28). A broken published alpha is handled
+   by delete-and-republish with a higher version (#28 rollback posture).
 7. **Verify the release.** Download an artifact from both hosts and confirm it
    launches.
 
