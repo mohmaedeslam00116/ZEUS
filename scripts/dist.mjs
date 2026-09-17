@@ -168,6 +168,20 @@ if (!archFlag) {
 
 console.log(`[dist] ${describeSigning()}`);
 
+// ADR-0008: electron-builder must NEVER publish. Its CI detection enables
+// "implicit publishing" (deprecated, warns in the log), which both demands
+// GH_TOKEN on CI runners and would AUTO-PUBLISH if one were present — the
+// exact path ADR-0008 bans (run #2 of the alpha.1 release died here, after
+// the installer was built). Publishing happens ONLY as the release
+// workflow's explicit draft step, followed by the maintainer's Publish click.
+if (forwardedArgs.some((a) => a.startsWith('--publish'))) {
+  console.error(
+    '[dist] refusing a --publish argument: electron-builder never publishes (ADR-0008). ' +
+      'The release workflow creates the draft; a human Publish click is the approval gate.',
+  );
+  process.exit(1);
+}
+
 // `--win nsis appx` style: targets listed after the platform flag ADD to the
 // config's list rather than replacing it, so NSIS is always built.
 const args = [
@@ -180,6 +194,10 @@ const args = [
   ...appx.config,
   ...electronBuilderSigningArgs(),
   ...forwardedArgs,
+  // Explicitly pin the never-publish posture (overrides electron-builder's
+  // CI-detection default; see the refusal above).
+  '--publish',
+  'never',
 ];
 
 console.log(`[dist] electron-builder ${args.slice(1).join(' ')}`);
