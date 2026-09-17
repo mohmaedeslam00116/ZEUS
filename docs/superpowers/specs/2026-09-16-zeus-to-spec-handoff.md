@@ -122,7 +122,7 @@ Every `to-spec` output contains, in this order:
 - Windows-specific behavior
 - UI/UX impact
 - Impeccable review requirements, when applicable
-- Verification plan
+- Verification plan (name the ladder rungs — see the Verification-plan guidance below)
 - Acceptance criteria
 - Dependencies
 - Known risks
@@ -145,6 +145,16 @@ If nothing is touched, the section must literally declare
 contest. Any change that weakens an invariant is a **release blocker** under
 the regression protocol in `docs/security/invariants.md` — not a follow-up
 ticket.
+
+#### Verification-plan guidance (mandatory)
+
+The canonical rung definitions live in
+`docs/development/verification.md` (ADR-0007). A `Verification plan` section
+must **name the applicable ladder rung(s)** for the change class
+(L0 typecheck · L1 unit · L2 boot smoke · L3 Windows manual checklist · L4
+deferred) and, **for each named rung, provide the concrete verification
+cases** — what was run/exercised and what was observed. Listing bare rung
+labels (`L0/L1/L2/L3`) without cases does not satisfy this section.
 
 ## Deferred scope — future work requiring future decisions/specifications
 

@@ -1526,6 +1526,11 @@ tables are parser-agnostic) would sharpen the resume symbol delta.
    OS/logic → `src/main/**` (+ future managers); the bridge → `src/preload/index.ts`;
    shared contracts → `src/shared/**`.
 4. Keep the process boundary, dark-only theme, and no-gradient rule intact.
-5. Verify with `npm run typecheck` + `npx vite build --config
-   vite.renderer.config.mts` + `npm run lint`. Prefer small,
-   single-responsibility additions wired through IPC.
+5. Verify per the verification ladder in
+   [`docs/development/verification.md`](docs/development/verification.md) —
+   L0 `npm run typecheck` on every change, then the rungs your change class
+   requires (L1 `npm test` for pure logic, L2 `npm start` boot smoke with the
+   touched surface exercised, L3 Windows checklist when platform-sensitive).
+   `npx vite build --config vite.renderer.config.mts` + `npm run lint` remain
+   part of the baseline. Prefer small, single-responsibility additions wired
+   through IPC.

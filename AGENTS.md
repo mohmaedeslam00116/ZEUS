@@ -39,6 +39,10 @@ the canonical invariant list. Every ticket's Security-impact section follows
 the Security-impact contract there, and the regression protocol applies: any
 change that weakens an invariant is a release blocker, not a follow-up ticket.
 
+**Verification:** [`docs/development/verification.md`](docs/development/verification.md)
+is the canonical ladder (L0–L4) and change-class mapping; every ticket's
+Verification plan names its rungs with concrete cases.
+
 ## Agent skills
 
 ### Issue tracker

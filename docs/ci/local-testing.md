@@ -8,8 +8,12 @@ scripts, so they behave identically to CI.
 ```bash
 npm ci
 npm run lint
+npm run typecheck
+npm test
 node ci/scripts/check-licenses.mjs
 node ci/scripts/check-electron-security.mjs
+node scripts/check-crown-jewels.mjs
+node scripts/check-provider-neutrality.mjs
 node ci/scripts/check-manifest.mjs
 npm audit --audit-level=high      # advisory; non-blocking in CI
 ```
@@ -21,8 +25,9 @@ npx vite build --config vite.renderer.config.mts
 npm run package        # compiles main + preload via the Forge Vite plugin
 ```
 
-> Do **not** use `tsc --noEmit` to verify — TypeScript is ~4.5 and the renderer is
-> esbuild-bundled (CLAUDE.md §2).
+> `npm run typecheck` (`tsc --noEmit`) is a required gate since #10 — run it
+> everywhere, including here. The renderer is still esbuild-bundled, so the
+> build check below stays separate (CLAUDE.md §2).
 
 ## Test (Electron smoke)
 
@@ -63,10 +68,10 @@ act pull_request -W .github/workflows/ci.yml
 ```
 
 Note that attestation, signing, and `download-artifact` cross-job steps behave
-differently under `act`; use it for the `validate`/`build` jobs and rely on a real branch
-push to exercise `cd.yml` / `release.yml`. The primary release path is the GitLab
-pipeline (`.gitlab-ci.yml`); validate it with `glab ci lint` or GitLab's Pipeline
-editor / CI Lint.
+differently under `act`; use it for the `validate`/`build` jobs. ZEUS runs
+**validation-only CI** (see [README](README.md)): the inherited release
+workflows (`cd.yml`, `release.yml`, the GitLab/Bitbucket pipelines) were
+removed in #13, so there is no release path to exercise locally.
 
 ## Linting the workflows
 
