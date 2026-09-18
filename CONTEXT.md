@@ -42,6 +42,14 @@ where ZEUS's own product model must still validate it.
   `default` | `acceptEdits`.
 - **Crown Jewels** — the small set of protected paths (secrets, database,
   settings) that every security layer denies to the agent, always.
+- **ACP (Agent Client Protocol)** — the standardized stdio JSON-RPC protocol
+  implemented natively by agents like Cline and OpenCode, enabling a unified
+  headless client bridge in ZEUS with blocking permission gating
+  (`session/request_permission`).
+- **Subscription Auth** — authentication flow utilizing existing local CLI
+  credentials (e.g. `~/.codex`, `~/.claude`) or in-app OAuth stored in
+  `SecretStore` (SEC-14), allowing users to use existing provider subscriptions
+  directly without dedicated pay-per-token API keys.
 
 ## Naming conventions
 
@@ -87,3 +95,7 @@ where ZEUS's own product model must still validate it.
 - **Code Isolation** — strict LTR (`direction: ltr !important`) and monospace
   isolation for terminals (`xterm.js`), code blocks, git diffs, and file paths
   regardless of the active UI locale.
+- **LocaleContext** — the bilingual prompt guidance producer in `AgentManager`
+  injecting compact English meta-instructions to steer natural language
+  reasoning/explanation into Modern Standard Arabic while enforcing strict
+  English/ASCII code and tool parameter isolation.
