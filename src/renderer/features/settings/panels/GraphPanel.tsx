@@ -490,16 +490,21 @@ export function GraphPanel() {
                 <ActionButton
                   label="Prune orphans"
                   onClick={() => {
-                    void pruneGraph();
-                    addToast({ title: 'Pruned orphaned nodes', tone: 'success' });
+                    void pruneGraph().then((removed) =>
+                      addToast({
+                        title: removed > 0 ? `Pruned ${removed} orphaned node(s)` : 'No orphaned nodes to prune',
+                        tone: removed > 0 ? 'success' : 'info',
+                      }),
+                    );
                   }}
                 />
                 <ActionButton
                   label="Clear graph"
                   danger
                   onClick={() => {
-                    void clearGraph();
-                    addToast({ title: "Cleared this session's graph", tone: 'success' });
+                    void clearGraph().then(() =>
+                      addToast({ title: "Cleared this session's graph", tone: 'success' }),
+                    );
                   }}
                 />
               </div>

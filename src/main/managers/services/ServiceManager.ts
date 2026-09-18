@@ -365,7 +365,12 @@ export class ServiceManager {
       const delayMs = Math.min(1_000 * 2 ** (attempt - 1), 30_000);
       setTimeout(() => {
         const current = this.services.get(key(sessionId, name));
-        if (!current || current.stopping) return;
+        // Registry + INSTANCE identity: a user stop/start between exit and
+        // timer fired replaced the map entry with a NEW ManagedService that
+        // already owns a live process — respawning over it would orphan the
+        // running service and double the port bindings. Only the object that
+        // actually exited may respawn.
+        if (current !== managed || current.stopping) return;
         void this.spawn(sessionId, name, managed.config, attempt).catch((err) =>
           logger.warn(`service respawn failed: ${name}`, err),
         );

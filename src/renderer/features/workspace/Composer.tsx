@@ -291,7 +291,7 @@ export function Composer({ disabled = false }: { disabled?: boolean }) {
                   ref={ref}
                   rows={1}
                   value={value}
-                  disabled={disabled || !installed}
+                  disabled={disabled || !connected}
                   onChange={(e) => {
                     setValue(e.target.value);
                     autoGrow();
@@ -340,10 +340,10 @@ export function Composer({ disabled = false }: { disabled?: boolean }) {
             <ComposerModeSwitch
               mode={mode}
               onChange={setMode}
-              disabled={disabled || !installed || planBlocked}
+              disabled={disabled || !connected || planBlocked}
             />
             <span className="hidden h-3.5 w-px shrink-0 bg-line sm:block" />
-            <ComposerControls disabled={disabled || !installed} />
+            <ComposerControls disabled={disabled || !connected} />
             <span className="ml-auto flex min-w-0 shrink items-center gap-2 text-[11px] text-faint">
               {/* The runtime ring sits immediately beside the status hint and
                   renders nothing at all when telemetry is off or the provider

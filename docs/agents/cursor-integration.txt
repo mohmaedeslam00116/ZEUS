@@ -40,7 +40,7 @@ is unusually well positioned for it: an exploration of the codebase confirms
 that the Claude coupling is concentrated almost entirely inside one file,
 src/main/managers/AgentManager.ts, behind a provider-neutral contract — the
 AgentEvent / AgentState / PermissionRequest types, the IPC channels in
-src/shared/ipc-channels.ts, the window.limboo.agent preload namespace, the
+src/shared/ipc-channels.ts, the window.zeus.agent preload namespace, the
 useAgentStore renderer store, and the Composer / permission / plan / timeline
 UI need no changes at all. There is even a dormant provider abstraction
 already in the tree (AgentProvider = 'anthropic', AGENT_MODELS, and
@@ -573,16 +573,16 @@ Where it plugs into Limboo: this is where Limboo's platform-service design
 pays off twice. Limboo already exposes its Memory System and Search Engine to
 Claude as in-process MCP servers (createMemoryMcpServer /
 createSearchMcpServer grafted into runOnce at AgentManager.ts:1469-1482, with
-the read-only limboo_search tools defined in search/searchTools.ts). Those
+the read-only zeus_search tools defined in search/searchTools.ts). Those
 are SDK-shaped in-process servers, so for Cursor the adapter exposes the same
 tool surface as a thin stdio MCP server: a small bundled Node entry point
 that speaks MCP over stdio and forwards to the same MemoryManager /
 SearchManager methods over the same local pipe used by the hook runner. The
-adapter materializes the session's .cursor/mcp.json pointing limboo_memory
-and limboo_search at that bundled command, passes --approve-mcps (their
+adapter materializes the session's .cursor/mcp.json pointing zeus_memory
+and zeus_search at that bundled command, passes --approve-mcps (their
 tools are already auto-allowed for Claude in canUseTool, :2247-2252 — same
-trust decision), and adds allow rules Mcp(limboo_memory:*) /
-Mcp(limboo_search:*). The result is the orchestration-platform property the
+trust decision), and adds allow rules Mcp(zeus_memory:*) /
+Mcp(zeus_search:*). The result is the orchestration-platform property the
 user is after: BOTH agents query the SAME memory and the SAME repository
 index, so knowledge captured while Claude works is retrievable when Cursor
 works and vice versa — the platform services stay provider-independent, as

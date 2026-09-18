@@ -33,6 +33,8 @@ const ACTIVATION_WATCHDOG_MS = 15_000;
 
 /** Module state: nothing renders from it, it only cancels the pending net. */
 let activationWatchdog: ReturnType<typeof setTimeout> | null = null;
+/** Stale-async guard for {@link useSessionStore.refresh} — see the comment there. */
+let refreshGeneration = 0;
 
 interface SessionState {
   sessions: Session[];
@@ -183,11 +185,17 @@ export const useSessionStore = create<SessionState>((set, get) => ({
       set({ sessions: [], trash: [], selectedId: null });
       return;
     }
+    // Stale-async guard: a workspace switch during this fetch must keep the
+    // old workspace's session list from clobbering the new one (audit:
+    // stale-async clobber). The generation is bumped by every refresh;
+    // commit only if this fetch is still the newest.
+    const gen = ++refreshGeneration;
     const [sessions, trash, active] = await Promise.all([
       api.list(wsId),
       get().showTrash ? api.list(wsId, true) : Promise.resolve([] as Session[]),
       api.getActive(),
     ]);
+    if (gen !== refreshGeneration) return;
     // Keep the active selection only if it belongs to this workspace; otherwise
     // fall back to the most recent session so the center column always has one.
     const selectedId =

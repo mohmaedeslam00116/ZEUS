@@ -4,6 +4,12 @@
  */
 import { create } from 'zustand';
 
+/** Monotonic toast identity: `Date.now()` collides for toasts created in the
+ * same millisecond, and React then reuses the keyed card — the auto-dismiss
+ * timer of the first toast kills its twin early (audit: toast-ID collision).
+ */
+let toastSeq = 0;
+
 export type ModalId = 'settings' | null;
 
 export interface Toast {
@@ -54,7 +60,7 @@ export const useUIStore = create<UIState>((set) => ({
 
   addToast: (toast) =>
     set((s) => ({
-      toasts: [...s.toasts, { ...toast, id: `t_${Date.now()}_${s.toasts.length}` }],
+      toasts: [...s.toasts, { ...toast, id: `t_${Date.now()}_${++toastSeq}` }],
     })),
   dismissToast: (id) => set((s) => ({ toasts: s.toasts.filter((t) => t.id !== id) })),
 }));

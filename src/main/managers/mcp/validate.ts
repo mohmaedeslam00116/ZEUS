@@ -93,6 +93,11 @@ function validatePairs(
   for (const [k, v] of entries) {
     const key = String(k);
     if (!key || key.length > MCP_LIMITS.keyMax) throw new Error(`Invalid ${label} key.`);
+    // Prototype-pollution guard: UNSAFE_KEYS documents the shared rule, so
+    // every renderer-supplied map funnels through it — a `__proto__` env or
+    // header key must be dropped, not merged into the persisted definition
+    // (CLAUDE.md §6 renderer-supplied object merge/key filtering).
+    if (isUnsafeKey(key)) throw new Error(`Invalid ${label} key.`);
     if (secret) {
       const value = String(v ?? '');
       if (value.length > MCP_LIMITS.secretMax) throw new Error(`${label} secret too long.`);

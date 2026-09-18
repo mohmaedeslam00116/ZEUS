@@ -29,8 +29,15 @@ function resolveLogFile(): string | null {
 /**
  * Cheap trigger pre-check before running the redaction regexes: only lines
  * containing one of these substrings are scanned at all (logging is hot).
+ * Each pattern's token families must be represented here or their matches can
+ * never fire: `glpat`/`xox`/`github_pat` (PATTERN[1]) and `authorization`
+ * (PATTERN[2]) carry no other trigger substring — a line with only those
+ * would skip redaction entirely (audit: redaction trigger gap).
  */
-const REDACT_TRIGGERS = ['sk-', 'bearer', 'token', 'secret', 'password', 'apikey', 'api_key', 'gh', '://', 'crsr'];
+const REDACT_TRIGGERS = [
+  'sk-', 'bearer', 'authorization', 'token', 'secret', 'password', 'apikey',
+  'api_key', 'gh', '://', 'crsr', 'glpat', 'xox', 'github_pat',
+];
 
 /**
  * Central secret redaction (CLAUDE.md §6: secrets/tokens are redacted before

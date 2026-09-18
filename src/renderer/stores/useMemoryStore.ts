@@ -54,6 +54,9 @@ function activeWs(): string | null {
   return useWorkspaceStore.getState().activeId;
 }
 
+/** Stale-async guard: a newer refresh supersedes an in-flight one. */
+let refreshGeneration = 0;
+
 export const useMemoryStore = create<MemoryState>((set, get) => ({
   memories: [],
   proposals: [],
@@ -81,6 +84,7 @@ export const useMemoryStore = create<MemoryState>((set, get) => ({
   },
 
   refresh: async () => {
+    const gen = ++refreshGeneration;
     const m = api();
     if (!m) return;
     const wsId = activeWs();
@@ -90,11 +94,13 @@ export const useMemoryStore = create<MemoryState>((set, get) => ({
         m.list({ workspaceId: wsId }),
         m.listProposals(wsId),
       ]);
+      if (gen !== refreshGeneration) return; // superseded — never commit
       set({ memories, proposals });
       // Keep the live search results fresh if a query is active.
       if (get().query.trim()) await get().search(get().query);
     } finally {
-      set({ loading: false });
+      // Only the run that owns the current generation may clear the flag.
+      if (gen === refreshGeneration) set({ loading: false });
     }
   },
 

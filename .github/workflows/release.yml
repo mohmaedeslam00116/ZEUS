@@ -44,6 +44,11 @@ jobs:
       # The workflow's standard ephemeral token. No PATs, no added secrets
       # (ADR-0008: no credentials in workflow artifacts or configuration).
       RELEASE_REPOSITORY: ${{ github.repository }}
+      # Dispatch inputs reach shell only through the environment — never
+      # interpolated into run: blocks, where a crafted tag/title could break
+      # out of a quoting context. Consumers read $RELEASE_TAG/$RELEASE_TITLE.
+      RELEASE_TAG: ${{ inputs.tag }}
+      RELEASE_TITLE: ${{ inputs.prerelease-title }}
 
     steps:
       # ---------------------------------------------------------------------
@@ -74,7 +79,7 @@ jobs:
         id: tag
         run: |
           set -e
-          TAG='${{ inputs.tag }}'
+          TAG="$RELEASE_TAG"
           # #30 scheme: vX.Y.Z with optional SemVer prerelease/build suffix.
           if ! printf '%s' "$TAG" | grep -Eq '^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$'; then
             echo "::error::tag input '$TAG' is not a vX.Y.Z[-pre] SemVer tag (#30 versioning scheme)"
@@ -98,7 +103,7 @@ jobs:
         # stamping (embed-release-manifest) requires it, and `gh release create`
         # materializes it on the remote at the same SHA when the draft is made.
         # No manual tag push happens anywhere (ADR-0008: dispatch-only).
-        run: git tag "${{ inputs.tag }}" "$GITHUB_SHA"
+        run: git tag "$RELEASE_TAG" "$GITHUB_SHA"
 
       # ---------------------------------------------------------------------
       # 3. Validation gates — the SAME gates ci.yml's Validate job runs,
@@ -136,13 +141,13 @@ jobs:
       #    #28); the multi-OS branches in dist.mjs stay dormant.
       # ---------------------------------------------------------------------
       - name: Stamp version from tag
-        run: node ci/scripts/apply-tag-version.mjs "${{ inputs.tag }}"
+        run: node ci/scripts/apply-tag-version.mjs "$RELEASE_TAG"
 
       - name: Stamp git-derived release metadata into the bundled manifest
         # Fills commit/buildNumber/contributors/stats in
         # releaseManifest.generated.ts before the renderer bundle bakes it in,
         # so the in-app What's-New shows real provenance (release-process.md step 3).
-        run: node ci/scripts/embed-release-manifest.mjs "${{ inputs.tag }}"
+        run: node ci/scripts/embed-release-manifest.mjs "$RELEASE_TAG"
 
       - name: Package app (Forge fuses + asar)
         run: npm run package
@@ -158,7 +163,7 @@ jobs:
       - name: Assemble publish set (checksums, manifest, update metadata)
         run: |
           set -e
-          TAG='${{ inputs.tag }}'
+          TAG="$RELEASE_TAG"
           # electron-builder debug side-files must never reach the publish set
           # (verify-artifacts --publish-set fails on them by design — run 3 of
           # the alpha.1 release proved it). Remove before checksumming so the
@@ -176,7 +181,7 @@ jobs:
       - name: Generate release notes (from canonical CHANGELOG.md)
         # Written OUTSIDE dist/ so the dist/* upload glob stays exactly the
         # publish set (notes ride the release body, not the asset list).
-        run: node ci/scripts/generate-release-notes.mjs "${{ inputs.tag }}" release-notes.md
+        run: node ci/scripts/generate-release-notes.mjs "$RELEASE_TAG" release-notes.md
 
       # ---------------------------------------------------------------------
       # 6. Draft prerelease — the workflow's FINAL action. Nothing auto-
@@ -193,7 +198,7 @@ jobs:
       - name: Replace stale same-tag draft
         run: |
           set -e
-          TAG='${{ inputs.tag }}'
+          TAG="$RELEASE_TAG"
           STALE=$(gh api "repos/$GITHUB_REPOSITORY/releases" --paginate \
             --jq "[.[] | select(.tag_name == \"$TAG\" and .draft == true) | .id] | join(\" \")")
           if [ -n "$STALE" ]; then
@@ -210,7 +215,7 @@ jobs:
       - name: Create draft prerelease
         run: |
           set -e
-          TAG='${{ inputs.tag }}'
+          TAG="$RELEASE_TAG"
           # Draft + prerelease flags are structural: the release is INVISIBLE
           # until a maintainer publishes it, and the updater treats it as a
           # prerelease under the beta channel (#28).
@@ -218,7 +223,7 @@ jobs:
             --draft \
             --prerelease \
             --target "$GITHUB_SHA" \
-            --title "${{ inputs.prerelease-title || inputs.tag }}" \
+            --title "${RELEASE_TITLE:-$RELEASE_TAG}" \
             --notes-file release-notes.md \
             dist/*
         env:

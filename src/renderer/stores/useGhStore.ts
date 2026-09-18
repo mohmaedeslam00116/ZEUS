@@ -55,6 +55,11 @@ function activeWs(): string | null {
   return useWorkspaceStore.getState().activeId;
 }
 
+/** Stale-async guards: in-flight gh calls must not commit across a workspace
+ * switch or a newer superseding call (audit: stale-async clobber). */
+let refreshGen = 0;
+let listGen = 0;
+
 export const useGhStore = create<GhStoreState>((set, get) => ({
   state: null,
   pullRequests: [],
@@ -81,42 +86,53 @@ export const useGhStore = create<GhStoreState>((set, get) => ({
   },
 
   refresh: async (force = false) => {
+    const gen = ++refreshGen;
     const gh = api();
     if (!gh) return;
     // Best-effort throughout: `gh` is optional, so a failure is a state, not an
     // error the user needs a toast about.
     try {
-      set({ state: await gh.state(activeWs(), force ? { force: true } : undefined) });
+      const state = await gh.state(activeWs(), force ? { force: true } : undefined);
+      if (gen !== refreshGen) return; // superseded — never commit stale state
+      set({ state });
     } catch {
       /* keep the previous classification */
     }
   },
 
   loadPullRequests: async (opts) => {
+    const gen = ++listGen;
     const gh = api();
     const ws = activeWs();
     if (!gh || !ws) return;
     set({ loading: true });
     try {
-      set({ pullRequests: await gh.pullRequests(ws, opts) });
+      const pullRequests = await gh.pullRequests(ws, opts);
+      if (gen !== listGen || activeWs() !== ws) return; // stale list
+      set({ pullRequests });
     } catch {
+      if (gen !== listGen) return;
       set({ pullRequests: [] });
     } finally {
-      set({ loading: false });
+      if (gen === listGen) set({ loading: false });
     }
   },
 
   loadIssues: async (opts) => {
+    const gen = ++listGen;
     const gh = api();
     const ws = activeWs();
     if (!gh || !ws) return;
     set({ loading: true });
     try {
-      set({ issues: await gh.issues(ws, opts) });
+      const issues = await gh.issues(ws, opts);
+      if (gen !== listGen || activeWs() !== ws) return; // stale list
+      set({ issues });
     } catch {
+      if (gen !== listGen) return;
       set({ issues: [] });
     } finally {
-      set({ loading: false });
+      if (gen === listGen) set({ loading: false });
     }
   },
 

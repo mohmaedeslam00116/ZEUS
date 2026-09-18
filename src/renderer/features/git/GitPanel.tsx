@@ -75,7 +75,7 @@ export function GitPanel() {
   const setActiveTab = useLayoutStore((s) => s.setActiveTab);
   const confirmForcePush = useSettingsStore((s) => s.settings.git.push.confirmForcePush);
   const addToast = useUIStore((s) => s.addToast);
-  const [tab, setTab] = useState<SubTab>('history'); // TEMP-VERIFY
+  const [tab, setTab] = useState<SubTab>('history');
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {

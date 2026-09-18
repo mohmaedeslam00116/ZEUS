@@ -76,7 +76,7 @@ interface GraphState {
   /** Batch export: one file per session into a user-chosen directory. */
   saveBatch: (sessionIds: string[], format: GraphExportFormat) => Promise<number>;
   setZoom: (zoom: number) => void;
-  prune: () => Promise<void>;
+  prune: () => Promise<number>;
   clear: () => Promise<void>;
 }
 
@@ -354,9 +354,10 @@ export const useGraphStore = create<GraphState>((set, get) => ({
   // showing rows the main process has already deleted.
   prune: async () => {
     const { sessionId } = get();
-    if (!sessionId) return;
-    await api()?.prune(sessionId);
+    if (!sessionId) return 0;
+    const removed = (await api()?.prune(sessionId)) ?? 0;
     await get().load(sessionId);
+    return removed;
   },
 
   clear: async () => {

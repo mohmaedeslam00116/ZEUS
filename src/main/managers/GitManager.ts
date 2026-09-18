@@ -432,7 +432,11 @@ export class GitManager {
   async commit(workspaceId: string, message: string): Promise<GitCommit | null> {
     const root = await this.requireRoot(workspaceId);
     const staged = (await this.status(workspaceId)).files.filter((f) => f.staged);
-    const res = await runGit(root, ['commit', '-m', message, ...this.identityArgs()], {});
+    // Global git options (`-c key=value`) must precede the subcommand: after
+    // `commit`, git parses `-c` as commit's edit-a-commit flag and treats the
+    // config as a commit-ish (verified failure). identityArgs() is safe to
+    // spread first — it is [] when no override is configured.
+    const res = await runGit(root, [...this.identityArgs(), 'commit', '-m', message], {});
     if (!res.ok) {
       this.recordActivity(workspaceId, { kind: 'commit', ok: false, command: 'git commit' });
       throw new Error(res.stderr || 'git commit failed');
@@ -780,7 +784,7 @@ export class GitManager {
     const strategy = opts.rebase ? 'rebase' : this.settings.getAll().git.pull.strategy;
     const args =
       strategy === 'rebase'
-        ? ['pull', '--rebase', ...this.identityArgs()]
+        ? [...this.identityArgs(), 'pull', '--rebase']
         : ['pull', '--ff-only'];
 
     const res = await runGit(root, args, { timeout: GIT_LIMITS.networkTimeoutMs });

@@ -74,7 +74,15 @@ export function registerAttachmentHandlers(attachments: AttachmentManager): void
       if (!(bytes instanceof ArrayBuffer) && !ArrayBuffer.isView(bytes)) {
         throw new Error('Expected image bytes');
       }
-      const view = bytes instanceof ArrayBuffer ? new Uint8Array(bytes) : new Uint8Array(bytes.buffer);
+      // Copy from byteOffset — a TypedArray sent over the context bridge may
+      // be a view into a LARGER buffer, so `new Uint8Array(bytes.buffer)`
+      // alone reads the whole backing store, pasted-payload bytes included;
+      // those extra bytes would be written to disk and hashed into the
+      // attachment's digest (audit: byteOffset window).
+      const view =
+        bytes instanceof ArrayBuffer
+          ? new Uint8Array(bytes)
+          : new Uint8Array(bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength));
       if (view.byteLength === 0 || view.byteLength > ATTACHMENT_LIMITS.pasteBytesMax) {
         throw new Error('Pasted image is too large');
       }

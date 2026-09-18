@@ -47,6 +47,16 @@ function activeWs(): string | null {
   return useWorkspaceStore.getState().activeId;
 }
 
+/**
+ * Monotonic generations for the two async paths that can outlive the state
+ * they were started against: a workspace switch (or a newer query) during an
+ * in-flight `refresh()`/`run()` must keep the stale response from committing
+ * — otherwise the panel renders ANOTHER workspace's history/files under the
+ * current one (audit: stale-async clobber).
+ */
+let refreshGen = 0;
+let searchGen = 0;
+
 export const useSearchStore = create<SearchState>((set, get) => ({
   query: '',
   kindFilter: null,
@@ -76,10 +86,12 @@ export const useSearchStore = create<SearchState>((set, get) => ({
   },
 
   refresh: async () => {
+    const gen = ++refreshGen;
     const s = api();
     if (!s) return;
     const wsId = activeWs();
     const [history, saved] = await Promise.all([s.historyList(wsId), s.savedList(wsId)]);
+    if (gen !== refreshGen) return; // superseded by a newer refresh/run
     set({ history, saved });
     if (get().query.trim()) await get().run(get().query);
   },
@@ -88,6 +100,7 @@ export const useSearchStore = create<SearchState>((set, get) => ({
   setKindFilter: (kind) => set({ kindFilter: kind }),
 
   run: async (q) => {
+    const gen = ++searchGen;
     const s = api();
     if (!s) return;
     const query = q.trim();
@@ -97,12 +110,18 @@ export const useSearchStore = create<SearchState>((set, get) => ({
     }
     const kind = get().kindFilter;
     const filter: SearchFilter = kind ? { kinds: [kind] } : {};
+    const wsAtStart = activeWs();
     set({ loading: true });
     try {
-      const groups = await s.global(query, { workspaceId: activeWs(), ...filter });
+      const groups = await s.global(query, { workspaceId: wsAtStart, ...filter });
+      // Stale-result guard: the workspace switched (or a newer run started)
+      // while this search was in flight — committing its groups would show
+      // the wrong workspace's files under the current one.
+      if (gen !== searchGen || activeWs() !== wsAtStart) return;
       set({ groups });
     } finally {
-      set({ loading: false });
+      // Only the run that owns the current generation may clear the flag.
+      if (gen === searchGen) set({ loading: false });
     }
   },
 

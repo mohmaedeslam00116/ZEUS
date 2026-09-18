@@ -287,7 +287,7 @@ export function exportMarkdown(
     const objective = byId.get(runId);
     // An absent objective means the run's root fell outside the retained
     // window — say that, rather than implying the work had no request.
-    lines.push(`## ${objective ? objective.title : 'Earlier work (objective not retained)'}`);
+    lines.push(`## ${objective ? mdText(objective.title) : 'Earlier work (objective not retained)'}`);
     const telemetry = runTelemetryLine(runs?.get(runId));
     if (telemetry) lines.push(`_${telemetry}_`);
     lines.push('');
@@ -296,7 +296,7 @@ export function exportMarkdown(
       if (n.id === runId) continue;
       const status = n.status === 'done' ? 'x' : ' ';
       const detail = summarize(n);
-      lines.push(`- [${status}] **${n.kind}** — ${n.title}${detail ? ` _(${detail})_` : ''}`);
+      lines.push(`- [${status}] **${n.kind}** — ${mdText(n.title)}${detail ? ` _(${mdText(detail)})_` : ''}`);
     }
     lines.push('');
   }
@@ -312,7 +312,7 @@ export function exportMarkdown(
       // Inferred relationships are labeled as such — an export must not present
       // a heuristic with the same authority as an observed fact.
       const mark = e.derived ? ' _(inferred)_' : '';
-      lines.push(`- ${src.title} ${EDGE_VERB[e.kind]} ${dst.title}${mark}`);
+      lines.push(`- ${mdText(src.title)} ${EDGE_VERB[e.kind]} ${mdText(dst.title)}${mark}`);
     }
     lines.push('');
   }
@@ -550,6 +550,19 @@ function groupByRun(nodes: WorkGraphNode[]): Map<string, WorkGraphNode[]> {
     else runs.set(n.runId, [n]);
   }
   return runs;
+}
+
+/**
+ * Escape a node's free-form text for Markdown structure: a title or detail
+ * containing a newline would start a new list item / heading, and a `]`
+ * would break the `[x]` task marker (audit: markdown exporter structure
+ * injection). Wraps and control chars are collapsed; pipes are harmless
+ * outside tables, so they stay.
+ */
+function mdText(text: string): string {
+  // The `u` flag is required: without it `\p{C}` degrades to the literal
+  // characters p/{/C/} and would mangle ordinary words.
+  return text.replace(/[\r\n\p{C}]+/gu, ' ').replace(/\]/g, '\\]').slice(0, 200);
 }
 
 /** A short, kind-aware detail suffix for a row. */

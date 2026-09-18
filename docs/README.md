@@ -1,6 +1,6 @@
-# Limboo Documentation
+# ZEUS Documentation
 
-This is the documentation home for Limboo, the operating system for AI software
+This is the documentation home for ZEUS, the operating system for AI software
 development. The documentation is organized as a subsystem, not a single file, in
 five layers: a landing page ([README](../README.md)), this site, contributor
 documentation, architecture documentation, and operational documentation.
