@@ -74,3 +74,16 @@ where ZEUS's own product model must still validate it.
   ("continue exactly where you left off").
 - **Work Graph** — the derived, queryable graph of what happened in a session.
 - **Runtime Telemetry** — measured context/cost/usage reporting per run.
+
+## Internationalization & Localization
+
+- **Locale** — the user-selected interface language (`'en'` | `'ar'`).
+- **Canvas-Only RTL** — the default layout mode for Arabic in ZEUS: the outer
+  application frame (sessions sidebar on the left, activity rail on the right)
+  retains standard developer muscle memory, while conversation, modals, cards,
+  and textual contents render right-to-left in Arabic typography (see ADR-0011).
+- **Full Mirror** — an optional layout mode in settings that mirrors the entire
+  window (sessions on the right, activity rail on the left).
+- **Code Isolation** — strict LTR (`direction: ltr !important`) and monospace
+  isolation for terminals (`xterm.js`), code blocks, git diffs, and file paths
+  regardless of the active UI locale.
