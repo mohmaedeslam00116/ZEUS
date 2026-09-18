@@ -29,6 +29,7 @@ export interface InjectedContextChars {
   memory: number;
   search: number;
   resume: number;
+  locale?: number;
   attachments: number;
   /** The user's prompt text, as sent. */
   prompt: number;

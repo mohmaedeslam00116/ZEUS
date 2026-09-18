@@ -124,6 +124,11 @@ import {
   type EffectiveSandbox,
 } from './sandbox/policy';
 import { isReadOnlyShellCommand } from './agent/readOnlyCommands';
+import {
+  ARABIC_LOCALE_INSTRUCTION,
+  COMMIT_SYSTEM_PROMPT,
+  resolveArabicLocaleGuidance,
+} from './agent/locale';
 import { clampGitPayload, gitActivityDetail, gitActivityLabel } from './agent/gitActivity';
 import {
   latestPlanFile,
@@ -334,14 +339,7 @@ const RUN_SETTLE_TIMEOUT_MS = 8_000;
  */
 const COMMIT_MESSAGE_MODEL = 'claude-haiku-4-5-20251001';
 
-const COMMIT_SYSTEM_PROMPT =
-  'You write git commit messages. Output ONLY the commit message text — no ' +
-  'preamble, no explanations, no code fences, no surrounding quotes. First ' +
-  'line: an imperative-mood subject of at most 72 characters. If the change ' +
-  'needs explanation, add one blank line then a short body wrapped at ~72 ' +
-  'columns. If the repository\'s recent commit subjects follow a consistent ' +
-  'convention (e.g. "feat:", "fix(scope):"), match it; otherwise use a plain ' +
-  'imperative subject.';
+export { ARABIC_LOCALE_INSTRUCTION, COMMIT_SYSTEM_PROMPT };
 
 function classifyTool(name: string): ToolRisk {
   if (WRITE_TOOLS.has(name)) return 'write';
@@ -1309,6 +1307,23 @@ export class AgentManager {
       logger.warn('resume: context build failed', err);
       return undefined;
     }
+  }
+
+  /**
+   * Build the bilingual language guidance meta-prompt that steers the agent to
+   * converse and explain in Modern Standard Arabic while keeping code, commands,
+   * diffs, paths, and tool calls strictly in English/ASCII.
+   */
+  localeContextFor(sessionId: string, prompt: string): string | undefined {
+    const s = this.settings.getAll();
+    const guidance = s.agent.languageGuidance ?? 'follow-ui';
+    const locale = s.appearance.locale ?? 'en';
+
+    const instruction = resolveArabicLocaleGuidance(guidance, locale, prompt);
+    if (!instruction) return undefined;
+
+    this.diag('request', 'debug', 'Injected Arabic bilingual language guidance', undefined, sessionId);
+    return instruction;
   }
 
   /**
@@ -2862,13 +2877,15 @@ export class AgentManager {
     const memoryContext = this.memoryContextFor(sessionId, prompt);
     const searchContext = this.searchContextFor(sessionId, prompt);
     const resumeContext = this.resumeContextFor(sessionId);
+    const localeContext = this.localeContextFor(sessionId, prompt);
     const injectedContext =
-      [memoryContext, searchContext, resumeContext].filter(Boolean).join('\n\n') || undefined;
+      [memoryContext, searchContext, resumeContext, localeContext].filter(Boolean).join('\n\n') || undefined;
 
     this.emitRunStart(sessionId, agent.model, permMode, {
       memory: memoryContext?.length ?? 0,
       search: searchContext?.length ?? 0,
       resume: resumeContext?.length ?? 0,
+      locale: localeContext?.length ?? 0,
       // The harness path composes no attachment manifest (attachments ride the
       // native payload path); the composed prompt is the measured total.
       attachments: 0,
@@ -3226,8 +3243,9 @@ export class AgentManager {
       const memoryContext = this.memoryContextFor(sessionId, prompt);
       const searchContext = this.searchContextFor(sessionId, prompt);
       const resumeContext = this.resumeContextFor(sessionId);
+      const localeContext = this.localeContextFor(sessionId, prompt);
       const injectedContext =
-        [memoryContext, searchContext, resumeContext].filter(Boolean).join('\n\n') || undefined;
+        [memoryContext, searchContext, resumeContext, localeContext].filter(Boolean).join('\n\n') || undefined;
       // Governance bus: SessionStart is the context-injection checkpoint. Audit
       // WHICH blocks were injected — presence booleans ONLY, never the injected
       // text (it carries memory/file content). Guarded once per run so recovery
@@ -3324,6 +3342,7 @@ export class AgentManager {
         memory: memoryContext?.length ?? 0,
         search: searchContext?.length ?? 0,
         resume: resumeContext?.length ?? 0,
+        locale: localeContext?.length ?? 0,
         attachments: manifest?.length ?? 0,
         prompt: prompt.length,
       });
@@ -3666,8 +3685,9 @@ export class AgentManager {
     const memoryContext = this.memoryContextFor(sessionId, prompt);
     const searchContext = this.searchContextFor(sessionId, prompt);
     const resumeContext = this.resumeContextFor(sessionId);
+    const localeContext = this.localeContextFor(sessionId, prompt);
     const injectedContext =
-      [memoryContext, searchContext, resumeContext].filter(Boolean).join('\n\n') || undefined;
+      [memoryContext, searchContext, resumeContext, localeContext].filter(Boolean).join('\n\n') || undefined;
 
     // Attachments ride as the same manifest text; image vision blocks are a
     // Claude streaming-input feature and are skipped for Cursor runs (the
@@ -3724,6 +3744,7 @@ export class AgentManager {
       memory: memoryContext?.length ?? 0,
       search: searchContext?.length ?? 0,
       resume: resumeContext?.length ?? 0,
+      locale: localeContext?.length ?? 0,
       attachments: manifest?.length ?? 0,
       prompt: prompt.length,
     });
@@ -7413,6 +7434,7 @@ export class AgentManager {
       memory: number;
       search: number;
       resume: number;
+      locale?: number;
       /** The attachment manifest as actually composed — measured, not estimated. */
       attachments: number;
       prompt: number;
@@ -7434,6 +7456,7 @@ export class AgentManager {
         memory: chars.memory,
         search: chars.search,
         resume: chars.resume,
+        locale: chars.locale ?? 0,
         attachments: chars.attachments,
         prompt: chars.prompt,
         memoryHits: retrieved.memory,

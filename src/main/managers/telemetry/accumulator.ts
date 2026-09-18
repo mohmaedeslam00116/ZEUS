@@ -64,6 +64,7 @@ const EMPTY_INJECTED: InjectedContextChars = {
   memory: 0,
   search: 0,
   resume: 0,
+  locale: 0,
   attachments: 0,
   prompt: 0,
   memoryHits: 0,
