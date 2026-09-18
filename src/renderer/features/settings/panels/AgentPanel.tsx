@@ -18,6 +18,7 @@ import {
 } from '@shared/constants';
 import { cn } from '@/renderer/lib/cn';
 import { ProviderIcon } from '@/renderer/components/brand/ProviderIcon';
+import { useTranslation } from '@/renderer/i18n';
 import { useSettingsStore } from '@/renderer/stores/useSettingsStore';
 import { useAgentStore } from '@/renderer/stores/useAgentStore';
 import { lifecycleMeta } from '@/renderer/features/agent/status';
@@ -29,6 +30,7 @@ import { ClaudeCodeControls } from './ClaudeCodeControls';
 import { AgentTroubleshooting } from './AgentTroubleshooting';
 
 export function AgentPanel() {
+  const { t } = useTranslation();
   const agent = useSettingsStore((s) => s.settings.agent);
   const update = useSettingsStore((s) => s.update);
   const lifecycle = useAgentStore((s) => s.lifecycle);
@@ -145,23 +147,23 @@ export function AgentPanel() {
         </Field>
         <Field
           id="languageGuidance"
-          label="Language guidance"
-          hint="Directs the agent to explain and converse in Arabic or English, while preserving English code and terminal commands."
+          label={t('settings.languageGuidance')}
+          hint={t('settings.languageGuidanceHint')}
         >
           <SegmentedControl<AgentLanguageGuidance>
             value={agent.languageGuidance}
             options={[
-              { value: 'follow-ui', label: 'Follow UI' },
-              { value: 'auto', label: 'Auto' },
-              { value: 'ar', label: 'العربية' },
-              { value: 'en', label: 'English' },
+              { value: 'follow-ui', label: t('settings.followUi') },
+              { value: 'auto', label: t('common.auto') },
+              { value: 'ar', label: t('settings.arabic') },
+              { value: 'en', label: t('settings.english') },
             ]}
             onChange={(value) => set('languageGuidance', value)}
           />
         </Field>
       </Section>
 
-      <Section title="Permissions & tools" hint="Control which agent actions need your approval before they run.">
+      <Section title={t('settings.permissions')} hint="Control which agent actions need your approval before they run.">
         <Field
           id="permissionMode"
           label="Approval policy"

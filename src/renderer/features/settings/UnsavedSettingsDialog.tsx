@@ -9,6 +9,7 @@
 import { useEffect } from 'react';
 import { AlertTriangle, X } from 'lucide-react';
 import { humanizeSettingPath } from './diffSettings';
+import { useTranslation } from '@/renderer/i18n';
 
 export function UnsavedSettingsDialog({
   changes,
@@ -19,6 +20,7 @@ export function UnsavedSettingsDialog({
   onKeepEditing: () => void;
   onDiscard: () => void;
 }) {
+  const { t, isRTL } = useTranslation();
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
@@ -37,17 +39,18 @@ export function UnsavedSettingsDialog({
       onMouseDown={onKeepEditing}
     >
       <div
+        dir={isRTL ? 'rtl' : 'ltr'}
         className="animate-pop-in flex max-h-[70vh] w-full max-w-md flex-col overflow-hidden rounded-md border border-line-strong bg-elevated shadow-2xl"
         onMouseDown={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between border-b border-line px-4 py-3">
           <span className="flex items-center gap-2 text-[13px] font-semibold text-fg">
             <AlertTriangle size={14} className="text-warning" />
-            Discard unsaved changes?
+            {t('dialogs.discardTitle')}
           </span>
           <button
             type="button"
-            aria-label="Keep editing"
+            aria-label={t('dialogs.keepEditing')}
             onClick={onKeepEditing}
             className="flex h-7 w-7 items-center justify-center rounded-md text-muted transition-colors hover:bg-surface-2 hover:text-fg"
           >
@@ -77,14 +80,14 @@ export function UnsavedSettingsDialog({
             onClick={onKeepEditing}
             className="rounded-md border border-line bg-surface-2 px-3 py-1.5 text-[12px] font-medium text-fg transition-colors hover:border-line-strong"
           >
-            Keep editing
+            {t('dialogs.keepEditing')}
           </button>
           <button
             type="button"
             onClick={onDiscard}
             className="rounded-md bg-danger px-3 py-1.5 text-[12px] font-semibold text-base transition-opacity hover:opacity-90"
           >
-            Discard changes
+            {t('dialogs.discardChanges')}
           </button>
         </div>
       </div>

@@ -9,20 +9,28 @@
 import { useEffect, useRef, useState } from 'react';
 import { PanelsTopLeft, X } from 'lucide-react';
 import type { AppSettings } from '@shared/types';
+import { useTranslation } from '@/renderer/i18n';
 import { useUIStore } from '@/renderer/stores/useUIStore';
 import { useSettingsStore } from '@/renderer/stores/useSettingsStore';
 import { useDocumentStore } from '@/renderer/stores/useDocumentStore';
 import { useSessionStore } from '@/renderer/stores/useSessionStore';
 import { SETTINGS_CATALOG } from './catalog';
-import { SettingsNav } from './SettingsNav';
+import { SettingsNav, getCategoryTitle } from './SettingsNav';
 import { SettingsHighlightContext } from './controls';
 import { diffSettings } from './diffSettings';
 import { UnsavedSettingsDialog } from './UnsavedSettingsDialog';
 
 const DEFAULT_CATEGORY = 'general';
 
-export function SettingsModal() {
-  const open = useUIStore((s) => s.activeModal === 'settings');
+export interface SettingsModalProps {
+  /** Controlled open state for isolated component rendering or testing. Defaults to UIStore. */
+  open?: boolean;
+}
+
+export function SettingsModal({ open: controlledOpen }: SettingsModalProps = {}) {
+  const { isRTL, t } = useTranslation();
+  const storeOpen = useUIStore((s) => s.activeModal === 'settings');
+  const open = controlledOpen ?? storeOpen;
   const close = useUIStore((s) => s.closeModal);
   // Documents live per session, so promotion needs one to live in.
   const activeSessionId = useSessionStore((s) => s.selectedId);
@@ -122,6 +130,7 @@ export function SettingsModal() {
       onMouseDown={attemptClose}
     >
       <div
+        dir={isRTL ? 'rtl' : 'ltr'}
         className="animate-pop-in flex h-[78vh] max-h-[640px] w-full max-w-5xl overflow-hidden rounded-md border border-line-strong bg-elevated shadow-2xl"
         onMouseDown={(e) => e.stopPropagation()}
       >
@@ -135,7 +144,9 @@ export function SettingsModal() {
 
         <div className="flex min-w-0 flex-1 flex-col">
           <div className="flex h-11 shrink-0 items-center justify-between border-b border-line px-4">
-            <span className="text-[13px] font-semibold text-fg">{category.label}</span>
+            <span className="text-[13px] font-semibold text-fg">
+              {getCategoryTitle(category.id, category.label, t)}
+            </span>
             <div className="flex items-center gap-1">
               {/* Promote to an editor tab. LEFT of close: dismissive actions
                   stay rightmost. Disabled with no session, because documents are
@@ -166,7 +177,7 @@ export function SettingsModal() {
               </button>
               <button
                 type="button"
-                aria-label="Close"
+                aria-label="Close settings"
                 onClick={attemptClose}
                 className="flex h-7 w-7 items-center justify-center rounded-md text-muted transition-colors hover:bg-surface-2 hover:text-fg"
               >
@@ -181,13 +192,16 @@ export function SettingsModal() {
             </SettingsHighlightContext.Provider>
           </div>
 
-          <div className="flex h-12 shrink-0 items-center justify-end border-t border-line px-4">
+          <div className="flex h-12 shrink-0 items-center justify-between border-t border-line px-5">
+            <span className="text-[11.5px] text-faint">
+              Esc to close • Changes take effect immediately
+            </span>
             <button
               type="button"
               onClick={close}
               className="rounded-md bg-accent px-3 py-1.5 text-[12px] font-semibold text-base transition-opacity hover:opacity-90"
             >
-              Done
+              {t('common.ok')}
             </button>
           </div>
         </div>

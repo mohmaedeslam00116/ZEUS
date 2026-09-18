@@ -1,24 +1,25 @@
-/** Appearance settings — density, font scale, chat font, reduced motion. Dark-only by rule. */
 import type { AppLayoutDirection, AppLocale, UiDensity } from '@shared/types';
 import { CHAT_FONTS, FONT_SCALE_LIMITS } from '@shared/constants';
 import { useSettingsStore } from '@/renderer/stores/useSettingsStore';
+import { useTranslation } from '@/renderer/i18n';
 import { Section, Field, StackedField, Slider, Toggle, SegmentedControl, Select } from '../controls';
 
 export function AppearancePanel() {
+  const { t } = useTranslation();
   const settings = useSettingsStore((s) => s.settings);
   const update = useSettingsStore((s) => s.update);
 
   return (
     <Section
-      title="Appearance"
+      title={t('settings.appearance')}
       hint="Zeus is pure-black, dark only — there is intentionally no light theme or color toggle."
     >
-      <Field id="locale" label="Language" hint="Interface language for menus, buttons, and conversation headers.">
+      <Field id="locale" label={t('settings.language')} hint={t('settings.languageHint')}>
         <SegmentedControl<AppLocale>
           value={settings.appearance.locale}
           options={[
-            { value: 'en', label: 'English' },
-            { value: 'ar', label: 'العربية' },
+            { value: 'en', label: t('settings.english') },
+            { value: 'ar', label: t('settings.arabic') },
           ]}
           onChange={(locale) => void update({ appearance: { locale } })}
         />
@@ -26,15 +27,15 @@ export function AppearancePanel() {
 
       <Field
         id="layoutDirection"
-        label="Layout direction"
-        hint="Controls RTL rendering for Arabic. Canvas-Only (recommended) preserves sidebar muscle memory while rendering conversations and modals right-to-left."
+        label={t('settings.layoutDirection')}
+        hint={t('settings.layoutDirectionHint')}
       >
         <Select
           value={settings.appearance.layoutDirection}
           options={[
-            { value: 'canvas-rtl', label: 'Canvas-only RTL (Recommended)' },
-            { value: 'full-rtl', label: 'Full mirror (All panels RTL)' },
-            { value: 'ltr', label: 'Left-to-right (LTR)' },
+            { value: 'canvas-rtl', label: t('settings.canvasRtl') },
+            { value: 'full-rtl', label: t('settings.fullRtl') },
+            { value: 'ltr', label: t('settings.ltr') },
           ]}
           onChange={(layoutDirection) =>
             void update({ appearance: { layoutDirection: layoutDirection as AppLayoutDirection } })
@@ -42,7 +43,7 @@ export function AppearancePanel() {
         />
       </Field>
 
-      <Field id="density" label="Density" hint="Spacing of rows and controls across the app.">
+      <Field id="density" label={t('settings.density')} hint="Spacing of rows and controls across the app.">
         <SegmentedControl<UiDensity>
           value={settings.appearance.density}
           options={[
@@ -55,7 +56,7 @@ export function AppearancePanel() {
 
       <StackedField
         id="fontScale"
-        label={`Font scale — ${Math.round(settings.appearance.fontScale * 100)}%`}
+        label={`${t('settings.fontScale')} — ${Math.round(settings.appearance.fontScale * 100)}%`}
         hint="Scales all interface text."
       >
         <Slider
@@ -71,7 +72,7 @@ export function AppearancePanel() {
 
       <Field
         id="chatFont"
-        label="Chat font"
+        label={t('settings.chatFont')}
         hint="Typeface for the conversation stream. Google fonts load when online; offline falls back to your system font."
       >
         <Select
@@ -83,7 +84,7 @@ export function AppearancePanel() {
 
       <Field
         id="reducedMotion"
-        label="Reduce motion"
+        label={t('settings.reducedMotion')}
         hint="Minimize animations and transitions."
       >
         <Toggle

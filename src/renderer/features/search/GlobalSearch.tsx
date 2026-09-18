@@ -34,6 +34,7 @@ import type { LucideIcon } from 'lucide-react';
 import type { SearchHit, SearchKind } from '@shared/types';
 import { IconButton, Kbd, Spinner } from '@/renderer/components/ui';
 import { cn } from '@/renderer/lib/cn';
+import { useTranslation } from '@/renderer/i18n';
 import { useUIStore } from '@/renderer/stores/useUIStore';
 import { useSearchStore } from '@/renderer/stores/useSearchStore';
 import { useSettingsStore } from '@/renderer/stores/useSettingsStore';
@@ -95,8 +96,15 @@ type Row =
   | { type: 'hit'; hit: SearchHit; groupLabel: string }
   | { type: 'command'; command: Command };
 
-export function GlobalSearch() {
-  const open = useUIStore((s) => s.searchOpen);
+export interface GlobalSearchProps {
+  /** Controlled open state for isolated component rendering or testing. Defaults to UIStore. */
+  open?: boolean;
+}
+
+export function GlobalSearch({ open: controlledOpen }: GlobalSearchProps = {}) {
+  const { isRTL, t } = useTranslation();
+  const storeOpen = useUIStore((s) => s.searchOpen);
+  const open = controlledOpen ?? storeOpen;
   const close = useUIStore((s) => s.closeSearch);
   const query = useSearchStore((s) => s.query);
   const setQuery = useSearchStore((s) => s.setQuery);
@@ -196,6 +204,7 @@ export function GlobalSearch() {
       onMouseDown={close}
     >
       <div
+        dir={isRTL ? 'rtl' : 'ltr'}
         className="animate-pop-in flex w-full max-w-2xl flex-col overflow-hidden rounded-md border border-line-strong bg-elevated shadow-2xl"
         onMouseDown={(e) => e.stopPropagation()}
       >
@@ -206,7 +215,7 @@ export function GlobalSearch() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={onKeyDown}
-            placeholder={typedPlaceholder}
+            placeholder={isRTL ? t('titlebar.search') : typedPlaceholder}
             className="flex-1 bg-transparent py-3 text-[13px] text-fg placeholder:text-muted focus:outline-none"
           />
           {(loading || progress) && <Spinner size={11} />}

@@ -91,6 +91,26 @@ export interface TranslationSchema {
     permissions: string;
     model: string;
     thinking: string;
+    canvasRtl: string;
+    fullRtl: string;
+    ltr: string;
+    followUi: string;
+    arabic: string;
+    english: string;
+    general: string;
+    workspace: string;
+    behavior: string;
+    runtime: string;
+    mcp: string;
+    planTasks: string;
+    terminal: string;
+    git: string;
+    memory: string;
+    graph: string;
+    attachments: string;
+    shortcuts: string;
+    updates: string;
+    about: string;
   };
   activity: {
     files: string;
@@ -108,6 +128,24 @@ export interface TranslationSchema {
     confirmDeleteBody: string;
     unsavedChangesTitle: string;
     unsavedChangesBody: string;
+    discardTitle: string;
+    keepEditing: string;
+    discardChanges: string;
+  };
+  workspace: {
+    welcomeTitle: string;
+    welcomeSubtitle: string;
+    startConversation: string;
+    startConversationHint: string;
+  };
+  permissions: {
+    required: string;
+    allow: string;
+    deny: string;
+    alwaysAllow: string;
+    read: string;
+    write: string;
+    command: string;
   };
 }
 

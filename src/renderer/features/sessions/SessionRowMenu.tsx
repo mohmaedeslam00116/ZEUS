@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import type { Session } from '@shared/types';
 import { useSessionStore } from '@/renderer/stores/useSessionStore';
+import { useTranslation } from '@/renderer/i18n';
 
 interface SessionRowMenuProps {
   session: Session;
@@ -29,6 +30,7 @@ interface SessionRowMenuProps {
 }
 
 export function SessionRowMenu({ session, point, onClose, onRename }: SessionRowMenuProps) {
+  const { t, isRTL } = useTranslation();
   const ref = useRef<HTMLDivElement>(null);
   const togglePin = useSessionStore((s) => s.togglePin);
   const setArchived = useSessionStore((s) => s.setArchived);
@@ -113,16 +115,17 @@ export function SessionRowMenu({ session, point, onClose, onRename }: SessionRow
   return (
     <div
       ref={ref}
+      dir={isRTL ? 'rtl' : 'ltr'}
       style={positioned}
       className="no-drag animate-pop-in z-50 mt-1 w-44 rounded-lg border border-line-strong bg-elevated p-1 shadow-2xl"
     >
-      <MenuItem icon={Pencil} label="Rename" onClick={run(onRename)} />
+      <MenuItem icon={Pencil} label={t('common.edit')} onClick={run(onRename)} />
       <MenuItem
         icon={session.pinned ? PinOff : Pin}
         label={session.pinned ? 'Unpin' : 'Pin'}
         onClick={run(() => void togglePin(session.id, !session.pinned))}
       />
-      <MenuItem icon={Copy} label="Duplicate" onClick={run(() => void duplicate(session.id))} />
+      <MenuItem icon={Copy} label={t('common.copy')} onClick={run(() => void duplicate(session.id))} />
       {(session.worktreePath || session.worktreeBranch) && (
         <MenuItem
           icon={GitBranch}
@@ -155,7 +158,7 @@ export function SessionRowMenu({ session, point, onClose, onRename }: SessionRow
       <div className="my-1 border-t border-line" />
       <MenuItem
         icon={Trash2}
-        label="Delete"
+        label={t('common.delete')}
         danger
         onClick={run(() => void requestDelete(session.id))}
       />
@@ -179,7 +182,7 @@ function MenuItem({
       type="button"
       onClick={onClick}
       className={
-        'flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-[12px] transition-colors ' +
+        'flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-start text-[12px] transition-colors ' +
         (danger
           ? 'text-danger hover:bg-surface-2'
           : 'text-muted hover:bg-surface-2 hover:text-fg')

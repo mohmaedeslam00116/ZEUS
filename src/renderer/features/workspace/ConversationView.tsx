@@ -572,7 +572,7 @@ function UserBubble({
       <div
         ref={body}
         className={cn(
-          'max-w-[85%] whitespace-pre-wrap break-words rounded-2xl rounded-br-md border border-line bg-surface-2 px-4 py-2.5 text-[13.5px] leading-relaxed text-fg shadow-sm animate-fade-in',
+          'max-w-[85%] whitespace-pre-wrap break-words rounded-2xl rounded-ee-md border border-line bg-surface-2 px-4 py-2.5 text-[13.5px] leading-relaxed text-fg shadow-sm animate-fade-in',
           raw && 'font-mono text-[11.5px] text-muted',
         )}
       >
@@ -692,7 +692,7 @@ function AssistantText({ message }: { message: ChatMessage }) {
     <div>
       <Markdown text={message.text} streaming={message.streaming} />
       {message.streaming && (
-        <span className="ml-0.5 inline-block h-3.5 w-[2px] translate-y-0.5 animate-pulse bg-accent align-middle" />
+        <span className="ms-0.5 inline-block h-3.5 w-[2px] translate-y-0.5 animate-pulse bg-accent align-middle" />
       )}
     </div>
   );
@@ -727,7 +727,7 @@ function InlineEventRow({ call }: { call: AgentToolCall }) {
           onClick={() => expandable && setOpen((v) => !v)}
           disabled={!expandable}
           className={cn(
-            'flex min-w-0 flex-1 items-center gap-2 rounded px-1 py-0.5 text-left',
+            'flex min-w-0 flex-1 items-center gap-2 rounded px-1 py-0.5 text-start',
             expandable ? 'transition-colors hover:bg-surface-2' : 'cursor-default',
           )}
         >
@@ -796,7 +796,7 @@ function InlineEventRow({ call }: { call: AgentToolCall }) {
           )}
           <ToolStatus status={call.status} />
           {expandable && (
-            <ChevronRight size={13} className={cn('text-faint transition-transform', open && 'rotate-90')} />
+            <ChevronRight size={13} className={cn('text-faint transition-transform rtl-flip', open && 'rotate-90')} />
           )}
         </span>
       </div>
@@ -804,7 +804,7 @@ function InlineEventRow({ call }: { call: AgentToolCall }) {
         <ToolDiff edit={call.edit} status={call.change?.status} />
       )}
       {open && !hasDiff && hasRead && call.read && (
-        <div className="ml-6">
+        <div className="ms-6">
           <CodeBlock
             code={call.read.content}
             lang={call.read.lang}
@@ -820,7 +820,7 @@ function InlineEventRow({ call }: { call: AgentToolCall }) {
         </div>
       )}
       {open && !hasDiff && !hasRead && expandable && (
-        <pre className="ml-6 max-h-48 overflow-auto rounded-md border border-line bg-[#0a0a0a] px-3 py-2 font-mono text-[11.5px] leading-relaxed text-muted">
+        <pre className="ms-6 max-h-48 overflow-auto rounded-md border border-line bg-[#0a0a0a] px-3 py-2 font-mono text-[11.5px] leading-relaxed text-muted">
           {call.detail}
         </pre>
       )}
@@ -846,14 +846,14 @@ function ToolGroup({ calls }: { calls: AgentToolCall[] }) {
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="flex items-center gap-2 rounded px-1 py-0.5 text-left text-[12px] text-muted transition-colors hover:bg-surface-2"
+        className="flex items-center gap-2 rounded px-1 py-0.5 text-start text-[12px] text-muted transition-colors hover:bg-surface-2"
       >
         <ChevronRight
           size={13}
-          className={cn('shrink-0 text-faint transition-transform', open && 'rotate-90')}
+          className={cn('shrink-0 text-faint transition-transform rtl-flip', open && 'rotate-90')}
         />
         <span>{settled ? `Ran ${calls.length} tools` : `Running tools… ${done}/${calls.length}`}</span>
-        <span className="ml-auto flex shrink-0 items-center">
+        <span className="ms-auto flex shrink-0 items-center">
           {settled ? (
             <span className={cn('h-1.5 w-1.5 rounded-full', failed ? 'bg-danger' : 'bg-success')} />
           ) : (
@@ -862,14 +862,14 @@ function ToolGroup({ calls }: { calls: AgentToolCall[] }) {
         </span>
       </button>
       {open ? (
-        <div className="ml-1.5 flex flex-col gap-1 border-l border-line pl-2">
+        <div className="ms-1.5 flex flex-col gap-1 border-s border-line ps-2">
           {calls.map((c) => (
             <InlineEventRow key={c.id} call={c} />
           ))}
         </div>
       ) : (
         !settled && (
-          <div className="ml-1.5 flex flex-col gap-1 border-l border-line pl-2">
+          <div className="ms-1.5 flex flex-col gap-1 border-s border-line ps-2">
             {running.map((c) => (
               <InlineEventRow key={c.id} call={c} />
             ))}

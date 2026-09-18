@@ -15,6 +15,7 @@ import { FilePen, ShieldCheck, Terminal, type LucideIcon } from 'lucide-react';
 import type { PermissionRequest, ToolRisk } from '@shared/types';
 import { cn } from '@/renderer/lib/cn';
 import { useAgentStore } from '@/renderer/stores/useAgentStore';
+import { useTranslation } from '@/renderer/i18n';
 
 const RISK_LABEL: Record<ToolRisk, string> = {
   read: 'Read',
@@ -29,6 +30,7 @@ function riskIcon(risk: ToolRisk): LucideIcon {
 }
 
 export function InlineApproval({ request }: { request: PermissionRequest }) {
+  const { t } = useTranslation();
   const respond = useAgentStore((s) => s.respond);
   const Icon = riskIcon(request.risk);
 
@@ -56,9 +58,9 @@ export function InlineApproval({ request }: { request: PermissionRequest }) {
             request.risk === 'read' && 'text-muted',
           )}
         />
-        <span className="text-[12px] font-medium text-fg">Permission required</span>
+        <span className="text-[12px] font-medium text-fg">{t('permissions.required')}</span>
         <span className="truncate text-[11px] text-faint">
-          {RISK_LABEL[request.risk]} · {request.tool}
+          {t(`permissions.${request.risk}`) || RISK_LABEL[request.risk]} · {request.tool}
           {/* Name the worker that asked, so an approval raised inside a
               delegation is not mistaken for the main conversation's. Main only
               sets this when exactly one worker is in flight — it never guesses
@@ -80,21 +82,21 @@ export function InlineApproval({ request }: { request: PermissionRequest }) {
           onClick={() => respond(request.id, 'allow')}
           className="rounded-md bg-accent px-3 py-1.5 text-[12px] font-semibold text-base transition-opacity hover:opacity-90"
         >
-          Allow
+          {t('permissions.allow')}
         </button>
         <button
           type="button"
           onClick={() => respond(request.id, 'deny')}
           className="rounded-md border border-line px-3 py-1.5 text-[12px] font-medium text-muted transition-colors hover:bg-elevated hover:text-fg"
         >
-          Deny
+          {t('permissions.deny')}
         </button>
         <button
           type="button"
           onClick={() => respond(request.id, 'allow', true)}
-          className="ml-auto text-[11.5px] text-faint transition-colors hover:text-fg"
+          className="ms-auto text-[11.5px] text-faint transition-colors hover:text-fg"
         >
-          Always allow this session
+          {t('permissions.alwaysAllow')}
         </button>
       </div>
     </div>

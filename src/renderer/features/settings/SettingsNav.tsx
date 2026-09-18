@@ -6,6 +6,7 @@
  */
 import { Search, CornerDownRight, X } from 'lucide-react';
 import { cn } from '@/renderer/lib/cn';
+import { useTranslation } from '@/renderer/i18n';
 import { SETTINGS_CATALOG, searchCategories, searchFields } from './catalog';
 
 interface SettingsNavProps {
@@ -16,6 +17,36 @@ interface SettingsNavProps {
   onSelectField: (categoryId: string, fieldId: string) => void;
 }
 
+import type { KnownTranslationKey } from '@/renderer/i18n';
+
+const CATEGORY_LABEL_MAP: Record<string, KnownTranslationKey> = {
+  general: 'settings.general',
+  appearance: 'settings.appearance',
+  workspace: 'settings.workspace',
+  behavior: 'settings.behavior',
+  agent: 'settings.agent',
+  runtime: 'settings.runtime',
+  mcp: 'settings.mcp',
+  planTasks: 'settings.planTasks',
+  terminal: 'settings.terminal',
+  git: 'settings.git',
+  memory: 'settings.memory',
+  graph: 'settings.graph',
+  attachments: 'settings.attachments',
+  shortcuts: 'settings.shortcuts',
+  updates: 'settings.updates',
+  about: 'settings.about',
+};
+
+export function getCategoryTitle(
+  id: string,
+  fallback: string,
+  t: (key: KnownTranslationKey) => string,
+): string {
+  const key = CATEGORY_LABEL_MAP[id];
+  return key ? t(key) : fallback;
+}
+
 export function SettingsNav({
   query,
   setQuery,
@@ -23,33 +54,37 @@ export function SettingsNav({
   onSelectCategory,
   onSelectField,
 }: SettingsNavProps) {
+  const { t } = useTranslation();
   const categories = searchCategories(query);
   const fieldHits = searchFields(query);
-  const labelFor = (id: string) => SETTINGS_CATALOG.find((c) => c.id === id)?.label ?? id;
+  const labelFor = (id: string) => {
+    const fallback = SETTINGS_CATALOG.find((c) => c.id === id)?.label ?? id;
+    return getCategoryTitle(id, fallback, t);
+  };
 
   return (
-    <div className="flex w-52 shrink-0 flex-col border-r border-line bg-surface">
+    <div className="flex w-52 shrink-0 flex-col border-e border-line bg-surface">
       <div className="p-2">
         <div className="relative">
           <Search
             size={13}
-            className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-faint"
+            className="pointer-events-none absolute start-2.5 top-1/2 -translate-y-1/2 text-faint"
           />
           <input
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search settings…"
+            placeholder={`${t('common.search')} ${t('settings.title')}…`}
             spellCheck={false}
             autoFocus
-            className="w-full rounded-md border border-line bg-surface-2 py-1.5 pl-8 pr-7 text-[12px] text-fg placeholder:text-faint focus:border-line-strong focus:outline-none"
+            className="w-full rounded-md border border-line bg-surface-2 py-1.5 ps-8 pe-7 text-[12px] text-fg placeholder:text-faint focus:border-line-strong focus:outline-none"
           />
           {query && (
             <button
               type="button"
               aria-label="Clear search"
               onClick={() => setQuery('')}
-              className="absolute right-1.5 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-md text-faint transition-colors hover:text-fg"
+              className="absolute end-1.5 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-md text-faint transition-colors hover:text-fg"
             >
               <X size={12} />
             </button>
@@ -70,11 +105,11 @@ export function SettingsNav({
                   <button
                     type="button"
                     onClick={() => hit.fieldId && onSelectField(hit.categoryId, hit.fieldId)}
-                    className="flex w-full items-center gap-1.5 rounded-md px-2 py-1.5 text-left text-[12px] text-muted transition-colors hover:bg-surface-2 hover:text-fg"
+                    className="flex w-full items-center gap-1.5 rounded-md px-2 py-1.5 text-start text-[12px] text-muted transition-colors hover:bg-surface-2 hover:text-fg"
                   >
-                    <CornerDownRight size={12} className="shrink-0 text-faint" />
+                    <CornerDownRight size={12} className="shrink-0 text-faint rtl-flip" />
                     <span className="truncate">{hit.label}</span>
-                    <span className="ml-auto shrink-0 text-[10px] text-faint">
+                    <span className="ms-auto shrink-0 text-[10px] text-faint">
                       {labelFor(hit.categoryId)}
                     </span>
                   </button>
@@ -104,7 +139,7 @@ export function SettingsNav({
                     onClick={() => onSelectCategory(category.id)}
                     aria-current={active ? 'page' : undefined}
                     className={cn(
-                      'flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-left text-[12px] transition-colors',
+                      'flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-start text-[12px] transition-colors',
                       'focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent',
                       // Active is carried by COLOR, not a background plate (see
                       // ActivityRail). The label takes accent too: with the plate
@@ -117,7 +152,7 @@ export function SettingsNav({
                   >
                     <Icon size={15} className={active ? 'text-accent' : 'text-faint'} />
                     <span className={cn('truncate', active && 'font-semibold')}>
-                      {category.label}
+                      {labelFor(category.id)}
                     </span>
                   </button>
                 </li>

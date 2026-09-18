@@ -87,19 +87,19 @@ export function ProseCard({
         className,
       )}
     >
-      <div className={cn('flex items-center gap-1.5', !bare && 'pr-1')}>
+      <div className={cn('flex items-center gap-1.5', !bare && 'pe-1')}>
         <button
           type="button"
           onClick={() => setOpen((v) => !v)}
           aria-expanded={open}
           className={cn(
-            'flex min-w-0 flex-1 items-center gap-1.5 text-left font-medium uppercase tracking-wider text-faint transition-colors hover:text-muted',
+            'flex min-w-0 flex-1 items-center gap-1.5 text-start font-medium uppercase tracking-wider text-faint transition-colors hover:text-muted',
             // Bare matches the sibling section labels exactly — same size, same
             // 1px inset — so the record reads as one list of sections.
             bare ? 'px-1 text-[10px]' : 'px-2.5 py-1.5 text-[11px]',
           )}
         >
-          {open ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
+          {open ? <ChevronDown size={12} /> : <ChevronRight size={12} className="rtl-flip" />}
           <span className="truncate">{label}</span>
         </button>
         {meta && <span className="shrink-0 text-[10px] text-faint">{meta}</span>}
@@ -129,7 +129,7 @@ export function ProseCard({
               type="button"
               onClick={() => setExpanded((v) => !v)}
               className={cn(
-                'w-full text-left text-[10.5px] text-faint transition-colors hover:text-accent',
+                'w-full text-start text-[10.5px] text-faint transition-colors hover:text-accent',
                 bare ? 'px-1 pt-0.5' : 'border-t border-line px-3 py-1',
               )}
             >

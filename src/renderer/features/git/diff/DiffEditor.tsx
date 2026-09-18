@@ -24,13 +24,13 @@ const ROW_H = 18;
 
 export interface DiffEditorProps {
   diff: GitFileDiff;
-  layout: 'unified' | 'split';
-  foldContext: boolean;
-  collapsedHunks: number[];
-  wordLevel: boolean;
-  showWhitespace: boolean;
+  layout?: 'unified' | 'split';
+  foldContext?: boolean;
+  collapsedHunks?: number[];
+  wordLevel?: boolean;
+  showWhitespace?: boolean;
   /** Run the async Shiki pass. Off for the compact preview (see DiffView). */
-  highlight: boolean;
+  highlight?: boolean;
   /** Initial scroll offset, and a callback so it can be preserved across remounts. */
   scrollTop?: number;
   onScrollTopChange?: (top: number) => void;
@@ -41,12 +41,12 @@ export interface DiffEditorProps {
 
 export function DiffEditor({
   diff,
-  layout,
-  foldContext,
-  collapsedHunks,
-  wordLevel,
-  showWhitespace,
-  highlight,
+  layout = 'unified',
+  foldContext = false,
+  collapsedHunks = [],
+  wordLevel = false,
+  showWhitespace = false,
+  highlight = false,
   scrollTop,
   onScrollTopChange,
   onToggleHunk,

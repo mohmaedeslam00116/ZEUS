@@ -97,6 +97,7 @@ code,
   text-align: left !important;
   unicode-bidi: isolate !important;
   font-family: var(--font-mono) !important;
+  line-height: 1.45 !important;
 }
 
 /* Directional icon mirroring in RTL mode */

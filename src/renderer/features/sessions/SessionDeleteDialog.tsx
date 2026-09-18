@@ -31,7 +31,7 @@ export function SessionDeleteDialog({
   session: Session;
   onClose: () => void;
 }) {
-  const { t } = useTranslation();
+  const { t, isRTL } = useTranslation();
   const removeSession = useSessionStore((s) => s.removeSession);
   const [deps, setDeps] = useState<SessionDependencies | null>(null);
   const [removeWorktree, setRemoveWorktree] = useState(true);
@@ -94,6 +94,7 @@ export function SessionDeleteDialog({
       onMouseDown={onClose}
     >
       <div
+        dir={isRTL ? 'rtl' : 'ltr'}
         className="animate-pop-in flex w-full max-w-md flex-col overflow-hidden rounded-md border border-line-strong bg-elevated shadow-2xl"
         onMouseDown={(e) => e.stopPropagation()}
       >

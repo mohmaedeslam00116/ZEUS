@@ -40,8 +40,10 @@ import { useReleaseNotes, useReleaseNotesTab } from '@/renderer/features/updates
 import { DocumentTabs } from './DocumentTabs';
 import { SubagentWorkspace } from './SubagentWorkspace';
 import { SettingsDocument } from '@/renderer/features/settings/SettingsDocument';
+import { useTranslation } from '@/renderer/i18n';
 
 export function CenterWorkspace() {
+  const { t } = useTranslation();
   const session = useSessionStore((s) =>
     s.sessions.find((item) => item.id === s.selectedId) ?? null,
   );
@@ -148,11 +150,10 @@ export function CenterWorkspace() {
                   <Logo size={60} />
                   <div className="flex flex-col gap-1.5">
                     <span className="text-[16px] font-semibold tracking-tight text-fg">
-                      Start the conversation
+                      {t('workspace.startConversation')}
                     </span>
                     <span className="text-[13px] leading-relaxed text-muted">
-                      Describe what you want to build. Zeus coordinates the repository,
-                      files, terminal, and tasks while the agent does the work.
+                      {t('workspace.startConversationHint')}
                     </span>
                   </div>
                 </div>
@@ -185,11 +186,10 @@ export function CenterWorkspace() {
                 <Logo size={40} />
                 <div className="flex flex-col gap-1">
                   <span className="text-[15px] font-semibold tracking-tight text-fg">
-                    Welcome to Zeus
+                    {t('workspace.welcomeTitle')}
                   </span>
                   <span className="max-w-md text-[13px] leading-relaxed text-muted">
-                    The local-first workspace for orchestrating coding agents. Create
-                    a session to begin — every task lives inside one.
+                    {t('workspace.welcomeSubtitle')}
                   </span>
                 </div>
                 <button
@@ -198,7 +198,7 @@ export function CenterWorkspace() {
                   className="flex items-center gap-1.5 rounded-md bg-accent px-3 py-1.5 text-[12px] font-semibold text-base transition-opacity hover:opacity-90"
                 >
                   <Plus size={13} />
-                  New session
+                  {t('sessions.newSession')}
                 </button>
               </div>
             )}
@@ -300,7 +300,7 @@ function SessionHeader({
       {running ? <SessionSpinner size={12} /> : <CircleDot size={12} className="text-success" />}
       <span className="text-[13px] font-medium">{title}</span>
       <span className="text-[11px] text-faint">{branch}</span>
-      <DiffStat adds={adds} dels={dels} className="ml-2" />
+      <DiffStat adds={adds} dels={dels} className="ms-2" />
       {running && <span className="text-[11px] text-accent">Working…</span>}
       {!running && revalidating && (
         <span className="flex items-center gap-1 rounded-full border border-accent/40 bg-accent/10 px-1.5 py-0.5 text-[10px] font-medium text-accent">
@@ -315,7 +315,7 @@ function SessionHeader({
       )}
       {/* Header anchor for the runtime ring. Renders only when the user chose
           this surface in Settings › Agent › Runtime Indicators. */}
-      <span className="ml-auto flex items-center">
+      <span className="ms-auto flex items-center">
         <RuntimeIndicator anchor="header" />
       </span>
       <IconButton
@@ -327,7 +327,7 @@ function SessionHeader({
         <span className="relative">
           <GitBranch size={14} />
           {gitDirty && (
-            <span className="absolute -right-1 -top-1 h-1.5 w-1.5 rounded-full bg-warning" />
+            <span className="absolute -top-1 -end-1 h-1.5 w-1.5 rounded-full bg-warning" />
           )}
         </span>
       </IconButton>
