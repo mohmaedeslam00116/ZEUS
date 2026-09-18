@@ -12,10 +12,11 @@
  * `screenExtraWritePath` ultimately reads `app.getPath('userData')`, so the
  * electron module is mocked hermetically — no Electron runtime is needed.
  */
+import path from 'node:path';
 import { describe, expect, it, vi } from 'vitest';
 
 vi.mock('electron', () => ({
-  app: { getPath: () => 'C:\\fake\\userData' },
+  app: { getPath: () => (process.platform === 'win32' ? 'C:\\fake\\userData' : '/fake/userData') },
 }));
 
 import { DEFAULT_SETTINGS, SETTINGS_VERSION } from '@shared/constants';
@@ -154,19 +155,22 @@ describe('normalizeSettings — allowlist filtering (renderer-supplied arrays)',
   });
 
   it('drops extra write paths that resolve into the crown-jewel floor', () => {
+    const isWin = process.platform === 'win32';
+    const fakeUserData = isWin ? 'C:\\fake\\userData' : '/fake/userData';
+    const legitimatePath = isWin ? 'D:\\work\\project' : '/work/project';
     const out = normalized({
       agent: {
         sandbox: {
           allowWritePaths: [
-            'D:\\work\\project', // legitimate
-            'C:\\fake\\userData\\secrets', // crown jewel (mocked userData)
-            'C:\\fake\\userData\\zeus.db', // crown jewel
-            'relative\\path', // not absolute
+            legitimatePath, // legitimate
+            path.join(fakeUserData, 'secrets'), // crown jewel (mocked userData)
+            path.join(fakeUserData, 'zeus.db'), // crown jewel
+            path.join('relative', 'path'), // not absolute
           ],
         },
       },
     });
-    expect(out.agent.sandbox.allowWritePaths).toEqual(['D:\\work\\project']);
+    expect(out.agent.sandbox.allowWritePaths).toEqual([legitimatePath]);
   });
 
   it('filters discovered model ids against the Cursor id regex', () => {
