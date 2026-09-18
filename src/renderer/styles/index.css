@@ -38,6 +38,8 @@
   /* Typography */
   --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI",
     Roboto, Helvetica, Arial, sans-serif;
+  --font-sans-ar: "Cairo", "IBM Plex Sans Arabic", "Segoe UI", Tahoma, sans-serif;
+  --font-arabic: "Cairo", "IBM Plex Sans Arabic", "Segoe UI", Tahoma, sans-serif;
   --font-mono: ui-monospace, "SF Mono", "JetBrains Mono", "Fira Code", Menlo,
     Consolas, monospace;
 }
@@ -68,6 +70,39 @@ body {
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
   overflow: hidden; /* the app manages its own internal scroll regions */
+}
+
+/* RTL & Arabic font stack */
+html[dir="rtl"] body,
+html[data-locale="ar"] body,
+[dir="rtl"] {
+  font-family: var(--font-sans-ar), var(--font-sans);
+}
+
+/* Relaxed line-height for Arabic text to accommodate diacritics and tall glyphs */
+[dir="rtl"] {
+  line-height: 1.6;
+}
+
+/* Strict LTR and monospace isolation for code, terminal, diffs (ADR-0011 Invariant) */
+.code-isolate,
+.xterm,
+.terminal-container,
+pre,
+code,
+.font-mono,
+[data-code-block],
+[data-diff-view] {
+  direction: ltr !important;
+  text-align: left !important;
+  unicode-bidi: isolate !important;
+  font-family: var(--font-mono) !important;
+}
+
+/* Directional icon mirroring in RTL mode */
+[dir="rtl"] .rtl-flip,
+[dir="rtl"] [data-direction-flip="true"] {
+  transform: scaleX(-1);
 }
 
 /* Respect the user's reduced-motion preference (appearance.reducedMotion sets

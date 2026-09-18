@@ -21,7 +21,7 @@ export function WindowControls() {
   }, []);
 
   return (
-    <div className="no-drag flex h-10 items-stretch">
+    <div dir="ltr" className="no-drag flex h-10 items-stretch">
       <WindowButton label={t('titlebar.minimize')} onClick={() => window.zeus?.window.minimize()}>
         <Minus size={15} />
       </WindowButton>

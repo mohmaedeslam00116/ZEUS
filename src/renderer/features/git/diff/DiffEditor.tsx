@@ -105,7 +105,7 @@ export function DiffEditor({
     });
 
   return (
-    <div className="relative min-h-0 flex-1">
+    <div dir="ltr" data-diff-view="true" className="code-isolate relative min-h-0 flex-1">
       {stickyHeader && (
         <div className="pointer-events-none absolute inset-x-0 top-0 z-10 truncate bg-surface-2/95 px-2 font-mono text-[11px] leading-[18px] text-faint">
           {stickyHeader}

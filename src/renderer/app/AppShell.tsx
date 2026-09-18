@@ -30,6 +30,7 @@ import { ActivityDrawer } from '@/renderer/features/activity/ActivityDrawer';
 import { TerminalPanel } from '@/renderer/features/terminal/TerminalPanel';
 import { useResizable } from '@/renderer/hooks/useResizable';
 import { useLayoutStore } from '@/renderer/stores/useLayoutStore';
+import { useTranslation } from '@/renderer/i18n';
 
 /**
  * Hard ceiling on the terminal column as a fraction of the window, applied at
@@ -40,6 +41,11 @@ import { useLayoutStore } from '@/renderer/stores/useLayoutStore';
 const TERMINAL_MAX_FRACTION = 0.45;
 
 export function AppShell() {
+  const { locale, layoutDirection } = useTranslation();
+  const isArabic = locale === 'ar';
+  const isFullRtl = isArabic && layoutDirection === 'full-rtl';
+  const isCanvasRtl = isArabic && layoutDirection === 'canvas-rtl';
+
   const leftWidth = useLayoutStore((s) => s.leftWidth);
   const rightWidth = useLayoutStore((s) => s.rightWidth);
   const terminalOpen = useLayoutStore((s) => s.terminalOpen);
@@ -57,6 +63,7 @@ export function AppShell() {
 
   const left = useResizable({
     edge: 'left',
+    isRtl: isFullRtl,
     getWidth: () => useLayoutStore.getState().leftWidth,
     setWidth: setLeftWidth,
   });
@@ -67,11 +74,13 @@ export function AppShell() {
   // left widen the column. `edge: 'left'` here would resize backwards.
   const term = useResizable({
     edge: 'right',
+    isRtl: isFullRtl,
     getWidth: () => useLayoutStore.getState().terminalWidth,
     setWidth: (w) => useLayoutStore.getState().setTerminalWidth(w),
   });
   const right = useResizable({
     edge: 'right',
+    isRtl: isFullRtl,
     getWidth: () => {
       const s = useLayoutStore.getState();
       if (s.activeTab === 'git') return s.gitWidth;
@@ -87,11 +96,15 @@ export function AppShell() {
   });
 
   return (
-    <div className="flex h-full w-full flex-col bg-base text-fg">
+    <div
+      dir={isFullRtl ? 'rtl' : 'ltr'}
+      data-layout-direction={layoutDirection}
+      className="flex h-full w-full flex-col bg-base text-fg"
+    >
       <TitleBar />
       <div className="flex min-h-0 flex-1 px-2 pb-4 pt-1">
         {sessionsCollapsed ? (
-          <div className="mr-2 shrink-0">
+          <div className="me-2 shrink-0">
             <CollapsedSessionsRail />
           </div>
         ) : (
@@ -106,7 +119,10 @@ export function AppShell() {
 
         {/* Floating workspace card — terminal + center column + drawer share one surface. */}
         <div className="flex min-w-0 flex-1 overflow-hidden rounded-md border border-line bg-surface">
-          <div className="min-w-0 flex-1">
+          <div
+            dir={isFullRtl || isCanvasRtl ? 'rtl' : 'ltr'}
+            className="min-w-0 flex-1"
+          >
             <CenterWorkspace />
           </div>
 
@@ -114,8 +130,9 @@ export function AppShell() {
             <>
               <ResizeHandle onMouseDown={term.startDrag} />
               <div
+                dir="ltr"
                 style={{ width: Math.min(terminalWidth, window.innerWidth * TERMINAL_MAX_FRACTION) }}
-                className="shrink-0"
+                className="code-isolate shrink-0"
               >
                 <TerminalPanel />
               </div>
@@ -125,14 +142,18 @@ export function AppShell() {
           {activeTab && (
             <>
               <ResizeHandle onMouseDown={right.startDrag} />
-              <div style={{ width: drawerWidth }} className="shrink-0">
+              <div
+                dir={isFullRtl || isCanvasRtl ? 'rtl' : 'ltr'}
+                style={{ width: drawerWidth }}
+                className="shrink-0"
+              >
                 <ActivityDrawer tab={activeTab} />
               </div>
             </>
           )}
         </div>
 
-        <div className="ml-2 shrink-0">
+        <div className="ms-2 shrink-0">
           <ActivityRail />
         </div>
       </div>

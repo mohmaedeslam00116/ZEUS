@@ -34,6 +34,9 @@ function applyAppearance(appearance: AppSettings['appearance']): void {
   root.dataset.density = appearance.density;
   root.dataset.locale = appearance.locale;
   root.dataset.layoutDirection = appearance.layoutDirection;
+  root.lang = appearance.locale;
+  root.dir =
+    appearance.locale === 'ar' && appearance.layoutDirection === 'full-rtl' ? 'rtl' : 'ltr';
   // Chat/LLM-stream typeface (see the `chat-font` utility in styles/index.css).
   // Unknown ids fall back to the default entry — main clamps to the allowlist,
   // but the optimistic local update must never apply an off-list value either.

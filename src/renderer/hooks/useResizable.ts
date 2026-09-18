@@ -7,12 +7,29 @@
 import { useCallback } from 'react';
 import type { MouseEvent as ReactMouseEvent } from 'react';
 
+/**
+ * Pure resize width calculation supporting LTR and RTL inversion.
+ */
+export function computeResizeWidth(opts: {
+  edge: 'left' | 'right';
+  isRtl?: boolean;
+  startWidth: number;
+  startX: number;
+  currentX: number;
+}): number {
+  const { edge, isRtl = false, startWidth, startX, currentX } = opts;
+  const rawDelta = currentX - startX;
+  const delta = isRtl ? -rawDelta : rawDelta;
+  return edge === 'left' ? startWidth + delta : startWidth - delta;
+}
+
 export function useResizable(opts: {
   edge: 'left' | 'right';
+  isRtl?: boolean;
   getWidth: () => number;
   setWidth: (width: number) => void;
 }) {
-  const { edge, getWidth, setWidth } = opts;
+  const { edge, isRtl = false, getWidth, setWidth } = opts;
 
   const startDrag = useCallback(
     (event: ReactMouseEvent) => {
@@ -24,8 +41,14 @@ export function useResizable(opts: {
       document.body.style.userSelect = 'none';
 
       const onMove = (e: globalThis.MouseEvent) => {
-        const delta = e.clientX - startX;
-        setWidth(edge === 'left' ? startWidth + delta : startWidth - delta);
+        const nextWidth = computeResizeWidth({
+          edge,
+          isRtl,
+          startWidth,
+          startX,
+          currentX: e.clientX,
+        });
+        setWidth(nextWidth);
       };
 
       const onUp = () => {

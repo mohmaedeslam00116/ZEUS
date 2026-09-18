@@ -32,7 +32,7 @@ export function TitleBar() {
     updateStage === 'downloaded';
 
   return (
-    <header className="drag-region relative z-20 flex h-10 shrink-0 items-center justify-between bg-base pl-3 pr-0">
+    <header dir="ltr" className="drag-region relative z-20 flex h-10 shrink-0 items-center justify-between bg-base pl-3 pr-0">
       <div className="flex items-center gap-2">
         <Wordmark />
         <WorkspaceSwitcher />
@@ -51,7 +51,7 @@ export function TitleBar() {
           className="no-drag group flex h-6 w-full max-w-md items-center gap-2 rounded-md border border-line bg-surface-2 px-2 text-faint transition-colors hover:border-line-strong hover:text-muted aria-disabled:cursor-default aria-disabled:hover:border-line aria-disabled:hover:text-faint"
         >
           <Search size={13} className="shrink-0" />
-          <span className="min-w-0 flex-1 truncate text-left text-[12px]">
+          <span className="min-w-0 flex-1 truncate text-start text-[12px]">
             {typed}
             <span className="animate-caret ml-px inline-block text-muted">▏</span>
           </span>

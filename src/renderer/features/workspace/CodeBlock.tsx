@@ -59,7 +59,11 @@ export function CodeBlock({
       : undefined;
 
   return (
-    <div className={cn('my-2 overflow-hidden rounded-xl border border-line bg-[#0a0a0a]', className)}>
+    <div
+      dir="ltr"
+      data-code-block="true"
+      className={cn('code-isolate my-2 overflow-hidden rounded-xl border border-line bg-[#0a0a0a]', className)}
+    >
       <div className="flex items-center justify-between gap-2 border-b border-line/70 bg-surface px-3 py-1">
         <span
           className={cn(
