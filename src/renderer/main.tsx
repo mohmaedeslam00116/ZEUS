@@ -14,6 +14,7 @@ import './styles/index.css';
 import { App } from '@/renderer/App';
 import { ErrorBoundary } from '@/renderer/components/feedback/ErrorBoundary';
 import { LoadingScreen } from '@/renderer/components/feedback/LoadingScreen';
+import { I18nProvider } from '@/renderer/i18n';
 import { useSettingsStore } from '@/renderer/stores/useSettingsStore';
 
 function Root() {
@@ -42,7 +43,9 @@ if (!container) {
 createRoot(container).render(
   <StrictMode>
     <ErrorBoundary>
-      <Root />
+      <I18nProvider>
+        <Root />
+      </I18nProvider>
     </ErrorBoundary>
   </StrictMode>,
 );

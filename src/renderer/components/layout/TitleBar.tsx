@@ -13,10 +13,12 @@ import { WorkspaceSwitcher } from '@/renderer/features/workspace/WorkspaceSwitch
 import { useUIStore } from '@/renderer/stores/useUIStore';
 import { useUpdateStore } from '@/renderer/stores/useUpdateStore';
 import { useSettingsStore } from '@/renderer/stores/useSettingsStore';
+import { useTranslation } from '@/renderer/i18n';
 import { useTypewriter } from '@/renderer/hooks/useTypewriter';
 import { SEARCH_PLACEHOLDERS } from '@/renderer/features/search/GlobalSearch';
 
 export function TitleBar() {
+  const { t } = useTranslation();
   const openSearch = useUIStore((s) => s.openSearch);
   const openModal = useUIStore((s) => s.openModal);
   const openOnClick = useSettingsStore((s) => s.settings.search.openOnClick);
@@ -45,7 +47,7 @@ export function TitleBar() {
             if (openOnClick) openSearch();
           }}
           aria-disabled={!openOnClick}
-          title={openOnClick ? 'Search everything' : 'Press Cmd/Ctrl+P to search'}
+          title={openOnClick ? t('titlebar.search') : t('titlebar.searchShortcut')}
           className="no-drag group flex h-6 w-full max-w-md items-center gap-2 rounded-md border border-line bg-surface-2 px-2 text-faint transition-colors hover:border-line-strong hover:text-muted aria-disabled:cursor-default aria-disabled:hover:border-line aria-disabled:hover:text-faint"
         >
           <Search size={13} className="shrink-0" />
@@ -63,7 +65,7 @@ export function TitleBar() {
           <span className="mx-0.5 h-4 w-px shrink-0 bg-line" />
           <span className="relative">
             <IconButton
-              label={hasUpdate ? 'Settings — update available' : 'Settings'}
+              label={hasUpdate ? t('titlebar.settingsWithUpdate') : t('common.settings')}
               onClick={() => openModal('settings')}
             >
               <Settings size={15} />

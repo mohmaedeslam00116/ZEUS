@@ -16,9 +16,10 @@
  * Pure presentation: the selected mode lives in the Composer and is passed to
  * `agent.send(sessionId, prompt, mode)`; every prompt inherits it until changed.
  */
-import type { ReactNode } from 'react';
+import { useMemo, type ReactNode } from 'react';
 import { ClipboardList, FilePen, MessageCircleQuestion, ShieldCheck } from 'lucide-react';
 import type { SessionPermissionMode } from '@shared/types';
+import { useTranslation } from '@/renderer/i18n';
 import { MiniSelect, type Option } from './ComposerControls';
 
 const MODE_GLYPH: Record<SessionPermissionMode, ReactNode> = {
@@ -27,13 +28,6 @@ const MODE_GLYPH: Record<SessionPermissionMode, ReactNode> = {
   default: <ShieldCheck size={13} className="text-muted" />,
   acceptEdits: <FilePen size={13} className="text-muted" />,
 };
-
-const MODE_OPTIONS: Option<SessionPermissionMode>[] = [
-  { value: 'plan', label: 'Plan', glyph: MODE_GLYPH.plan },
-  { value: 'ask', label: 'Ask', glyph: MODE_GLYPH.ask },
-  { value: 'default', label: 'Ask before edits', glyph: MODE_GLYPH.default },
-  { value: 'acceptEdits', label: 'Accept edits', glyph: MODE_GLYPH.acceptEdits },
-];
 
 const MODE_TITLE =
   'Permission mode — Plan is read-only and proposes a strategy; Ask explores and answers without changing anything; Ask before edits prompts for every change; Accept edits auto-approves file edits (commands still prompt)';
@@ -47,11 +41,23 @@ export function ComposerModeSwitch({
   onChange: (mode: SessionPermissionMode) => void;
   disabled?: boolean;
 }) {
+  const { t } = useTranslation();
+
+  const options = useMemo<Option<SessionPermissionMode>[]>(
+    () => [
+      { value: 'plan', label: t('composer.planMode'), glyph: MODE_GLYPH.plan },
+      { value: 'ask', label: t('composer.askMode'), glyph: MODE_GLYPH.ask },
+      { value: 'default', label: t('composer.defaultMode'), glyph: MODE_GLYPH.default },
+      { value: 'acceptEdits', label: t('composer.acceptEditsMode'), glyph: MODE_GLYPH.acceptEdits },
+    ],
+    [t],
+  );
+
   return (
     <MiniSelect
       title={MODE_TITLE}
       value={mode}
-      options={MODE_OPTIONS}
+      options={options}
       onChange={onChange}
       // Mirror the active mode's glyph on the trigger so it reads at a glance, and
       // light the trigger up in accent while a read-only mode is active.

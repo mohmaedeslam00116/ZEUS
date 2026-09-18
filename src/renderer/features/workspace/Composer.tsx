@@ -29,6 +29,7 @@ import { useAttachmentStore, draftAttachments } from '@/renderer/stores/useAttac
 import { useComposerStore } from '@/renderer/stores/useComposerStore';
 import { useFileDragActive } from '@/renderer/hooks/usePreventFileDrop';
 import { useTypewriter } from '@/renderer/hooks/useTypewriter';
+import { useTranslation } from '@/renderer/i18n';
 import { agentDisplayName, lifecycleMeta, phaseLabel } from '@/renderer/features/agent/status';
 import { RuntimeIndicator } from '@/renderer/features/agent/runtime/RuntimeIndicator';
 import { RUNNING_PHASES } from '@/renderer/features/sessions/useSessionRunning';
@@ -68,6 +69,7 @@ const ASK_PLACEHOLDERS = [
 ];
 
 export function Composer({ disabled = false }: { disabled?: boolean }) {
+  const { t, isRTL } = useTranslation();
   const ref = useRef<HTMLTextAreaElement>(null);
 
   const sessionId = useSessionStore((s) => s.selectedId);
@@ -155,8 +157,11 @@ export function Composer({ disabled = false }: { disabled?: boolean }) {
       paused: !normalPlaceholderState || value.length > 0,
     },
   );
+  const defaultPlaceholder = t('composer.placeholder');
   const placeholder = normalPlaceholderState
-    ? typedPlaceholder
+    ? isRTL
+      ? defaultPlaceholder
+      : typedPlaceholder || defaultPlaceholder
     : planBlocked
       ? 'A plan is waiting for your decision — approve, keep planning, reject or archive it first.'
       : activating
@@ -282,7 +287,7 @@ export function Composer({ disabled = false }: { disabled?: boolean }) {
                       : 'Attachments are disabled in Settings'
                   }
                   className="mb-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-muted transition-colors hover:bg-elevated hover:text-fg disabled:cursor-not-allowed disabled:opacity-50"
-                  aria-label="Attach"
+                  aria-label={t('composer.attachFiles')}
                   disabled={blocked || !attachmentsEnabled}
                 >
                   <Paperclip size={15} />
@@ -309,7 +314,7 @@ export function Composer({ disabled = false }: { disabled?: boolean }) {
                     className="mb-0.5 flex h-7 items-center gap-1.5 rounded-full bg-surface px-2.5 text-[12px] font-semibold text-fg transition-colors hover:bg-elevated"
                   >
                     <CircleStop size={14} />
-                    Stop
+                    {t('composer.stop')}
                   </button>
                 ) : (
                   <button
@@ -322,7 +327,7 @@ export function Composer({ disabled = false }: { disabled?: boolean }) {
                         ? 'cursor-not-allowed bg-surface text-faint'
                         : 'bg-accent text-base hover:opacity-90',
                     )}
-                    aria-label="Send"
+                    aria-label={t('composer.send')}
                   >
                     <ArrowUp size={15} />
                   </button>

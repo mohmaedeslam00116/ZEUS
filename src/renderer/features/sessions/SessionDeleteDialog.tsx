@@ -22,6 +22,7 @@ import {
 import type { Session, SessionDependencies } from '@shared/types';
 import { Spinner } from '@/renderer/components/ui';
 import { useSessionStore } from '@/renderer/stores/useSessionStore';
+import { useTranslation } from '@/renderer/i18n';
 
 export function SessionDeleteDialog({
   session,
@@ -30,6 +31,7 @@ export function SessionDeleteDialog({
   session: Session;
   onClose: () => void;
 }) {
+  const { t } = useTranslation();
   const removeSession = useSessionStore((s) => s.removeSession);
   const [deps, setDeps] = useState<SessionDependencies | null>(null);
   const [removeWorktree, setRemoveWorktree] = useState(true);
@@ -98,11 +100,11 @@ export function SessionDeleteDialog({
         <div className="flex items-center justify-between border-b border-line px-4 py-3">
           <span className="flex items-center gap-2 text-[13px] font-semibold text-fg">
             <AlertTriangle size={14} className="text-warning" />
-            Delete session
+            {t('dialogs.confirmDeleteTitle')}
           </span>
           <button
             type="button"
-            aria-label="Close"
+            aria-label={t('common.close')}
             onClick={onClose}
             className="flex h-7 w-7 items-center justify-center rounded-md text-muted transition-colors hover:bg-surface-2 hover:text-fg"
           >
@@ -112,8 +114,7 @@ export function SessionDeleteDialog({
 
         <div className="flex flex-col gap-3 p-4">
           <p className="text-[12px] leading-relaxed text-muted">
-            <span className="font-medium text-fg">{session.title}</span> moves to the recoverable
-            trash. It owns the resources below — choose what to keep.
+            <span className="font-medium text-fg">{session.title}</span> — {t('dialogs.confirmDeleteBody')}
           </p>
 
           {!deps ? (
@@ -196,7 +197,7 @@ export function SessionDeleteDialog({
             onClick={onClose}
             className="rounded-md border border-line bg-surface-2 px-3 py-1.5 text-[12px] font-medium text-fg transition-colors hover:border-line-strong"
           >
-            Cancel
+            {t('common.cancel')}
           </button>
           <button
             type="button"
@@ -205,7 +206,7 @@ export function SessionDeleteDialog({
             className="flex items-center gap-1.5 rounded-md bg-danger px-3 py-1.5 text-[12px] font-semibold text-base transition-opacity hover:opacity-90 disabled:opacity-50"
           >
             {busy && <Spinner size={12} />}
-            {dirty && removeWorktree ? 'Discard changes & delete' : 'Delete session'}
+            {dirty && removeWorktree ? 'Discard changes & delete' : t('sessions.deleteSession')}
           </button>
         </div>
       </div>

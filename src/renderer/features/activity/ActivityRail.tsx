@@ -13,8 +13,10 @@ import { RAIL_TABS } from './tabs';
 import { useLayoutStore } from '@/renderer/stores/useLayoutStore';
 import { useActivityBadges } from './useActivityBadges';
 import { cn } from '@/renderer/lib/cn';
+import { useTranslation } from '@/renderer/i18n';
 
 export function ActivityRail() {
+  const { t } = useTranslation();
   const activeTab = useLayoutStore((s) => s.activeTab);
   const toggleTab = useLayoutStore((s) => s.toggleTab);
   const badgeFor = useActivityBadges();
@@ -24,12 +26,13 @@ export function ActivityRail() {
       {RAIL_TABS.map((tab) => {
         const isActive = activeTab === tab.id;
         const badge = badgeFor(tab.id);
+        const label = t(`activity.${tab.id}`) || tab.label;
         return (
           <button
             key={tab.id}
             type="button"
-            aria-label={tab.label}
-            title={badge > 0 ? `${tab.label} (${badge})` : tab.label}
+            aria-label={label}
+            title={badge > 0 ? `${label} (${badge})` : label}
             onClick={() => toggleTab(tab.id)}
             aria-current={isActive ? 'page' : undefined}
             className={cn(

@@ -33,6 +33,7 @@ import { useSessionStore } from '@/renderer/stores/useSessionStore';
 import { useWorkspaceStore } from '@/renderer/stores/useWorkspaceStore';
 import { useLayoutStore } from '@/renderer/stores/useLayoutStore';
 import { useSettingsStore } from '@/renderer/stores/useSettingsStore';
+import { useTranslation } from '@/renderer/i18n';
 
 function sortSessions(list: Session[], sort: SessionSort): Session[] {
   const arr = [...list];
@@ -43,6 +44,7 @@ function sortSessions(list: Session[], sort: SessionSort): Session[] {
 }
 
 export function SessionsSidebar() {
+  const { t } = useTranslation();
   const sessions = useSessionStore((s) => s.sessions);
   const trash = useSessionStore((s) => s.trash);
   const selectedId = useSessionStore((s) => s.selectedId);
@@ -112,11 +114,11 @@ export function SessionsSidebar() {
     <aside className="flex h-full min-h-0 flex-col bg-base">
       <div className="flex h-9 shrink-0 items-center justify-between gap-1 px-3">
         <span className="text-[11px] font-semibold uppercase tracking-wider text-faint">
-          Sessions
+          {t('sessions.title')}
         </span>
         <div className="flex items-center gap-0.5">
           <IconButton
-            label="Search sessions"
+            label={t('sessions.filterSessions')}
             size="sm"
             active={searchOpen || q.length > 0}
             onClick={() => setSearchOpen((v) => !v)}
@@ -145,7 +147,7 @@ export function SessionsSidebar() {
                   setSearchOpen(false);
                 }
               }}
-              placeholder="Filter by title or branch…"
+              placeholder={t('sessions.filterSessions')}
               className="min-w-0 flex-1 bg-transparent py-1 text-[12px] text-fg outline-none placeholder:text-faint"
             />
             {filter && (
@@ -176,7 +178,7 @@ export function SessionsSidebar() {
           ) : (
             <EmptyState
               icon={MessagesSquare}
-              title="No sessions yet"
+              title={t('sessions.noSessions')}
               description="Every task happens inside a session. Create one to get started."
               action={
                 <button
@@ -185,7 +187,7 @@ export function SessionsSidebar() {
                   className="flex items-center gap-1.5 rounded-md bg-accent px-3 py-1.5 text-[12px] font-semibold text-base transition-opacity hover:opacity-90"
                 >
                   <Plus size={13} />
-                  New session
+                  {t('sessions.newSession')}
                 </button>
               }
             />
@@ -194,7 +196,7 @@ export function SessionsSidebar() {
           <>
             {pinned.length > 0 && (
               <>
-                <GroupLabel>Pinned</GroupLabel>
+                <GroupLabel>{t('sessions.pinned')}</GroupLabel>
                 {pinned.map(renderRow)}
               </>
             )}
@@ -208,7 +210,7 @@ export function SessionsSidebar() {
                 ))}
                 {ungrouped.length > 0 && (
                   <>
-                    <GroupLabel>Sessions</GroupLabel>
+                    <GroupLabel>{t('sessions.title')}</GroupLabel>
                     {ungrouped.map(renderRow)}
                   </>
                 )}
@@ -216,7 +218,7 @@ export function SessionsSidebar() {
             ) : (
               unpinned.length > 0 && (
                 <>
-                  {pinned.length > 0 && <GroupLabel>Sessions</GroupLabel>}
+                  {pinned.length > 0 && <GroupLabel>{t('sessions.title')}</GroupLabel>}
                   {unpinned.map(renderRow)}
                 </>
               )
@@ -224,14 +226,14 @@ export function SessionsSidebar() {
 
             {archived.length > 0 && (
               <>
-                <GroupLabel>Archived</GroupLabel>
+                <GroupLabel>{t('sessions.archived')}</GroupLabel>
                 {archived.map(renderRow)}
               </>
             )}
 
             {trashed.length > 0 && (
               <>
-                <GroupLabel>Recently deleted</GroupLabel>
+                <GroupLabel>{t('sessions.recentlyDeleted')}</GroupLabel>
                 {trashed.map((s) => (
                   <TrashRow key={s.id} session={s} />
                 ))}
@@ -282,6 +284,7 @@ function TrashRow({ session }: { session: Session }) {
  * isolated checkout + branch for the session before it opens.
  */
 function NewSessionMenu() {
+  const { t } = useTranslation();
   const createSession = useSessionStore((s) => s.createSession);
   const createSessionInWorktree = useSessionStore((s) => s.createSessionInWorktree);
   const worktreesEnabled = useSettingsStore((s) => s.settings.git.worktrees.enabled);
@@ -300,7 +303,7 @@ function NewSessionMenu() {
 
   if (!worktreesEnabled) {
     return (
-      <IconButton label="New session" size="sm" onClick={() => void createSession()}>
+      <IconButton label={t('sessions.newSession')} size="sm" onClick={() => void createSession()}>
         <Plus size={15} />
       </IconButton>
     );
@@ -308,7 +311,7 @@ function NewSessionMenu() {
 
   return (
     <div ref={ref} className="relative">
-      <IconButton label="New session" size="sm" active={open} onClick={() => setOpen((v) => !v)}>
+      <IconButton label={t('sessions.newSession')} size="sm" active={open} onClick={() => setOpen((v) => !v)}>
         <Plus size={15} />
       </IconButton>
       {open && (
@@ -322,7 +325,7 @@ function NewSessionMenu() {
             className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-[12px] text-muted transition-colors hover:bg-surface-2 hover:text-fg"
           >
             <Plus size={13} className="shrink-0" />
-            New session
+            {t('sessions.newSession')}
           </button>
           <button
             type="button"
@@ -333,7 +336,7 @@ function NewSessionMenu() {
             className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-[12px] text-muted transition-colors hover:bg-surface-2 hover:text-fg"
           >
             <GitBranch size={13} className="shrink-0 text-accent" />
-            <span className="flex-1">New session in worktree</span>
+            <span className="flex-1">{t('sessions.worktreeSession')}</span>
           </button>
           <p className="px-2 pb-1 pt-0.5 text-[10px] leading-snug text-faint">
             Isolated checkout + branch — run parallel tasks without conflicts.

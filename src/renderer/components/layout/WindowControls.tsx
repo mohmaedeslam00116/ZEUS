@@ -7,8 +7,10 @@ import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import { Copy, Minus, Square, X } from 'lucide-react';
 import { cn } from '@/renderer/lib/cn';
+import { useTranslation } from '@/renderer/i18n';
 
 export function WindowControls() {
+  const { t } = useTranslation();
   const [isMax, setIsMax] = useState(false);
 
   useEffect(() => {
@@ -20,16 +22,16 @@ export function WindowControls() {
 
   return (
     <div className="no-drag flex h-10 items-stretch">
-      <WindowButton label="Minimize" onClick={() => window.zeus?.window.minimize()}>
+      <WindowButton label={t('titlebar.minimize')} onClick={() => window.zeus?.window.minimize()}>
         <Minus size={15} />
       </WindowButton>
       <WindowButton
-        label={isMax ? 'Restore' : 'Maximize'}
+        label={isMax ? t('titlebar.restore') : t('titlebar.maximize')}
         onClick={() => window.zeus?.window.maximize()}
       >
         {isMax ? <Copy size={12} /> : <Square size={12} />}
       </WindowButton>
-      <WindowButton label="Close" danger onClick={() => window.zeus?.window.close()}>
+      <WindowButton label={t('titlebar.close')} danger onClick={() => window.zeus?.window.close()}>
         <X size={15} />
       </WindowButton>
     </div>
