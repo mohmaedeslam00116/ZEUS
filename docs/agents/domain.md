@@ -33,3 +33,6 @@ ADR directory at the repo root.
 4. If `CONTEXT.md` does not exist and you have just had to explain the domain to
    yourself, that is the moment to create it: seed it from what you learned,
    cross-linking `CLAUDE.md` / `project.md` rather than copying them.
+5. **Flag ADR conflicts**: If your output contradicts an existing ADR, surface it
+   explicitly rather than silently overriding:
+   > _Contradicts ADR-XXXX (...), but worth reopening because…_

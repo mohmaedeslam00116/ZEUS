@@ -44,8 +44,6 @@ export type ActivityTab =
   | 'memory'
   | 'tasks'
   | 'console'
-  | /** Persisted-history + focus ref target; never a drawer rail tab. */
-    'terminal'
   | 'graph';
 
 /** Kinds of center-column workspace document that survive a restart. */

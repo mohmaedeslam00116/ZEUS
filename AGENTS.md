@@ -47,7 +47,11 @@ Verification plan names its rungs with concrete cases.
 
 ### Issue tracker
 
-Issues live in GitHub Issues on `limboo-ai/limboo`, driven via the `gh` CLI. See `docs/agents/issue-tracker.md`.
+Issues live in GitHub Issues on `mohmaedeslam00116/ZEUS`, driven via the `gh` CLI. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Canonical five-role triage vocabulary. See `docs/agents/triage-labels.md`.
 
 ### Domain docs
 

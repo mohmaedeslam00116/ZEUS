@@ -64,7 +64,7 @@ export function revealRef(ref: WorkGraphRef | undefined): string | null {
     case 'terminal': {
       const workspaceId = useWorkspaceStore.getState().activeId;
       if (!workspaceId) return null;
-      layout.setActiveTab('terminal');
+      layout.setTerminalOpen(true);
       useTerminalStore.getState().setActive(workspaceId, ref.id);
       return 'Terminal';
     }

@@ -35,7 +35,6 @@ export const ACTIVITY_TAB_IDS: readonly ActivityTab[] = [
   'memory',
   'tasks',
   'console',
-  'terminal',
   'graph',
 ];
 

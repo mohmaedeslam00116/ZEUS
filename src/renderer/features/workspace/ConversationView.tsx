@@ -778,7 +778,7 @@ function InlineEventRow({ call }: { call: AgentToolCall }) {
             <button
               type="button"
               title="Focus terminal"
-              onClick={() => useLayoutStore.getState().setActiveTab('terminal')}
+              onClick={() => useLayoutStore.getState().setTerminalOpen(true)}
               className="rounded-md px-1.5 py-0.5 text-[10px] text-faint transition-colors hover:bg-elevated hover:text-fg"
             >
               Terminal
