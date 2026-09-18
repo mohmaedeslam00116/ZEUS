@@ -129,6 +129,12 @@ import {
   COMMIT_SYSTEM_PROMPT,
   resolveArabicLocaleGuidance,
 } from './agent/locale';
+import { isBinaryAvailable } from './agent/binaryProbe';
+import {
+  PROVIDER_INSTALL_GUIDANCE,
+  type AgentRuntimeAdapter,
+  type HeadlessAgentProvider,
+} from './agent/types';
 import { clampGitPayload, gitActivityDetail, gitActivityLabel } from './agent/gitActivity';
 import {
   latestPlanFile,
@@ -1031,6 +1037,26 @@ export class AgentManager {
   setHarnessRuntime(runtime: HarnessRuntime, sandbox: LocalWorktreeSandboxProvider): void {
     this.harnessRuntime = runtime;
     this.harnessSandbox = sandbox;
+  }
+
+  /** Headless agent runtime adapters (wired after construction or in tests). */
+  private clineRuntime: AgentRuntimeAdapter | null = null;
+  private openCodeRuntime: AgentRuntimeAdapter | null = null;
+  private codexRuntime: AgentRuntimeAdapter | null = null;
+
+  /** Inject the Cline ACP runtime adapter. */
+  setClineRuntime(runtime: AgentRuntimeAdapter): void {
+    this.clineRuntime = runtime;
+  }
+
+  /** Inject the OpenCode ACP runtime adapter. */
+  setOpenCodeRuntime(runtime: AgentRuntimeAdapter): void {
+    this.openCodeRuntime = runtime;
+  }
+
+  /** Inject the Codex runtime adapter. */
+  setCodexRuntime(runtime: AgentRuntimeAdapter): void {
+    this.codexRuntime = runtime;
   }
 
   /**
@@ -3215,6 +3241,19 @@ export class AgentManager {
           this.settleOrphanedToolCalls(sessionId);
         }
         return;
+      case 'cline':
+      case 'opencode':
+      case 'codex':
+        try {
+          await this.runHeadlessOnce(routing.provider, sessionId, prompt, cwd, abort, permMode, {
+            ensureStreaming,
+            queueDelta,
+            finishStreaming,
+          });
+        } finally {
+          this.settleOrphanedToolCalls(sessionId);
+        }
+        return;
       default:
         // Unreachable: the null routing case is thrown above and every
         // AgentProvider member has a case here — the compiler narrows
@@ -3645,6 +3684,64 @@ export class AgentManager {
         });
       }
     }
+  }
+
+  /* ---------------------------------------------------------------- */
+  /* Headless agent provider run paths (Cline, OpenCode, Codex)         */
+  /* ---------------------------------------------------------------- */
+
+  private async runHeadlessOnce(
+    provider: HeadlessAgentProvider,
+    sessionId: string,
+    prompt: string,
+    cwd: string,
+    abort: AbortController,
+    permMode: SessionPermissionMode,
+    stream: {
+      ensureStreaming: () => ChatMessage;
+      queueDelta: (text: string) => void;
+      finishStreaming: (finalText?: string) => void;
+    },
+  ): Promise<void> {
+    const available = await isBinaryAvailable(provider);
+    if (!available) {
+      throw new Error(PROVIDER_INSTALL_GUIDANCE[provider]);
+    }
+    const runtime =
+      provider === 'cline'
+        ? this.clineRuntime
+        : provider === 'opencode'
+          ? this.openCodeRuntime
+          : this.codexRuntime;
+    if (!runtime) {
+      const label =
+        provider === 'cline'
+          ? 'Cline ACP'
+          : provider === 'opencode'
+            ? 'OpenCode ACP'
+            : 'Codex';
+      throw new Error(`The ${label} runtime is not available.`);
+    }
+
+    const agent = this.settings.getAll().agent;
+    const memoryContext = this.memoryContextFor(sessionId, prompt);
+    const searchContext = this.searchContextFor(sessionId, prompt);
+    const resumeContext = this.resumeContextFor(sessionId);
+    const localeContext = this.localeContextFor(sessionId, prompt);
+    const injectedContext =
+      [memoryContext, searchContext, resumeContext, localeContext].filter(Boolean).join('\n\n') || undefined;
+
+    this.emitRunStart(sessionId, agent.model, permMode, {
+      memory: memoryContext?.length ?? 0,
+      search: searchContext?.length ?? 0,
+      resume: resumeContext?.length ?? 0,
+      locale: localeContext?.length ?? 0,
+      attachments: 0,
+      prompt: prompt.length,
+    });
+
+    const finalPrompt = injectedContext ? `${injectedContext}\n\n${prompt}` : prompt;
+    await runtime.run(sessionId, finalPrompt, cwd, abort, permMode, stream);
   }
 
   /* ---------------------------------------------------------------- */

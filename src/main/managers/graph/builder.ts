@@ -23,7 +23,7 @@
  *   for a Cursor run.
  */
 import crypto from 'node:crypto';
-import { GRAPH_LIMITS } from '@shared/constants';
+import { GRAPH_LIMITS, type AgentProvider } from '@shared/constants';
 import { isSubagentTool } from '@shared/subagents';
 import type {
   AgentEvent,
@@ -168,7 +168,7 @@ export interface BuilderContext {
    * model was selected at the time it was built, so switching models mid-session
    * silently relabelled the run's history and made `nodeColoring: 'provider'` lie.
    */
-  provider(): 'anthropic' | 'cursor' | 'openai' | 'pi';
+  provider(): AgentProvider;
   /** Composer permission mode of the run's OWN session, not the foreground one. */
   mode(sessionId: string): string;
   /** Currently selected model id, for the objective node's metadata. */
@@ -245,7 +245,7 @@ interface SessionState {
    * node in the run is stamped from here, so the run's history stays internally
    * consistent even if the user picks a different model while it is streaming.
    */
-  provider: 'anthropic' | 'cursor' | 'openai' | 'pi';
+  provider: AgentProvider;
   /** The last node on the structural spine, which the next node `follows`. */
   spineTip: string | null;
   /** tool-call id -> node id, so `tool-end` patches the right node. */
@@ -287,7 +287,7 @@ interface SessionState {
   runStartedAt: number;
 }
 
-function freshState(provider: 'anthropic' | 'cursor' | 'openai' | 'pi'): SessionState {
+function freshState(provider: AgentProvider): SessionState {
   return {
     runId: null,
     provider,

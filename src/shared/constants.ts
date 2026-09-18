@@ -51,7 +51,14 @@ export const ACTIVITY_TAB_IDS: readonly ActivityTab[] = [
  * selected model — picking a Composer model routes runs through the Cursor
  * runtime adapter.
  */
-export type AgentProvider = 'anthropic' | 'cursor' | 'openai' | 'pi';
+export type AgentProvider =
+  | 'anthropic'
+  | 'cursor'
+  | 'openai'
+  | 'pi'
+  | 'cline'
+  | 'opencode'
+  | 'codex';
 
 /**
  * Selectable agent models (id + short label + provider). The Anthropic ids are
@@ -75,13 +82,9 @@ export const AGENT_MODELS = [
   // Pi publishes no discoverable default model id, so rather than invent one
   // this selects "whatever the adapter picks" — see HARNESS_DEFAULT_MODEL_SUFFIX.
   { value: 'pi:default', label: 'Pi (default model)', provider: 'pi' },
-  // NO CODEX MODEL, deliberately. `@ai-sdk/harness-codex@1.0.79` declares
-  // `supportsBuiltinToolApprovals: false`, so its `bash` tool cannot be routed
-  // through Zeus's permission gate and the harness is refused at preflight.
-  // A picker entry that can only ever fail is worse than an absent one. The
-  // harness stays registered (see harnessRegistry.ts) so the Harnesses surface
-  // can say WHY it is unavailable; add a model here only after the published
-  // flag changes.
+  { value: 'cline:default', label: 'Cline (default model)', provider: 'cline' },
+  { value: 'opencode:default', label: 'OpenCode (default model)', provider: 'opencode' },
+  { value: 'codex:default', label: 'Codex (default model)', provider: 'codex' },
 ] as const;
 
 /**
@@ -113,6 +116,8 @@ export const HARNESS_LABELS: Record<string, string> = {
   'cursor-cli': 'Cursor',
   codex: 'Codex',
   pi: 'Pi',
+  cline: 'Cline',
+  opencode: 'OpenCode',
 };
 
 /**
@@ -127,8 +132,10 @@ export const HARNESS_LABELS: Record<string, string> = {
 export const HARNESS_PROVIDER: Record<string, AgentProvider> = {
   'claude-code': 'anthropic',
   'cursor-cli': 'cursor',
-  codex: 'openai',
+  codex: 'codex',
   pi: 'pi',
+  cline: 'cline',
+  opencode: 'opencode',
 };
 
 /**
@@ -143,6 +150,9 @@ export const PROVIDER_HARNESS: Record<AgentProvider, string> = {
   cursor: 'cursor-cli',
   openai: 'codex',
   pi: 'pi',
+  cline: 'cline',
+  opencode: 'opencode',
+  codex: 'codex',
 };
 
 /**
@@ -223,6 +233,16 @@ export function resolveModelRouting(
   const known = AGENT_MODELS.find((m) => m.value === model)?.provider;
   if (known) return { provider: known };
   if (dynamicCursorModels.has(model)) return { provider: 'cursor' };
+  if (model === 'cline' || model.startsWith('cline:')) return { provider: 'cline' };
+  if (model === 'opencode' || model.startsWith('opencode:')) return { provider: 'opencode' };
+  if (
+    model === 'codex' ||
+    model.startsWith('codex:') ||
+    model === 'openai-codex' ||
+    model.startsWith('openai-codex:')
+  ) {
+    return { provider: 'codex' };
+  }
   return {
     provider: null,
     reason: `"${model.slice(0, 80)}" is not a known model for any configured provider`,

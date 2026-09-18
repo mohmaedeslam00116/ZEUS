@@ -27,7 +27,7 @@
  * an extension point, not the load-bearing path.
  */
 import crypto from 'node:crypto';
-import { HOOK_LIMITS, providerForModel } from '@shared/constants';
+import { HOOK_LIMITS, providerForModel, type AgentProvider } from '@shared/constants';
 import type { DiagnosticSeverity, HookEvent, HookPhase } from '@shared/types';
 import { getDb } from '../../db/database';
 import { logger } from '../../logger';
@@ -86,7 +86,7 @@ export class HookEngine {
    * need to know the provider or repeat redaction. Never throws.
    */
   emit(sessionId: string, phase: HookPhase, opts: HookEmit = {}): void {
-    let provider: 'anthropic' | 'cursor' | 'openai' | 'pi';
+    let provider: AgentProvider;
     try {
       provider = providerForModel(this.settings.getAll().agent.model);
     } catch {
