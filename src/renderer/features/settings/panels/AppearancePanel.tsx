@@ -1,5 +1,5 @@
 /** Appearance settings — density, font scale, chat font, reduced motion. Dark-only by rule. */
-import type { UiDensity } from '@shared/types';
+import type { AppLayoutDirection, AppLocale, UiDensity } from '@shared/types';
 import { CHAT_FONTS, FONT_SCALE_LIMITS } from '@shared/constants';
 import { useSettingsStore } from '@/renderer/stores/useSettingsStore';
 import { Section, Field, StackedField, Slider, Toggle, SegmentedControl, Select } from '../controls';
@@ -13,6 +13,35 @@ export function AppearancePanel() {
       title="Appearance"
       hint="Zeus is pure-black, dark only — there is intentionally no light theme or color toggle."
     >
+      <Field id="locale" label="Language" hint="Interface language for menus, buttons, and conversation headers.">
+        <SegmentedControl<AppLocale>
+          value={settings.appearance.locale}
+          options={[
+            { value: 'en', label: 'English' },
+            { value: 'ar', label: 'العربية' },
+          ]}
+          onChange={(locale) => void update({ appearance: { locale } })}
+        />
+      </Field>
+
+      <Field
+        id="layoutDirection"
+        label="Layout direction"
+        hint="Controls RTL rendering for Arabic. Canvas-Only (recommended) preserves sidebar muscle memory while rendering conversations and modals right-to-left."
+      >
+        <Select
+          value={settings.appearance.layoutDirection}
+          options={[
+            { value: 'canvas-rtl', label: 'Canvas-only RTL (Recommended)' },
+            { value: 'full-rtl', label: 'Full mirror (All panels RTL)' },
+            { value: 'ltr', label: 'Left-to-right (LTR)' },
+          ]}
+          onChange={(layoutDirection) =>
+            void update({ appearance: { layoutDirection: layoutDirection as AppLayoutDirection } })
+          }
+        />
+      </Field>
+
       <Field id="density" label="Density" hint="Spacing of rows and controls across the app.">
         <SegmentedControl<UiDensity>
           value={settings.appearance.density}

@@ -81,6 +81,28 @@ describe('normalizeSettings — enum allowlists self-heal', () => {
     const out = normalized({ runtime: { criticalRemainingPct: 80, warnRemainingPct: 20 } });
     expect(out.runtime.criticalRemainingPct).toBeLessThanOrEqual(out.runtime.warnRemainingPct);
   });
+
+  it('validates appearance.locale and rejects unsupported language codes', () => {
+    expect(normalized({ appearance: { locale: 'ar' } }).appearance.locale).toBe('ar');
+    expect(normalized({ appearance: { locale: 'en' } }).appearance.locale).toBe('en');
+    expect(normalized({ appearance: { locale: 'fr' as never } }).appearance.locale).toBe('en');
+    expect(normalized({ appearance: { locale: 123 as never } }).appearance.locale).toBe('en');
+  });
+
+  it('validates appearance.layoutDirection and self-heals invalid values', () => {
+    expect(normalized({ appearance: { layoutDirection: 'canvas-rtl' } }).appearance.layoutDirection).toBe('canvas-rtl');
+    expect(normalized({ appearance: { layoutDirection: 'full-rtl' } }).appearance.layoutDirection).toBe('full-rtl');
+    expect(normalized({ appearance: { layoutDirection: 'ltr' } }).appearance.layoutDirection).toBe('ltr');
+    expect(normalized({ appearance: { layoutDirection: 'upside-down' as never } }).appearance.layoutDirection).toBe('canvas-rtl');
+  });
+
+  it('validates agent.languageGuidance and self-heals invalid values', () => {
+    expect(normalized({ agent: { languageGuidance: 'follow-ui' } }).agent.languageGuidance).toBe('follow-ui');
+    expect(normalized({ agent: { languageGuidance: 'auto' } }).agent.languageGuidance).toBe('auto');
+    expect(normalized({ agent: { languageGuidance: 'ar' } }).agent.languageGuidance).toBe('ar');
+    expect(normalized({ agent: { languageGuidance: 'en' } }).agent.languageGuidance).toBe('en');
+    expect(normalized({ agent: { languageGuidance: 'es' as never } }).agent.languageGuidance).toBe('follow-ui');
+  });
 });
 
 describe('normalizeSettings — the voice v30→v31 migration', () => {

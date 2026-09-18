@@ -10,7 +10,10 @@ import type { AppSettings, DeepPartial, PersistedDocument } from '@shared/types'
 import {
   ACTIVITY_TAB_IDS,
   AGENT_CONNECTION_LIMITS,
+  AGENT_LANGUAGE_GUIDANCE,
   AGENT_LIMITS,
+  APP_LAYOUT_DIRECTIONS,
+  APP_LOCALES,
   SUBAGENT_LIMITS,
   ATTACHMENT_LIMITS,
   CHAT_FONTS,
@@ -147,6 +150,12 @@ export function normalizeSettings(input: Partial<AppSettings>): AppSettings {
     if (!CHAT_FONTS.some((f) => f.id === merged.appearance.chatFont)) {
       merged.appearance.chatFont = DEFAULT_SETTINGS.appearance.chatFont;
     }
+    if (!APP_LOCALES.includes(merged.appearance.locale)) {
+      merged.appearance.locale = DEFAULT_SETTINGS.appearance.locale;
+    }
+    if (!APP_LAYOUT_DIRECTIONS.includes(merged.appearance.layoutDirection)) {
+      merged.appearance.layoutDirection = DEFAULT_SETTINGS.appearance.layoutDirection;
+    }
     merged.layout.leftWidth = clamp(
       merged.layout.leftWidth,
       LAYOUT_LIMITS.left.min,
@@ -225,6 +234,9 @@ export function normalizeSettings(input: Partial<AppSettings>): AppSettings {
     merged.agent.maxTurns = Math.round(
       clamp(merged.agent.maxTurns, AGENT_LIMITS.maxTurns.min, AGENT_LIMITS.maxTurns.max),
     );
+    if (!AGENT_LANGUAGE_GUIDANCE.includes(merged.agent.languageGuidance)) {
+      merged.agent.languageGuidance = DEFAULT_SETTINGS.agent.languageGuidance;
+    }
 
     // Subagents (SETTINGS_VERSION 23 -> 24: `agent.subagents` introduced; the
     // deep-merge above supplies every default, so there is no data migration).

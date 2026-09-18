@@ -6,6 +6,7 @@
  * turn budget, and the connection-monitoring / reliability controls.
  */
 import { useEffect, useState } from 'react';
+import type { AgentLanguageGuidance } from '@shared/types';
 import {
   AGENT_LIMITS,
   AGENT_MODELS,
@@ -140,6 +141,22 @@ export function AgentPanel() {
               { value: 'adaptive', label: 'Adaptive' },
             ]}
             onChange={(value) => set('thinking', value)}
+          />
+        </Field>
+        <Field
+          id="languageGuidance"
+          label="Language guidance"
+          hint="Directs the agent to explain and converse in Arabic or English, while preserving English code and terminal commands."
+        >
+          <SegmentedControl<AgentLanguageGuidance>
+            value={agent.languageGuidance}
+            options={[
+              { value: 'follow-ui', label: 'Follow UI' },
+              { value: 'auto', label: 'Auto' },
+              { value: 'ar', label: 'العربية' },
+              { value: 'en', label: 'English' },
+            ]}
+            onChange={(value) => set('languageGuidance', value)}
           />
         </Field>
       </Section>

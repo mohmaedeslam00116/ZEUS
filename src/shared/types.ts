@@ -110,6 +110,15 @@ export interface PersistedDocument {
   pinned: boolean;
 }
 
+/** Application UI locale (`'en'` | `'ar'`). */
+export type AppLocale = 'en' | 'ar';
+
+/** Application layout directionality (ADR-0011). */
+export type AppLayoutDirection = 'canvas-rtl' | 'full-rtl' | 'ltr';
+
+/** Agent language guidance mode. */
+export type AgentLanguageGuidance = 'follow-ui' | 'auto' | 'en' | 'ar';
+
 /**
  * Persistent, user-facing preferences. NOTE: there is intentionally NO light
  * theme — Zeus is pure-black, dark-only by product rule. "Appearance" here is
@@ -126,6 +135,10 @@ export interface AppSettings {
     reducedMotion: boolean;
     /** Chat/LLM-stream typeface — an id from the CHAT_FONTS allowlist. */
     chatFont: string;
+    /** Interface language: English or Arabic. */
+    locale: AppLocale;
+    /** Layout directionality mode (ADR-0011). Default is canvas-rtl. */
+    layoutDirection: AppLayoutDirection;
   };
   layout: {
     /** Left sessions sidebar width in px. */
@@ -171,6 +184,8 @@ export interface AppSettings {
     model: string;
     /** Extended-thinking budget. */
     thinking: 'off' | 'on' | 'adaptive';
+    /** Language steering mode: follow UI locale, auto, or explicit. */
+    languageGuidance: AgentLanguageGuidance;
     /**
      * How tool calls are gated:
      * - `approve-edits`: writes/commands prompt; reads run freely.

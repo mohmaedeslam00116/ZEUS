@@ -32,6 +32,8 @@ function applyAppearance(appearance: AppSettings['appearance']): void {
   root.style.setProperty('--zeus-font-scale', String(appearance.fontScale));
   root.dataset.reducedMotion = String(appearance.reducedMotion);
   root.dataset.density = appearance.density;
+  root.dataset.locale = appearance.locale;
+  root.dataset.layoutDirection = appearance.layoutDirection;
   // Chat/LLM-stream typeface (see the `chat-font` utility in styles/index.css).
   // Unknown ids fall back to the default entry — main clamps to the allowlist,
   // but the optimistic local update must never apply an off-list value either.

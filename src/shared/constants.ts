@@ -1,4 +1,11 @@
-import type { ActivityTab, AppSettings, WorkspaceConfig } from './types';
+import type {
+  ActivityTab,
+  AgentLanguageGuidance,
+  AppLayoutDirection,
+  AppLocale,
+  AppSettings,
+  WorkspaceConfig,
+} from './types';
 
 /**
  * Bumped whenever the {@link AppSettings} shape changes incompatibly.
@@ -1022,6 +1029,15 @@ export const CHAT_FONT_FALLBACK =
 /** Minimum window size enforced by the main process. */
 export const WINDOW_MIN = { width: 1024, height: 640 } as const;
 
+/** Supported interface locales (English, Arabic). */
+export const APP_LOCALES: readonly AppLocale[] = ['en', 'ar'];
+
+/** Supported layout direction modes (ADR-0011). */
+export const APP_LAYOUT_DIRECTIONS: readonly AppLayoutDirection[] = ['canvas-rtl', 'full-rtl', 'ltr'];
+
+/** Supported agent language guidance modes. */
+export const AGENT_LANGUAGE_GUIDANCE: readonly AgentLanguageGuidance[] = ['follow-ui', 'auto', 'en', 'ar'];
+
 /** Default window size used on first launch (no persisted state yet). */
 export const WINDOW_DEFAULT = { width: 1440, height: 900 } as const;
 
@@ -1033,6 +1049,8 @@ export const DEFAULT_SETTINGS: AppSettings = {
     fontScale: FONT_SCALE_LIMITS.default,
     reducedMotion: false,
     chatFont: 'roboto',
+    locale: 'en',
+    layoutDirection: 'canvas-rtl',
   },
   layout: {
     leftWidth: LAYOUT_LIMITS.left.default,
@@ -1052,6 +1070,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   agent: {
     model: 'claude-opus-5',
     thinking: 'adaptive',
+    languageGuidance: 'follow-ui',
     permissionMode: 'approve-edits',
     webSearch: true,
     autoApproveReads: true,
