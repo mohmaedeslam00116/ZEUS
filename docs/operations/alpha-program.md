@@ -45,7 +45,8 @@ Canonical channel: **GitHub Issues on `mohmaedeslam00116/ZEUS`** — the single
 
 Every gate below is checked against the **actual packaged ZEUS build**
 (`ZEUS-Setup-<version>-x64.exe`), not `npm start`. Gates marked **[M]** are
-manual human-recorded verifications; everything else is machine-checked.
+manual human-recorded verifications; everything else is machine-checked. The active
+release run record for `v0.1.0-alpha.1` is documented in [alpha-1-release-evidence.md](alpha-1-release-evidence.md).
 
 ### Release commit
 
