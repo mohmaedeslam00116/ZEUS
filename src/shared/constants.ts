@@ -431,6 +431,20 @@ export const CURSOR_LIMITS = {
   hookTimeoutSecs: 600,
 } as const;
 
+/**
+ * Bounds + caps for Agent Client Protocol (ACP) communication (XP-01).
+ */
+export const ACP_LIMITS = {
+  /** Default timeout for an ACP request (ms). */
+  requestTimeoutMs: 60_000,
+  /** Grace period between SIGTERM and SIGKILL when terminating an ACP agent process. */
+  killGraceMs: 1_000,
+  /** Maximum single JSON-RPC line / buffer accumulation before truncation (bytes). */
+  maxBuffer: 64 * 1024,
+  /** Bounded tail of stderr kept for crash diagnosis (bytes). */
+  stderrTailMax: 16 * 1024,
+} as const;
+
 /** A discovered Cursor model id must match this before it is trusted anywhere. */
 export const CURSOR_MODEL_ID_RE = /^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/;
 
