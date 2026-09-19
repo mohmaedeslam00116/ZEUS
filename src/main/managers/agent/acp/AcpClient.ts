@@ -13,6 +13,7 @@ import path from 'node:path';
 import { spawn, type ChildProcess, type SpawnOptions } from 'node:child_process';
 import { ACP_LIMITS } from '@shared/constants';
 import { killTree } from '../killTree';
+import { redactSecrets } from '../../graph/redact';
 import {
   isJsonRpcNotification,
   isJsonRpcRequest,
@@ -115,6 +116,10 @@ export class AcpClient {
     child.stderr?.setEncoding('utf8');
     child.stderr?.on('data', (chunk: string) => {
       this.stderrTail = (this.stderrTail + chunk).slice(-ACP_LIMITS.stderrTailMax);
+      const text = redactSecrets(chunk.trim());
+      if (text.length > 0) {
+        this.options.logger?.('info', `[${this.options.executablePath} stderr] ${text}`);
+      }
     });
 
     child.on('error', (err: Error) => {
@@ -129,7 +134,7 @@ export class AcpClient {
     child.on('close', (code: number | null, signal: string | null) => {
       this.parser?.flush();
       const exitInfo = `code ${code ?? 'unknown'}, signal ${signal ?? 'none'}`;
-      const errDetail = this.stderrTail.trim();
+      const errDetail = redactSecrets(this.stderrTail.trim());
       const errMsg = errDetail
         ? `ACP process exited prematurely (${exitInfo}): ${errDetail}`
         : `ACP process exited prematurely (${exitInfo})`;

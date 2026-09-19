@@ -136,7 +136,6 @@ import {
   type HeadlessAgentProvider,
   type ToolGateFunction,
 } from './agent/types';
-import { AcpRuntime } from './agent/acp/AcpRuntime';
 import { clampGitPayload, gitActivityDetail, gitActivityLabel } from './agent/gitActivity';
 import {
   latestPlanFile,
@@ -7330,7 +7329,7 @@ export class AgentManager {
       sessionId: sessionId || null,
       severity,
       category,
-      label,
+      label: redact(label).slice(0, 500),
       detail: detail ? redact(detail).slice(0, 2_000) : undefined,
       at: Date.now(),
     };

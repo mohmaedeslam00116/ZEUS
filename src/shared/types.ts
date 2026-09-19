@@ -2579,6 +2579,21 @@ export interface AgentState {
 }
 
 /* ------------------------------------------------------------------ */
+/* Headless agent providers (Spec #50)                                */
+/* ------------------------------------------------------------------ */
+
+export type HeadlessAgentProvider = 'cline' | 'opencode' | 'codex';
+
+export interface BinaryProbeResult {
+  available: boolean;
+  binaryName: string;
+  path?: string;
+  version?: string;
+  error?: string;
+  installGuide: string;
+}
+
+/* ------------------------------------------------------------------ */
 /* Cursor provider — authentication only (no run capability yet)       */
 /* ------------------------------------------------------------------ */
 

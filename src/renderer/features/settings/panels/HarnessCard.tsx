@@ -19,16 +19,9 @@
  * conversation surfaces — Settings is where the choice is made.)
  */
 import type { ReactNode } from 'react';
-import { HARNESS_LABELS } from '@shared/constants';
-import type { AgentProvider } from '@shared/constants';
+import { HARNESS_LABELS, HARNESS_PROVIDER } from '@shared/constants';
 import type { LifecycleMeta } from '@/renderer/features/agent/status';
 import { ProviderStatusRow } from './ProviderCard';
-
-/** Which provider icon a harness shows. */
-const HARNESS_PROVIDER: Record<string, AgentProvider> = {
-  'claude-code': 'anthropic',
-  'cursor-cli': 'cursor',
-};
 
 export function HarnessCard({
   harnessId,

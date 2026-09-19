@@ -155,6 +155,18 @@ export const PROVIDER_HARNESS: Record<AgentProvider, string> = {
   codex: 'codex',
 };
 
+/** Headless CLI agent providers (Spec #50 Track B). */
+export const HEADLESS_PROVIDERS = ['cline', 'opencode', 'codex'] as const;
+export type HeadlessAgentProvider = (typeof HEADLESS_PROVIDERS)[number];
+
+/** Default CLI installation commands for headless agent providers. */
+export const PROVIDER_INSTALL_COMMANDS: Record<HeadlessAgentProvider, string> = {
+  cline: 'npm install -g cline',
+  opencode: 'npm install -g opencode-ai',
+  codex: 'npm install -g @openai/codex',
+};
+
+
 /**
  * Harness ids whose built-in READ tools cannot be routed through Zeus's
  * permission gate — the renderer-safe half of `HarnessCapabilities.gatesReads`.

@@ -20,6 +20,7 @@ import type {
   AgentLifecycleStatus,
   AgentSessionSnapshot,
   AgentState,
+  BinaryProbeResult,
   ChatMessage,
   ClarificationRequest,
   ConversationRevertPreview,
@@ -127,11 +128,14 @@ interface AgentStoreState {
   cursorInteractive: AgentState['cursorInteractive'];
   /** True while a `cursor-agent update` self-update is in flight. */
   cursorUpdating: boolean;
+  /** Headless agent provider probe status (Cline, OpenCode, Codex). */
+  providerStatus: Record<string, BinaryProbeResult> | null;
   hydrated: boolean;
 
   setComposerMode: (sessionId: string, mode: SessionPermissionMode) => void;
 
   hydrate: () => Promise<void>;
+  refreshProviderStatus: () => Promise<void>;
   loadSession: (sessionId: string) => Promise<void>;
   loadDiagnostics: (sessionId?: string | null) => Promise<void>;
   send: (
@@ -381,6 +385,7 @@ export const useAgentStore = create<AgentStoreState>((set, get) => {
     cursorBridge: undefined,
     cursorInteractive: undefined,
     cursorUpdating: false,
+    providerStatus: null,
     hydrated: false,
 
     setComposerMode: (sessionId, mode) =>
@@ -461,6 +466,7 @@ export const useAgentStore = create<AgentStoreState>((set, get) => {
 
       // Seed the diagnostics console with recent history.
       void get().loadDiagnostics();
+      void get().refreshProviderStatus();
     },
 
     loadSession: async (sessionId) => {
@@ -641,6 +647,17 @@ export const useAgentStore = create<AgentStoreState>((set, get) => {
         });
       } finally {
         set({ cursorUpdating: false });
+      }
+    },
+
+    refreshProviderStatus: async () => {
+      const api = window.zeus?.agent;
+      if (!api?.getProviderStatus) return;
+      try {
+        const status = await api.getProviderStatus();
+        set({ providerStatus: status });
+      } catch (err) {
+        console.warn('Failed to probe provider status', err);
       }
     },
 

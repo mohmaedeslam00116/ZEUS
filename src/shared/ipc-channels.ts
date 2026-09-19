@@ -83,6 +83,7 @@ export const IpcChannels = {
   agentGetDiagnostics: 'agent:getDiagnostics',
   agentClearRateLimit: 'agent:clearRateLimit',
   agentRetryAuth: 'agent:retryAuth',
+  agentGetProviderStatus: 'agent:getProviderStatus',
 
   // Cursor provider — auth + CLI maintenance. The API key crosses exactly
   // once (set) and is never returned by any channel.

@@ -52,7 +52,7 @@ export interface AcpRuntimeOptions {
 
 export class AcpRuntime implements AgentRuntimeAdapter {
   readonly provider: 'cline' | 'opencode';
-  private activeClient: AcpClient | null = null;
+  private readonly activeClients = new Map<string, AcpClient>();
   private isDisposed = false;
 
   constructor(
@@ -120,7 +120,11 @@ export class AcpRuntime implements AgentRuntimeAdapter {
       env,
       timeoutMs: this.options.timeoutMs,
       graceMs: this.options.graceMs,
-      logger: this.options.logger,
+      logger:
+        this.options.logger ??
+        ((level, msg) => {
+          effectiveBridge.diag('agent', level === 'warn' ? 'warning' : level, msg);
+        }),
       onRequestPermission: async (
         params: AcpPermissionRequestParams,
         signal?: AbortSignal,
@@ -158,7 +162,7 @@ export class AcpRuntime implements AgentRuntimeAdapter {
       },
     });
 
-    this.activeClient = client;
+    this.activeClients.set(sessionId, client);
 
     try {
       // 4. Initialization handshake
@@ -195,9 +199,7 @@ export class AcpRuntime implements AgentRuntimeAdapter {
       effectiveBridge.finishStreaming(context.accumulatedText);
     } finally {
       client.dispose();
-      if (this.activeClient === client) {
-        this.activeClient = null;
-      }
+      this.activeClients.delete(sessionId);
     }
   }
 
@@ -207,9 +209,9 @@ export class AcpRuntime implements AgentRuntimeAdapter {
   dispose(): void {
     if (this.isDisposed) return;
     this.isDisposed = true;
-    if (this.activeClient) {
-      this.activeClient.dispose();
-      this.activeClient = null;
+    for (const client of this.activeClients.values()) {
+      client.dispose();
     }
+    this.activeClients.clear();
   }
 }

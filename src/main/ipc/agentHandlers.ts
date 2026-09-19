@@ -12,6 +12,7 @@ import type {
   AgentInstall,
   AgentSessionSnapshot,
   AgentState,
+  BinaryProbeResult,
   ClarificationDecision,
   ConversationRevertPreview,
   ConversationRevertResult,
@@ -25,6 +26,7 @@ import type { PlanDecisionKind } from '@shared/plan';
 import { isPlanDecisionKind } from '@shared/plan';
 import type { AgentManager } from '../managers/AgentManager';
 import { harnessById } from '../managers/agent/harnessRegistry';
+import { probeBinary } from '../managers/agent/binaryProbe';
 import { handle } from './registry';
 
 const FORBIDDEN_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
@@ -195,6 +197,18 @@ export function registerAgentHandlers(agent: AgentManager): void {
   });
 
   handle<[], AgentInstall>(IpcChannels.agentRetryAuth, () => agent.retryAuth());
+
+  handle<[], Record<string, BinaryProbeResult>>(
+    IpcChannels.agentGetProviderStatus,
+    async () => {
+      const [cline, opencode, codex] = await Promise.all([
+        probeBinary('cline'),
+        probeBinary('opencode'),
+        probeBinary('codex'),
+      ]);
+      return { cline, opencode, codex };
+    },
+  );
 
   /* ---- Plan Mode ---- */
 

@@ -14,6 +14,8 @@
 import type { AgentProvider } from '@shared/constants';
 import { cn } from '@/renderer/lib/cn';
 import { ProviderIcon } from '@/renderer/components/brand/ProviderIcon';
+import { CopyButton } from '@/renderer/components/ui/CopyButton';
+import { useTranslation } from '@/renderer/i18n';
 import type { LifecycleMeta } from '@/renderer/features/agent/status';
 
 export function ProviderStatusRow({
@@ -44,6 +46,36 @@ export function ProviderStatusRow({
         <Icon size={12} className={cn(meta.text, meta.spin && 'animate-spin')} aria-hidden />
         {meta.label}
       </span>
+    </div>
+  );
+}
+
+export function HeadlessProviderControls({
+  description,
+  installCommand,
+  installed,
+}: {
+  description: string;
+  installCommand: string;
+  installed: boolean;
+}) {
+  const { t } = useTranslation();
+  return (
+    <div className="flex flex-col gap-2 px-2 pt-1 pb-2">
+      <p className="text-[12px] leading-relaxed text-muted">{description}</p>
+      {!installed && (
+        <div className="flex flex-col gap-1.5 rounded-md border border-line bg-surface-2 p-2.5">
+          <span className="text-[11px] font-medium text-faint">
+            {t('providers.installHint')}
+          </span>
+          <div className="flex items-center gap-2">
+            <code className="min-w-0 flex-1 truncate font-mono text-[12px] text-fg">
+              {installCommand}
+            </code>
+            <CopyButton value={installCommand} label={t('providers.copyCommand')} />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -206,5 +206,6 @@ export interface CodexClientOptions {
   onRequestApproval?: (params: CodexApprovalRequestParams) => Promise<CodexApprovalResult>;
   onNotification?: (method: string, params: unknown) => void;
   onError?: (err: Error) => void;
+  onLog?: (level: 'info' | 'warn' | 'error', message: string) => void;
   spawnFn?: (command: string, args: readonly string[], options: unknown) => import('node:child_process').ChildProcess;
 }

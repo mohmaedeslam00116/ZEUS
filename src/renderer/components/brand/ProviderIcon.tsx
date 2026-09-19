@@ -65,6 +65,9 @@ export function ProviderIcon({
     // worse than a neutral glyph — the label beside it already names them.
     case 'openai':
     case 'pi':
+    case 'cline':
+    case 'opencode':
+    case 'codex':
       return <Boxes size={size} className={className} />;
     case 'anthropic':
     default:

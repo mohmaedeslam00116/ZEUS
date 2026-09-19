@@ -98,6 +98,10 @@ export class CodexClient {
     child.stderr?.setEncoding('utf8');
     child.stderr?.on('data', (chunk: string) => {
       this.stderrTail = (this.stderrTail + chunk).slice(-CODEX_LIMITS.stderrTailMax);
+      const text = redactSecrets(chunk.trim());
+      if (text.length > 0) {
+        this.options.onLog?.('info', `[codex stderr] ${text}`);
+      }
     });
 
     // Wire JSON-RPC stream parser
@@ -114,6 +118,7 @@ export class CodexClient {
     });
 
     child.on('error', (err) => {
+      this.options.onLog?.('error', `Codex process error: ${err.message}`);
       this.rejectAllPending(new Error(`Codex process error: ${err.message}`));
       this.options.onError?.(err);
       if (this.child) {
@@ -126,6 +131,9 @@ export class CodexClient {
       const exitReason = errDetail
         ? `Codex process exited with code ${code ?? 'null'} (signal: ${signal ?? 'none'}). Stderr tail: ${errDetail}`
         : `Codex process exited with code ${code ?? 'null'} (signal: ${signal ?? 'none'})`;
+      if (code !== 0 && code !== null) {
+        this.options.onLog?.('warn', exitReason);
+      }
       this.rejectAllPending(new Error(exitReason));
     });
 

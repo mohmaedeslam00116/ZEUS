@@ -147,6 +147,25 @@ export interface TranslationSchema {
     write: string;
     command: string;
   };
+  providers: {
+    available: string;
+    missingBinary: string;
+    installRequired: string;
+    installHint: string;
+    copyCommand: string;
+    copied: string;
+    clineName: string;
+    clineDesc: string;
+    opencodeName: string;
+    opencodeDesc: string;
+    codexName: string;
+    codexDesc: string;
+    availableNotSelected: string;
+    probing: string;
+    active: string;
+    notInstalled: string;
+    checking: string;
+  };
 }
 
 /** Section-based dictionary structure for translations. */

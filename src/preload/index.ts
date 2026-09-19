@@ -20,6 +20,7 @@ import type {
   AppSettings,
   AttachmentMeta,
   AttachmentProgress,
+  BinaryProbeResult,
   ClarificationDecision,
   CheckpointRestoreResult,
   ClarificationRequest,
@@ -331,6 +332,8 @@ const agentApi = {
     ipcRenderer.invoke(IpcChannels.agentGetDiagnostics, sessionId ?? null),
   clearRateLimit: (): Promise<void> => ipcRenderer.invoke(IpcChannels.agentClearRateLimit),
   retryAuth: (): Promise<AgentInstall> => ipcRenderer.invoke(IpcChannels.agentRetryAuth),
+  getProviderStatus: (): Promise<Record<string, BinaryProbeResult>> =>
+    ipcRenderer.invoke(IpcChannels.agentGetProviderStatus),
   respondPermission: (decision: PermissionDecision): Promise<void> =>
     ipcRenderer.invoke(IpcChannels.agentPermissionRespond, decision),
   respondClarification: (decision: ClarificationDecision): Promise<void> =>

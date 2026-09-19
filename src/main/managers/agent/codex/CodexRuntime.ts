@@ -44,7 +44,7 @@ export interface CodexRuntimeOptions {
 
 export class CodexRuntime implements AgentRuntimeAdapter {
   readonly provider: HeadlessAgentProvider = 'codex';
-  private activeClient: CodexClient | null = null;
+  private readonly activeClients = new Map<string, CodexClient>();
   private isDisposed = false;
 
   constructor(private readonly options: CodexRuntimeOptions = {}) {}
@@ -136,9 +136,12 @@ export class CodexRuntime implements AgentRuntimeAdapter {
           context,
         );
       },
+      onLog: (level, message) => {
+        effectiveBridge.diag('agent', level === 'warn' ? 'warning' : level, message);
+      },
     });
 
-    this.activeClient = client;
+    this.activeClients.set(sessionId, client);
 
     try {
       // 4. Initialization handshake
@@ -177,7 +180,7 @@ export class CodexRuntime implements AgentRuntimeAdapter {
       throw err;
     } finally {
       client.dispose();
-      this.activeClient = null;
+      this.activeClients.delete(sessionId);
     }
   }
 
@@ -188,9 +191,9 @@ export class CodexRuntime implements AgentRuntimeAdapter {
     if (this.isDisposed) return;
     this.isDisposed = true;
 
-    if (this.activeClient) {
-      this.activeClient.dispose();
-      this.activeClient = null;
+    for (const client of this.activeClients.values()) {
+      client.dispose();
     }
+    this.activeClients.clear();
   }
 }

@@ -13,21 +13,36 @@ import {
   DEFAULT_SETTINGS,
   HARNESSES_WITHOUT_READ_GATING,
   HARNESS_LABELS,
+  HEADLESS_PROVIDERS,
+  type HeadlessAgentProvider,
   PROVIDER_HARNESS,
+  PROVIDER_INSTALL_COMMANDS,
   resolveModelRouting,
 } from '@shared/constants';
+import type { KnownTranslationKey } from '@/renderer/i18n/types';
 import { cn } from '@/renderer/lib/cn';
 import { ProviderIcon } from '@/renderer/components/brand/ProviderIcon';
 import { useTranslation } from '@/renderer/i18n';
 import { useSettingsStore } from '@/renderer/stores/useSettingsStore';
 import { useAgentStore } from '@/renderer/stores/useAgentStore';
-import { lifecycleMeta } from '@/renderer/features/agent/status';
+import { Download, Loader2 } from 'lucide-react';
+import { lifecycleMeta, type LifecycleMeta } from '@/renderer/features/agent/status';
 import { useAgentModels } from '@/renderer/features/agent/models';
 import { Field, Section, SegmentedControl, Slider, StackedField, TextInput, Toggle } from '../controls';
 import { HarnessCard } from './HarnessCard';
 import { CursorAuthControls, useCursorStatus } from './CursorProviderCard';
 import { ClaudeCodeControls } from './ClaudeCodeControls';
+import { HeadlessProviderControls } from './ProviderCard';
 import { AgentTroubleshooting } from './AgentTroubleshooting';
+
+const HEADLESS_CONFIG: Record<
+  HeadlessAgentProvider,
+  { nameKey: KnownTranslationKey; descKey: KnownTranslationKey }
+> = {
+  cline: { nameKey: 'providers.clineName', descKey: 'providers.clineDesc' },
+  opencode: { nameKey: 'providers.opencodeName', descKey: 'providers.opencodeDesc' },
+  codex: { nameKey: 'providers.codexName', descKey: 'providers.codexDesc' },
+};
 
 export function AgentPanel() {
   const { t } = useTranslation();
@@ -35,6 +50,7 @@ export function AgentPanel() {
   const update = useSettingsStore((s) => s.update);
   const lifecycle = useAgentStore((s) => s.lifecycle);
   const install = useAgentStore((s) => s.install);
+  const providerStatus = useAgentStore((s) => s.providerStatus);
   const models = useAgentModels();
   const cursorStatus = useCursorStatus();
 
@@ -76,6 +92,41 @@ export function AgentPanel() {
     cursorActive || cursorStatus.meta.label !== 'Connected'
       ? cursorStatus.meta
       : { ...cursorStatus.meta, label: 'Available' };
+
+  const headlessCards = HEADLESS_PROVIDERS.map((providerId) => {
+    const active = activeHarnessId === providerId;
+    const probe = providerStatus?.[providerId];
+    const installed = !!probe?.available;
+    const statusLine = installed
+      ? active
+        ? `Active — ${t('providers.available')}`
+        : t('providers.availableNotSelected')
+      : providerStatus === null
+        ? t('providers.probing')
+        : t('providers.missingBinary');
+
+    const meta: LifecycleMeta = active
+      ? { ...lifecycleMeta('ready', true), label: t('providers.active') }
+      : installed
+        ? availableMeta
+        : providerStatus === null
+          ? { dot: 'bg-muted', text: 'text-muted', label: t('providers.checking'), icon: Loader2, spin: true }
+          : { dot: 'bg-warning', text: 'text-warning', label: t('providers.notInstalled'), icon: Download };
+
+    const config = HEADLESS_CONFIG[providerId];
+    const installCommand = probe?.installGuide || PROVIDER_INSTALL_COMMANDS[providerId];
+
+    return (
+      <HarnessCard key={providerId} harnessId={providerId} statusLine={statusLine} meta={meta}>
+        <HeadlessProviderControls
+          description={t(config.descKey)}
+          installCommand={installCommand}
+          installed={installed}
+        />
+      </HarnessCard>
+    );
+  });
+
   const harnessCards = [
     <HarnessCard key="claude-code" harnessId="claude-code" statusLine={claudeStatusLine} meta={claudeMeta}>
       <ClaudeCodeControls />
@@ -83,8 +134,9 @@ export function AgentPanel() {
     <HarnessCard key="cursor-cli" harnessId="cursor-cli" statusLine={cursorStatusLine} meta={cursorMeta}>
       <CursorAuthControls />
     </HarnessCard>,
+    ...headlessCards,
   ];
-  if (cursorActive) harnessCards.reverse();
+  harnessCards.sort((a, b) => (a.key === activeHarnessId ? -1 : b.key === activeHarnessId ? 1 : 0));
   const set = <K extends keyof typeof agent>(key: K, value: (typeof agent)[K]): void =>
     void update({ agent: { [key]: value } });
   const setSandbox = <K extends keyof typeof agent.sandbox>(

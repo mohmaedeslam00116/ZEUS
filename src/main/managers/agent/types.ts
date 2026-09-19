@@ -5,12 +5,15 @@
  * binary probe structures for the Agent Client Protocol (ACP) and native
  * process adapters.
  */
-import type { SessionPermissionMode } from '@shared/types';
+import type {
+  BinaryProbeResult,
+  HeadlessAgentProvider,
+  SessionPermissionMode,
+} from '@shared/types';
 import type { AgentProvider } from '@shared/constants';
 import type { ProviderRunBridge } from './providerBridge';
 
-/** Headless CLI agent providers introduced in Spec #50. */
-export type HeadlessAgentProvider = 'cline' | 'opencode' | 'codex';
+export type { HeadlessAgentProvider, BinaryProbeResult };
 
 /** Canonical model prefixes for headless CLI agents. */
 export const CLINE_MODEL_PREFIX = 'cline:';
@@ -25,12 +28,7 @@ export const PROVIDER_BINARIES: Record<HeadlessAgentProvider, string> = {
   codex: 'codex',
 };
 
-/** Recommended CLI installation commands. */
-export const PROVIDER_INSTALL_COMMANDS: Record<HeadlessAgentProvider, string> = {
-  cline: 'npm install -g cline',
-  opencode: 'npm install -g opencode-ai',
-  codex: 'npm install -g @openai/codex',
-};
+export { PROVIDER_INSTALL_COMMANDS } from '@shared/constants';
 
 /** Human-readable and actionable installation guidance when a binary is missing. */
 export const PROVIDER_INSTALL_GUIDANCE: Record<HeadlessAgentProvider, string> = {
@@ -41,16 +39,6 @@ export const PROVIDER_INSTALL_GUIDANCE: Record<HeadlessAgentProvider, string> = 
   codex:
     'The Codex CLI is not installed or not found on PATH. Install it using: npm install -g @openai/codex',
 };
-
-/** Result of probing host PATH for an agent CLI executable. */
-export interface BinaryProbeResult {
-  available: boolean;
-  binaryName: string;
-  path?: string;
-  version?: string;
-  error?: string;
-  installGuide: string;
-}
 
 /** Streaming callbacks passed to runtime adapters during execution. */
 export interface AgentRuntimeStreamCallbacks {
