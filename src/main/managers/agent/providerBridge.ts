@@ -68,7 +68,12 @@ export interface ProviderRunBridge {
    * request, not shipped, and request quotas live only in the team-scoped
    * Enterprise Admin API, which this app deliberately never calls.
    */
-  onUsage?(usage: { durationMs?: number }): void;
+  onUsage?(usage: {
+    durationMs?: number;
+    inputTokens?: number;
+    outputTokens?: number;
+    totalTokens?: number;
+  }): void;
   /** Reasoning/thinking deltas, for providers that stream them separately. */
   onThinking?(text: string): void;
   /**

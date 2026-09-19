@@ -7,6 +7,7 @@
  */
 import type { SessionPermissionMode } from '@shared/types';
 import type { AgentProvider } from '@shared/constants';
+import type { ProviderRunBridge } from './providerBridge';
 
 /** Headless CLI agent providers introduced in Spec #50. */
 export type HeadlessAgentProvider = 'cline' | 'opencode' | 'codex';
@@ -58,6 +59,17 @@ export interface AgentRuntimeStreamCallbacks {
   finishStreaming: (finalText?: string) => void;
 }
 
+/** Tool permission gating callback for runtime adapters. */
+export type ToolGateFunction = (
+  toolName: string,
+  input: Record<string, unknown>,
+  signal?: AbortSignal,
+) => Promise<{
+  behavior: 'allow' | 'deny';
+  message?: string;
+  updatedInput?: Record<string, unknown>;
+}>;
+
 /** Unified interface for headless agent runtime adapters (ACP and native process). */
 export interface AgentRuntimeAdapter {
   readonly provider: HeadlessAgentProvider | AgentProvider;
@@ -68,5 +80,7 @@ export interface AgentRuntimeAdapter {
     abort: AbortController,
     permMode: SessionPermissionMode,
     stream: AgentRuntimeStreamCallbacks,
+    bridge?: ProviderRunBridge,
+    gate?: ToolGateFunction,
   ): Promise<void>;
 }

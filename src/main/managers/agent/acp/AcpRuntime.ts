@@ -1,0 +1,215 @@
+/**
+ * Headless Agent Client Protocol (ACP) Runtime Adapter for Cline and OpenCode.
+ *
+ * Implements:
+ * - Spawns and configures `cline --acp` and `opencode acp` child processes via `AcpClient`.
+ * - Discovers host configuration profiles (`~/.cline`, `~/.config/opencode`) and
+ *   injects workspace `cwd` and sanitized environment variables without leaking credentials.
+ * - Injects bilingual `LocaleContext` into session `instructions` to respect Arabic/English
+ *   conversation guidance while keeping code syntax in English.
+ * - Uses `translate.ts` to map ACP streaming notifications and progress events to
+ *   canonical ZEUS `ProviderRunBridge` callbacks and `AgentEvent` objects (ADR-0003).
+ * - Captures token usage reported by ACP runtimes into session run metrics.
+ * - Wires synchronous tool permission gating (`session/request_permission`) to
+ *   ZEUS's permission authority (SEC-19).
+ */
+import type { SessionPermissionMode } from '@shared/types';
+import { ARABIC_LOCALE_INSTRUCTION } from '../locale';
+import type { ProviderRunBridge } from '../providerBridge';
+import type {
+  AgentRuntimeAdapter,
+  AgentRuntimeStreamCallbacks,
+  HeadlessAgentProvider,
+  ToolGateFunction,
+} from '../types';
+import { AcpClient, type ExtendedAcpClientOptions } from './AcpClient';
+import { discoverProfile, sanitizeEnvironment } from './profile';
+import { newAcpTranslateContext, translateAcpNotification } from './translate';
+import type {
+  AcpPermissionRequestParams,
+  AcpPermissionResult,
+  AcpSessionPromptResult,
+} from './types';
+
+export interface AcpRuntimeOptions {
+  /** CLI executable path override (defaults to 'cline' or 'opencode'). */
+  executablePath?: string;
+  /** CLI arguments override. Defaults: cline -> ['--acp'], opencode -> ['acp']. */
+  args?: string[];
+  /** Custom host configuration directory (overrides auto-discovery). */
+  configDir?: string;
+  /** Extra environment variables passed to the child process. */
+  extraEnv?: Record<string, string>;
+  /** Request timeout in ms. */
+  timeoutMs?: number;
+  /** Grace period in ms before SIGKILL. */
+  graceMs?: number;
+  /** Optional client factory override for hermetic unit testing. */
+  clientFactory?: (options: ExtendedAcpClientOptions) => AcpClient;
+  /** Optional logger. */
+  logger?: (level: 'debug' | 'info' | 'warn' | 'error', message: string, detail?: unknown) => void;
+}
+
+export class AcpRuntime implements AgentRuntimeAdapter {
+  readonly provider: 'cline' | 'opencode';
+  private activeClient: AcpClient | null = null;
+  private isDisposed = false;
+
+  constructor(
+    provider: 'cline' | 'opencode' | HeadlessAgentProvider,
+    private readonly options: AcpRuntimeOptions = {},
+  ) {
+    if (provider !== 'cline' && provider !== 'opencode') {
+      throw new Error(`Unsupported ACP provider: "${provider}". Only "cline" and "opencode" are supported.`);
+    }
+    this.provider = provider;
+  }
+
+  /**
+   * Executes a single headless agent run turn.
+   */
+  async run(
+    sessionId: string,
+    prompt: string,
+    cwd: string,
+    abort: AbortController,
+    permMode: SessionPermissionMode,
+    stream: AgentRuntimeStreamCallbacks,
+    bridge?: ProviderRunBridge,
+    gate?: ToolGateFunction,
+  ): Promise<void> {
+    if (this.isDisposed) {
+      throw new Error(`AcpRuntime for ${this.provider} has been disposed.`);
+    }
+
+    const effectiveBridge: ProviderRunBridge = bridge ?? {
+      ensureStreaming: () => stream.ensureStreaming(),
+      queueDelta: (text) => stream.queueDelta(text),
+      finishStreaming: (finalText) => stream.finishStreaming(finalText),
+      onToolUse: () => undefined,
+      onToolResult: () => undefined,
+      onInit: () => undefined,
+      onResult: () => undefined,
+      diag: (cat, sev, label, detail) =>
+        this.options.logger?.(sev === 'warning' ? 'warn' : sev, `[${cat}] ${label}: ${detail ?? ''}`),
+    };
+
+    const context = newAcpTranslateContext(sessionId);
+
+    // 1. Discover host profile and sanitize environment
+    const profile = discoverProfile(this.provider, this.options.configDir);
+    const extraEnv: Record<string, string> = {
+      ...(this.options.extraEnv ?? {}),
+      ...(profile.configDir
+        ? { [this.provider === 'cline' ? 'CLINE_DIR' : 'OPENCODE_CONFIG_DIR']: profile.configDir }
+        : {}),
+    };
+    const env = sanitizeEnvironment(extraEnv);
+
+    // 2. Resolve default executable and arguments
+    const executablePath =
+      this.options.executablePath ?? (this.provider === 'cline' ? 'cline' : 'opencode');
+    const args = this.options.args ?? (this.provider === 'cline' ? ['--acp'] : ['acp']);
+
+    // 3. Create ACP Client
+    const clientFactory = this.options.clientFactory ?? ((opts) => new AcpClient(opts));
+    const client = clientFactory({
+      executablePath,
+      args,
+      cwd,
+      env,
+      timeoutMs: this.options.timeoutMs,
+      graceMs: this.options.graceMs,
+      logger: this.options.logger,
+      onRequestPermission: async (
+        params: AcpPermissionRequestParams,
+        signal?: AbortSignal,
+      ): Promise<AcpPermissionResult> => {
+        // SEC-19: Synchronous tool permission gating
+        if (gate) {
+          try {
+            const decision = await gate(params.toolName, params.input, signal ?? abort.signal);
+            return {
+              approved: decision.behavior === 'allow',
+              reason: decision.message,
+              updatedInput: decision.updatedInput,
+            };
+          } catch (err) {
+            return {
+              approved: false,
+              reason: err instanceof Error ? err.message : 'Tool permission check failed',
+            };
+          }
+        }
+
+        // Default permission behavior when no explicit gate is passed
+        const approved = permMode === 'acceptEdits';
+        return {
+          approved,
+          reason: approved ? undefined : 'Permission denied: tool requires approval.',
+        };
+      },
+      onNotification: (method: string, params: unknown) => {
+        translateAcpNotification(
+          { jsonrpc: '2.0', method, params },
+          effectiveBridge,
+          context,
+        );
+      },
+    });
+
+    this.activeClient = client;
+
+    try {
+      // 4. Initialization handshake
+      await client.start();
+
+      // 5. Extract bilingual instructions if present in prompt
+      let instructions: string | undefined;
+      if (prompt.includes(ARABIC_LOCALE_INSTRUCTION)) {
+        instructions = ARABIC_LOCALE_INSTRUCTION;
+      }
+
+      // 6. Create ACP session
+      const acpSessionId = await client.createSession(cwd, instructions);
+      effectiveBridge.onInit(acpSessionId);
+
+      // 7. Start turn streaming
+      effectiveBridge.ensureStreaming();
+
+      const result: AcpSessionPromptResult = await client.prompt(
+        acpSessionId,
+        prompt,
+        abort.signal,
+      );
+
+      // 8. Capture and report token usage
+      if (result.usage) {
+        effectiveBridge.onUsage?.({ ...result.usage });
+      } else if (context.usage.totalTokens || context.usage.inputTokens) {
+        effectiveBridge.onUsage?.({ ...context.usage });
+      }
+
+      const ok = result.stopReason !== 'cancelled';
+      effectiveBridge.onResult(ok, context.accumulatedText);
+      effectiveBridge.finishStreaming(context.accumulatedText);
+    } finally {
+      client.dispose();
+      if (this.activeClient === client) {
+        this.activeClient = null;
+      }
+    }
+  }
+
+  /**
+   * Terminate active child process on shutdown.
+   */
+  dispose(): void {
+    if (this.isDisposed) return;
+    this.isDisposed = true;
+    if (this.activeClient) {
+      this.activeClient.dispose();
+      this.activeClient = null;
+    }
+  }
+}

@@ -134,7 +134,9 @@ import {
   PROVIDER_INSTALL_GUIDANCE,
   type AgentRuntimeAdapter,
   type HeadlessAgentProvider,
+  type ToolGateFunction,
 } from './agent/types';
+import { AcpRuntime } from './agent/acp/AcpRuntime';
 import { clampGitPayload, gitActivityDetail, gitActivityLabel } from './agent/gitActivity';
 import {
   latestPlanFile,
@@ -3740,8 +3742,49 @@ export class AgentManager {
       prompt: prompt.length,
     });
 
+    const bridge: ProviderRunBridge = {
+      ensureStreaming: () => {
+        stream.ensureStreaming();
+      },
+      queueDelta: stream.queueDelta,
+      finishStreaming: stream.finishStreaming,
+      onToolUse: (id, name, input, parentCallId) =>
+        this.onToolUse(sessionId, id, name, input, parentCallId),
+      onToolResult: (id, status, output) => this.onToolResult(sessionId, id, status, output),
+      onInit: (providerSessionId) => {
+        this.rememberProviderSession(sessionId, provider, providerSessionId);
+      },
+      onResult: (ok, text) =>
+        this.recordRunResult(sessionId, {
+          ok,
+          subtype: ok ? 'success' : 'error_during_execution',
+          errors: ok || !text ? [] : [text],
+          text,
+        }),
+      onUsage: (usage) =>
+        this.emitTelemetry({
+          kind: 'run-end',
+          sessionId,
+          durationMs: usage.durationMs,
+          totals:
+            usage.inputTokens !== undefined || usage.outputTokens !== undefined
+              ? {
+                  inputTokens: usage.inputTokens ?? 0,
+                  cacheReadTokens: 0,
+                  cacheCreationTokens: 0,
+                  outputTokens: usage.outputTokens ?? 0,
+                }
+              : undefined,
+        }),
+      diag: (category, severity, label, detail) =>
+        this.diag(category as DiagnosticCategory, severity, label, detail, sessionId),
+    };
+
+    const gate: ToolGateFunction = (toolName, input, sig) =>
+      this.decideToolUse(sessionId, cwd, permMode, toolName, input, sig ?? abort.signal);
+
     const finalPrompt = injectedContext ? `${injectedContext}\n\n${prompt}` : prompt;
-    await runtime.run(sessionId, finalPrompt, cwd, abort, permMode, stream);
+    await runtime.run(sessionId, finalPrompt, cwd, abort, permMode, stream, bridge, gate);
   }
 
   /* ---------------------------------------------------------------- */

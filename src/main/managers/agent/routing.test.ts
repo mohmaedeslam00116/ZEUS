@@ -396,6 +396,8 @@ describe('AgentManager Headless Provider Routing & Dispatch (#56)', () => {
       expect.any(AbortController),
       'acceptEdits',
       mockStream,
+      expect.any(Object),
+      expect.any(Function),
     );
 
     probeSpy.mockRestore();

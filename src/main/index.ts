@@ -40,6 +40,7 @@ import { AttachmentManager } from './managers/attachments/AttachmentManager';
 import { SecretStore } from './secrets/SecretStore';
 import { CursorAuthManager } from './managers/cursor/CursorAuthManager';
 import { CursorRuntime } from './managers/cursor/CursorRuntime';
+import { AcpRuntime } from './managers/agent/acp/AcpRuntime';
 import { harnessById, harnessIdForRun } from './managers/agent/harnessRegistry';
 import { worktreeRootDir } from './managers/worktree/paths';
 import { HarnessRuntime } from './managers/harness/HarnessRuntime';
@@ -187,6 +188,9 @@ function bootstrap(): void {
     workspace = new WorkspaceManager();
     sessions = new SessionManager();
     agent = new AgentManager(workspace, settings, notifications);
+    // Headless ACP agent runtimes (Cline & OpenCode)
+    agent.setClineRuntime(new AcpRuntime('cline'));
+    agent.setOpenCodeRuntime(new AcpRuntime('opencode'));
     // Cursor provider (Agent Adapter Architecture). Auth: API keys live
     // safeStorage-encrypted in the SecretStore; probing is lazy and classifies
     // per the user's `agent.cursor.preferredAuth` setting. Runtime: print-mode

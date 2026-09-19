@@ -99,8 +99,16 @@ export interface AcpSessionPromptParams {
   prompt: string;
 }
 
+export interface AcpUsageMetrics {
+  inputTokens?: number;
+  outputTokens?: number;
+  totalTokens?: number;
+  durationMs?: number;
+}
+
 export interface AcpSessionPromptResult {
   stopReason?: 'endTurn' | 'complete' | 'cancelled' | 'maxTokens';
+  usage?: AcpUsageMetrics;
 }
 
 export interface AcpSessionCancelParams {
@@ -130,13 +138,15 @@ export interface AcpPermissionResult {
 
 export interface AcpSessionUpdateParams {
   sessionId: string;
-  kind: 'textDelta' | 'thoughtDelta' | 'toolUse' | 'toolResult' | 'progress';
+  kind: 'textDelta' | 'thoughtDelta' | 'toolUse' | 'toolResult' | 'progress' | 'usage';
   delta?: string;
   toolCallId?: string;
   toolName?: string;
   input?: Record<string, unknown>;
   output?: string;
   status?: 'done' | 'error';
+  usage?: AcpUsageMetrics;
+  error?: string;
 }
 
 /* ---------------------------------------------------------------- */
