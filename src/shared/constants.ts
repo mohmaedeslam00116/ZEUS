@@ -445,6 +445,20 @@ export const ACP_LIMITS = {
   stderrTailMax: 16 * 1024,
 } as const;
 
+/**
+ * Bounds + caps for OpenAI Codex native process adapter communication (XP-01).
+ */
+export const CODEX_LIMITS = {
+  /** Default timeout for a Codex request (ms). */
+  requestTimeoutMs: 60_000,
+  /** Grace period between SIGTERM and SIGKILL when terminating a Codex agent process. */
+  killGraceMs: 1_000,
+  /** Maximum single JSON-RPC line / buffer accumulation before truncation (bytes). */
+  maxBuffer: 64 * 1024,
+  /** Bounded tail of stderr kept for crash diagnosis (bytes). */
+  stderrTailMax: 16 * 1024,
+} as const;
+
 /** A discovered Cursor model id must match this before it is trusted anywhere. */
 export const CURSOR_MODEL_ID_RE = /^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/;
 

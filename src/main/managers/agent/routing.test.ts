@@ -436,7 +436,16 @@ describe('AgentManager Headless Provider Routing & Dispatch (#56)', () => {
       'acceptEdits',
       mockStream,
     );
-    expect(mockCodexAdapter.run).toHaveBeenCalledTimes(1);
+    expect(mockCodexAdapter.run).toHaveBeenCalledWith(
+      'sess-3',
+      'Codex prompt',
+      'C:\\fake\\workspace',
+      expect.any(AbortController),
+      'acceptEdits',
+      mockStream,
+      expect.any(Object),
+      expect.any(Function),
+    );
 
     probeSpy.mockRestore();
   });

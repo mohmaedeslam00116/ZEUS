@@ -41,6 +41,7 @@ import { SecretStore } from './secrets/SecretStore';
 import { CursorAuthManager } from './managers/cursor/CursorAuthManager';
 import { CursorRuntime } from './managers/cursor/CursorRuntime';
 import { AcpRuntime } from './managers/agent/acp/AcpRuntime';
+import { CodexRuntime } from './managers/agent/codex/CodexRuntime';
 import { harnessById, harnessIdForRun } from './managers/agent/harnessRegistry';
 import { worktreeRootDir } from './managers/worktree/paths';
 import { HarnessRuntime } from './managers/harness/HarnessRuntime';
@@ -191,6 +192,8 @@ function bootstrap(): void {
     // Headless ACP agent runtimes (Cline & OpenCode)
     agent.setClineRuntime(new AcpRuntime('cline'));
     agent.setOpenCodeRuntime(new AcpRuntime('opencode'));
+    // Native Codex process adapter (OpenAI Codex app-server)
+    agent.setCodexRuntime(new CodexRuntime());
     // Cursor provider (Agent Adapter Architecture). Auth: API keys live
     // safeStorage-encrypted in the SecretStore; probing is lazy and classifies
     // per the user's `agent.cursor.preferredAuth` setting. Runtime: print-mode
