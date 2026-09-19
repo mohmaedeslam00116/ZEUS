@@ -8,11 +8,15 @@
  * 4. Stdio diagnostic logging with sensitive token and secret redaction (SEC-16).
  * 5. Headless provider binary probing and IPC status queries.
  */
+import { mkdtempSync, rmSync } from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
-import { describe, expect, it, vi, beforeEach } from 'vitest';
+import { describe, expect, it, vi, beforeEach, afterAll } from 'vitest';
+
+const TMP_USER_DATA = mkdtempSync(path.join(os.tmpdir(), 'zeus-multiprovider-'));
 
 vi.mock('electron', () => ({
-  app: { getPath: () => 'C:\\fake\\userData' },
+  app: { getPath: () => TMP_USER_DATA },
   BrowserWindow: { getAllWindows: (): unknown[] => [] },
 }));
 
@@ -35,6 +39,7 @@ import * as binaryProbeModule from './binaryProbe';
 import { clearBinaryProbeCache, probeBinary } from './binaryProbe';
 import { AgentManager } from '../AgentManager';
 import { redactSecrets } from '../graph/redact';
+import { closeDb } from '../../db/database';
 import type { AcpClientOptions } from './acp/types';
 import type { CodexClientOptions } from './codex/types';
 
@@ -102,6 +107,15 @@ describe('Multi-Provider Integration Suite (#60)', () => {
       mockNotifications as never,
     );
     runner = agentManager as unknown as AgentManagerInternalRunner;
+  });
+
+  afterAll(() => {
+    closeDb();
+    try {
+      rmSync(TMP_USER_DATA, { recursive: true, force: true });
+    } catch {
+      // ignore
+    }
   });
 
   describe('1. Universal 5-Provider Model Routing', () => {
@@ -326,11 +340,12 @@ describe('Multi-Provider Integration Suite (#60)', () => {
           const gate: ToolGateFunction = capturedGate;
 
           // Crown jewel database file and secrets must be blocked immediately
-          const sqliteGate = await gate('Read', { path: 'C:\\fake\\userData\\zeus.db' });
+          const dbPath = path.join(TMP_USER_DATA, 'zeus.db');
+          const sqliteGate = await gate('Read', { path: dbPath });
           expect(sqliteGate.behavior).toBe('deny');
           expect(sqliteGate.message).toContain('off limits');
 
-          const bashCrownGate = await gate('Bash', { command: 'cat C:\\fake\\userData\\zeus.db' });
+          const bashCrownGate = await gate('Bash', { command: `cat "${dbPath}"` });
           expect(bashCrownGate.behavior).toBe('deny');
           expect(bashCrownGate.message).toContain('off limits');
         });
