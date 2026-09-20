@@ -200,7 +200,23 @@ export class CodexClient {
     }
 
     try {
-      return await this.sendRequest<CodexTurnStartResult>('turn/start', params);
+      const input = params.input
+        ? (Array.isArray(params.input) ? params.input : [{ type: 'text', text: params.input }])
+        : [{ type: 'text', text: params.prompt ?? '' }];
+
+      const payload: Record<string, unknown> = {
+        threadId: params.threadId,
+        input,
+      };
+      if (params.mode) {
+        payload.mode = params.mode;
+      }
+
+      const res = await this.sendRequest<CodexTurnStartResult>('turn/start', payload);
+      if (res && res.turn?.id && !res.turnId) {
+        res.turnId = res.turn.id;
+      }
+      return res;
     } finally {
       if (signal && abortHandler) {
         signal.removeEventListener('abort', abortHandler);

@@ -180,6 +180,13 @@ describe('AcpClient Protocol Handshake & Lifecycle (#57)', () => {
     expect(initReq.params).toEqual({
       protocolVersion: 1,
       clientInfo: { name: 'zeus', version: '0.2.0' },
+      clientCapabilities: {
+        fs: {
+          readTextFile: false,
+          writeTextFile: false,
+        },
+        terminal: false,
+      },
       capabilities: {
         tools: { requestPermission: true },
         streaming: true,
@@ -245,8 +252,8 @@ describe('AcpClient Protocol Handshake & Lifecycle (#57)', () => {
       if (req) {
         expect(req.params).toEqual({
           cwd: '/my/repo',
+          mcpServers: [],
           instructions: 'Arabic guidance instructions',
-          env: undefined,
         });
         mockEnv.stdout.write(
           serializeJsonRpc({
@@ -271,7 +278,7 @@ describe('AcpClient Protocol Handshake & Lifecycle (#57)', () => {
       if (req) {
         expect(req.params).toEqual({
           sessionId: 'sess-abc-123',
-          prompt: 'Refactor this function',
+          prompt: [{ type: 'text', text: 'Refactor this function' }],
         });
         mockEnv.stdout.write(
           serializeJsonRpc({
@@ -300,6 +307,7 @@ describe('AcpClient Protocol Handshake & Lifecycle (#57)', () => {
       if (req) {
         expect(req.params).toEqual({
           cwd: '/my/other-repo',
+          mcpServers: [],
           instructions: 'Custom instructions',
           env: { CUSTOM_VAR: '1' },
         });

@@ -52,6 +52,11 @@ export type JsonRpcMessage =
 /* ---------------------------------------------------------------- */
 
 export interface AcpClientCapabilities {
+  fs?: {
+    readTextFile?: boolean;
+    writeTextFile?: boolean;
+  };
+  terminal?: boolean;
   tools?: {
     requestPermission?: boolean;
   };
@@ -60,6 +65,17 @@ export interface AcpClientCapabilities {
 
 export interface AcpAgentCapabilities {
   streaming?: boolean;
+  loadSession?: boolean;
+  promptCapabilities?: {
+    image?: boolean;
+    audio?: boolean;
+    embeddedContext?: boolean;
+  };
+  mcpCapabilities?: {
+    http?: boolean;
+    sse?: boolean;
+  };
+  sessionCapabilities?: Record<string, unknown>;
 }
 
 export interface AcpInitializeParams {
@@ -68,7 +84,8 @@ export interface AcpInitializeParams {
     name: string;
     version: string;
   };
-  capabilities: AcpClientCapabilities;
+  clientCapabilities?: AcpClientCapabilities;
+  capabilities?: AcpClientCapabilities;
 }
 
 export interface AcpInitializeResult {
@@ -78,14 +95,23 @@ export interface AcpInitializeResult {
     version?: string;
   };
   capabilities?: AcpAgentCapabilities;
+  agentCapabilities?: AcpAgentCapabilities;
 }
 
 /* ---------------------------------------------------------------- */
 /* ACP Session Lifecycle Types                                      */
 /* ---------------------------------------------------------------- */
 
+export interface AcpContentBlock {
+  type: string;
+  text?: string;
+  [key: string]: unknown;
+}
+
 export interface AcpSessionNewParams {
   cwd: string;
+  mcpServers?: unknown[];
+  additionalDirectories?: string[];
   instructions?: string;
   env?: Record<string, string>;
 }
@@ -96,7 +122,7 @@ export interface AcpSessionNewResult {
 
 export interface AcpSessionPromptParams {
   sessionId: string;
-  prompt: string;
+  prompt: string | AcpContentBlock[];
 }
 
 export interface AcpUsageMetrics {

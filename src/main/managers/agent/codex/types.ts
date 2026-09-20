@@ -100,18 +100,26 @@ export interface CodexThreadStartResult {
   threadId: string;
 }
 
-/* ---------------------------------------------------------------- */
-/* Turn Lifecycle Types                                             */
-/* ---------------------------------------------------------------- */
+export interface CodexContentBlock {
+  type: string;
+  text?: string;
+  [key: string]: unknown;
+}
 
 export interface CodexTurnStartParams {
   threadId: string;
-  prompt: string;
+  prompt?: string;
+  input?: string | CodexContentBlock[];
   mode?: string;
 }
 
 export interface CodexTurnStartResult {
   turnId?: string;
+  turn?: {
+    id?: string;
+    status?: string;
+    error?: unknown;
+  };
   status?: string;
   usage?: CodexUsageMetrics;
 }

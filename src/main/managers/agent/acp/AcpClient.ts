@@ -24,6 +24,7 @@ import {
 } from './jsonRpc';
 import type {
   AcpClientOptions,
+  AcpContentBlock,
   AcpInitializeParams,
   AcpInitializeResult,
   AcpPermissionRequestParams,
@@ -152,12 +153,19 @@ export class AcpClient {
       this.child = null;
     });
 
-    // Perform ACP capabilities exchange
+    // Perform ACP capabilities exchange per ACP specification
     const initParams: AcpInitializeParams = {
       protocolVersion: 1,
       clientInfo: {
         name: 'zeus',
         version: '0.2.0',
+      },
+      clientCapabilities: {
+        fs: {
+          readTextFile: false,
+          writeTextFile: false,
+        },
+        terminal: false,
       },
       capabilities: {
         tools: {
@@ -192,17 +200,31 @@ export class AcpClient {
     instructions?: string,
     env?: Record<string, string>,
   ): Promise<string> {
-    const params: AcpSessionNewParams =
+    const rawParams: AcpSessionNewParams =
       typeof cwdOrParams === 'string'
         ? { cwd: cwdOrParams, instructions, env }
         : cwdOrParams;
 
     // SEC-11: Working directory must be an absolute path
-    if (!path.isAbsolute(params.cwd)) {
-      throw new Error(`Session working directory must be an absolute path: "${params.cwd}"`);
+    if (!path.isAbsolute(rawParams.cwd)) {
+      throw new Error(`Session working directory must be an absolute path: "${rawParams.cwd}"`);
     }
 
-    const res = await this.sendRequest<AcpSessionNewResult>('session/new', params);
+    const payload: Record<string, unknown> = {
+      cwd: rawParams.cwd,
+      mcpServers: rawParams.mcpServers ?? [],
+    };
+    if (rawParams.additionalDirectories) {
+      payload.additionalDirectories = rawParams.additionalDirectories;
+    }
+    if (rawParams.instructions) {
+      payload.instructions = rawParams.instructions;
+    }
+    if (rawParams.env) {
+      payload.env = rawParams.env;
+    }
+
+    const res = await this.sendRequest<AcpSessionNewResult>('session/new', payload);
     this.activeSessionId = res.sessionId;
     return res.sessionId;
   }
@@ -213,7 +235,7 @@ export class AcpClient {
    */
   async prompt(
     sessionId: string,
-    promptText: string,
+    promptText: string | AcpContentBlock[],
     signal?: AbortSignal,
   ): Promise<AcpSessionPromptResult> {
     this.currentAbortSignal = signal;
@@ -238,9 +260,12 @@ export class AcpClient {
     signal?.addEventListener('abort', onAbort, { once: true });
 
     try {
-      const params: AcpSessionPromptParams = {
+      const promptPayload: AcpContentBlock[] = Array.isArray(promptText)
+        ? (promptText as AcpContentBlock[])
+        : [{ type: 'text', text: promptText }];
+      const params = {
         sessionId,
-        prompt: promptText,
+        prompt: promptPayload,
       };
       const result = await this.sendRequest<AcpSessionPromptResult>(
         'session/prompt',
