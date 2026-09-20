@@ -24,6 +24,57 @@ import type { ReleaseIndexEntry, ReleaseManifestEntry } from './release';
 /** Newest first. */
 export const RELEASE_MANIFESTS: ReleaseManifestEntry[] = [
   {
+    "version": "0.1.0-alpha.5",
+    "date": "2026-09-21",
+    "channel": "preview",
+    "codename": null,
+    "gitTag": "v0.1.0-alpha.5",
+    "commit": null,
+    "buildNumber": null,
+    "summary": "ZEUS 0.1.0-alpha.5 resolves headless agent streaming, discovery, and handshake issues across Cline, Codex, and OpenCode on Windows:",
+    "sections": [
+      {
+        "category": "fixed",
+        "title": "Fixed",
+        "items": [
+          {
+            "lead": "Cline text and thought streaming omitted from conversation UI",
+            "text": ":\n  - Cline emits streamed text and thinking responses wrapped in ACP v1 nested session updates (`{\"method\": \"session/update\", \"params\": {\"update\": {\"sessionUpdate\": \"agent_message_chunk\", \"content\": {\"type\": \"text\", \"text\": \"...\"}}}}`).\n  - Previously, `translateAcpNotification` only inspected flat `params.kind === 'textDelta'`, dropping nested session chunks. ZEUS now unpacks `agent_message_chunk`, `agent_thought_chunk`, `tool_call`, and `tool_call_update` so all model outputs, thoughts, and tool actions stream live to the UI."
+          },
+          {
+            "lead": "Codex initialize timeout (`Codex request timed out after 60000ms: method \"initialize\" (id: 1)`)",
+            "text": ":\n  - The Codex app-server emits initial response frames without an explicit `\"jsonrpc\": \"2.0\"` header (e.g. `{\"id\": 1, \"result\": {...}}`).\n  - `JsonRpcStreamParser` previously rejected these frames as invalid JSON-RPC, causing `initialize` and subsequent method calls to hang until timeout. The parser now tolerates frames containing `'id'` or `'method'` without the strict `\"jsonrpc\"` header."
+          },
+          {
+            "lead": "OpenCode CLI discovery on Windows (`The OpenCode CLI is not installed or not found on PATH`)",
+            "text": ":\n  - OpenCode installed on Windows under custom or standard system paths (e.g. `D:\\Program Files\\OpenCode\\opencode-cli.exe` or `%LOCALAPPDATA%\\Programs\\@opencode-aidesktop`) was not detected when not in system PATH or named `opencode-cli`.\n  - Added binary probing and spawn resolution for both `opencode` and `opencode-cli` aliases across common Windows installation locations and PATH directories."
+          }
+        ],
+        "markdown": "- **Cline text and thought streaming omitted from conversation UI**:\n  - Cline emits streamed text and thinking responses wrapped in ACP v1 nested session updates (`{\"method\": \"session/update\", \"params\": {\"update\": {\"sessionUpdate\": \"agent_message_chunk\", \"content\": {\"type\": \"text\", \"text\": \"...\"}}}}`).\n  - Previously, `translateAcpNotification` only inspected flat `params.kind === 'textDelta'`, dropping nested session chunks. ZEUS now unpacks `agent_message_chunk`, `agent_thought_chunk`, `tool_call`, and `tool_call_update` so all model outputs, thoughts, and tool actions stream live to the UI.\n- **Codex initialize timeout (`Codex request timed out after 60000ms: method \"initialize\" (id: 1)`)**:\n  - The Codex app-server emits initial response frames without an explicit `\"jsonrpc\": \"2.0\"` header (e.g. `{\"id\": 1, \"result\": {...}}`).\n  - `JsonRpcStreamParser` previously rejected these frames as invalid JSON-RPC, causing `initialize` and subsequent method calls to hang until timeout. The parser now tolerates frames containing `'id'` or `'method'` without the strict `\"jsonrpc\"` header.\n- **OpenCode CLI discovery on Windows (`The OpenCode CLI is not installed or not found on PATH`)**:\n  - OpenCode installed on Windows under custom or standard system paths (e.g. `D:\\Program Files\\OpenCode\\opencode-cli.exe` or `%LOCALAPPDATA%\\Programs\\@opencode-aidesktop`) was not detected when not in system PATH or named `opencode-cli`.\n  - Added binary probing and spawn resolution for both `opencode` and `opencode-cli` aliases across common Windows installation locations and PATH directories."
+      }
+    ],
+    "contributors": [],
+    "pullRequests": [],
+    "mergedBranches": [],
+    "assets": [],
+    "signing": [],
+    "stats": {
+      "commits": null,
+      "filesChanged": null,
+      "additions": null,
+      "deletions": null
+    },
+    "links": {
+      "release": "https://github.com/mohmaedeslam00116/ZEUS/releases/tag/v0.1.0-alpha.5",
+      "compare": null,
+      "tag": "https://github.com/mohmaedeslam00116/ZEUS/releases/tag/v0.1.0-alpha.5",
+      "milestone": null
+    },
+    "checksumManifest": "SHA256SUMS",
+    "provenanceRepo": "mohmaedeslam00116/ZEUS",
+    "markdown": "ZEUS 0.1.0-alpha.5 resolves headless agent streaming, discovery, and handshake issues across Cline, Codex, and OpenCode on Windows:\n\n### Fixed\n\n- **Cline text and thought streaming omitted from conversation UI**:\n  - Cline emits streamed text and thinking responses wrapped in ACP v1 nested session updates (`{\"method\": \"session/update\", \"params\": {\"update\": {\"sessionUpdate\": \"agent_message_chunk\", \"content\": {\"type\": \"text\", \"text\": \"...\"}}}}`).\n  - Previously, `translateAcpNotification` only inspected flat `params.kind === 'textDelta'`, dropping nested session chunks. ZEUS now unpacks `agent_message_chunk`, `agent_thought_chunk`, `tool_call`, and `tool_call_update` so all model outputs, thoughts, and tool actions stream live to the UI.\n- **Codex initialize timeout (`Codex request timed out after 60000ms: method \"initialize\" (id: 1)`)**:\n  - The Codex app-server emits initial response frames without an explicit `\"jsonrpc\": \"2.0\"` header (e.g. `{\"id\": 1, \"result\": {...}}`).\n  - `JsonRpcStreamParser` previously rejected these frames as invalid JSON-RPC, causing `initialize` and subsequent method calls to hang until timeout. The parser now tolerates frames containing `'id'` or `'method'` without the strict `\"jsonrpc\"` header.\n- **OpenCode CLI discovery on Windows (`The OpenCode CLI is not installed or not found on PATH`)**:\n  - OpenCode installed on Windows under custom or standard system paths (e.g. `D:\\Program Files\\OpenCode\\opencode-cli.exe` or `%LOCALAPPDATA%\\Programs\\@opencode-aidesktop`) was not detected when not in system PATH or named `opencode-cli`.\n  - Added binary probing and spawn resolution for both `opencode` and `opencode-cli` aliases across common Windows installation locations and PATH directories."
+  },
+  {
     "version": "0.1.0-alpha.4",
     "date": "2026-09-20",
     "channel": "preview",
@@ -278,6 +329,13 @@ export const RELEASE_MANIFESTS: ReleaseManifestEntry[] = [
 
 /** Every released version, newest first. */
 export const RELEASE_INDEX: ReleaseIndexEntry[] = [
+  {
+    "version": "0.1.0-alpha.5",
+    "date": "2026-09-21",
+    "channel": "preview",
+    "summary": "ZEUS 0.1.0-alpha.5 resolves headless agent streaming, discovery, and handshake issues across Cline, Codex, and OpenCode on Windows:",
+    "detailed": true
+  },
   {
     "version": "0.1.0-alpha.4",
     "date": "2026-09-20",
