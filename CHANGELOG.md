@@ -1557,6 +1557,31 @@ operational.
 
 ## [Unreleased]
 
+## [0.1.0-alpha.3] - 2026-09-20
+
+ZEUS 0.1.0-alpha.3 is a critical stability patch resolving Windows installation shortcut
+disappearance after updates and fixing the `spawn ENOENT` failure when running headless
+agents (Cline, OpenCode, Codex) installed via npm on Windows.
+
+### Fixed
+
+- **Windows Desktop and Start Menu shortcuts wiped during updates & reinstalls**:
+  - `customInit` in `assets/installer/installer.nsh` previously scrubbed `ZEUS.lnk` during
+    pre-install cleanup. Combined with electron-builder's `$keepShortcuts = "true"` upgrade logic,
+    the installer skipped recreating shortcuts, leaving updated machines without Desktop or
+    Start Menu launchers.
+  - Removed shortcut deletion from `customInit`, and added an automated safety net in `customInstall`
+    to ensure `$newStartMenuLink` and `$newDesktopLink` exist and notify Windows Shell.
+  - Enabled `createDesktopShortcut: always` in `electron-builder.yml`.
+- **Headless agent spawning failure on Windows (`spawn cline ENOENT`)**:
+  - On Windows, npm global CLIs (`cline`, `opencode`, `codex`) are `.cmd` / `.bat` shell shims.
+    Node's `child_process.spawn()` with `shell: false` fails with `ENOENT` because Win32
+    `CreateProcessW` only directly executes `.exe` binaries.
+  - Introduced `resolveSpawnTarget` utility that bridges `.cmd` and `.bat` shims via
+    `%ComSpec% /d /s /c` with static argv arrays, preserving SEC-08 (no `shell: true`).
+  - Corrected ACP protocol initialization in `AcpClient`: updated `protocolVersion` to integer `1`
+    per ACP standard, eliminating parameter validation rejections from Cline and OpenCode.
+
 ## [0.1.0-alpha.2] - 2026-09-19
 
 ZEUS 0.1.0-alpha.2 delivers the complete ZEUS v0.2.0 milestone, introducing comprehensive

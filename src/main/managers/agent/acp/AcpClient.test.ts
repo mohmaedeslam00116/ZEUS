@@ -178,7 +178,7 @@ describe('AcpClient Protocol Handshake & Lifecycle (#57)', () => {
     const initReq = mockEnv.receivedFrames[0] as JsonRpcRequest;
     expect(initReq.method).toBe('initialize');
     expect(initReq.params).toEqual({
-      protocolVersion: '2024-11-05',
+      protocolVersion: 1,
       clientInfo: { name: 'zeus', version: '0.2.0' },
       capabilities: {
         tools: { requestPermission: true },
@@ -188,7 +188,7 @@ describe('AcpClient Protocol Handshake & Lifecycle (#57)', () => {
 
     // Simulate Agent responding to initialize
     const initResponse: AcpInitializeResult = {
-      protocolVersion: '2024-11-05',
+      protocolVersion: 1,
       agentInfo: { name: 'cline', version: '1.0.0' },
       capabilities: { streaming: true },
     };
@@ -230,7 +230,7 @@ describe('AcpClient Protocol Handshake & Lifecycle (#57)', () => {
       serializeJsonRpc({
         jsonrpc: '2.0',
         id: (mockEnv.receivedFrames[0] as JsonRpcRequest).id,
-        result: { protocolVersion: '2024-11-05' },
+        result: { protocolVersion: 1 },
       }),
     );
     await startPromise;
@@ -348,7 +348,7 @@ describe('AcpClient Protocol Handshake & Lifecycle (#57)', () => {
       serializeJsonRpc({
         jsonrpc: '2.0',
         id: (mockEnv.receivedFrames[0] as JsonRpcRequest).id,
-        result: { protocolVersion: '2024-11-05' },
+        result: { protocolVersion: 1 },
       }),
     );
     await startPromise;
@@ -391,7 +391,7 @@ describe('SEC-19 Synchronous Tool Permission Gating (#57)', () => {
       serializeJsonRpc({
         jsonrpc: '2.0',
         id: (mockEnv.receivedFrames[0] as JsonRpcRequest).id,
-        result: { protocolVersion: '2024-11-05' },
+        result: { protocolVersion: 1 },
       }),
     );
     await startPromise;
@@ -469,7 +469,7 @@ describe('SEC-19 Synchronous Tool Permission Gating (#57)', () => {
       serializeJsonRpc({
         jsonrpc: '2.0',
         id: (mockEnv.receivedFrames[0] as JsonRpcRequest).id,
-        result: { protocolVersion: '2024-11-05' },
+        result: { protocolVersion: 1 },
       }),
     );
     await startPromise;
@@ -534,7 +534,7 @@ describe('SEC-19 Synchronous Tool Permission Gating (#57)', () => {
       serializeJsonRpc({
         jsonrpc: '2.0',
         id: (mockEnv.receivedFrames[0] as JsonRpcRequest).id,
-        result: { protocolVersion: '2024-11-05' },
+        result: { protocolVersion: 1 },
       }),
     );
     await startPromise;
@@ -587,7 +587,7 @@ describe('SEC-19 Synchronous Tool Permission Gating (#57)', () => {
       serializeJsonRpc({
         jsonrpc: '2.0',
         id: (mockEnv.receivedFrames[0] as JsonRpcRequest).id,
-        result: { protocolVersion: '2024-11-05' },
+        result: { protocolVersion: 1 },
       }),
     );
     await startPromise;
@@ -653,7 +653,7 @@ describe('Cancellation & Teardown (#57)', () => {
       serializeJsonRpc({
         jsonrpc: '2.0',
         id: (mockEnv.receivedFrames[0] as JsonRpcRequest).id,
-        result: { protocolVersion: '2024-11-05' },
+        result: { protocolVersion: 1 },
       }),
     );
     await startPromise;
@@ -727,7 +727,7 @@ describe('Cancellation & Teardown (#57)', () => {
       serializeJsonRpc({
         jsonrpc: '2.0',
         id: (mockEnv.receivedFrames[0] as JsonRpcRequest).id,
-        result: { protocolVersion: '2024-11-05' },
+        result: { protocolVersion: 1 },
       }),
     );
     await startPromise;
@@ -756,5 +756,41 @@ describe('Cancellation & Teardown (#57)', () => {
     await expect(startPromise).rejects.toThrow(
       'ACP process exited prematurely (code 1, signal none): Fatal: missing authentication token',
     );
+  });
+
+  it('bridges Windows .cmd and .bat shims via ComSpec preserving SEC-08 argv-only', async () => {
+    let capturedCmd = '';
+    let capturedArgs: readonly string[] = [];
+
+    const client = new AcpClient({
+      executablePath: 'C:\\Users\\Dell\\AppData\\Roaming\\npm\\cline.cmd',
+      args: ['--acp'],
+      cwd: 'C:\\fake\\workspace',
+      env: { ComSpec: 'C:\\Windows\\system32\\cmd.exe' },
+      onRequestPermission: vi.fn(),
+      spawnFn: (cmd, args) => {
+        capturedCmd = cmd;
+        capturedArgs = args;
+        return mockEnv.child;
+      },
+    });
+
+    const startPromise = client.start();
+    if (process.platform === 'win32') {
+      expect(capturedCmd).toBe('C:\\Windows\\system32\\cmd.exe');
+      expect(capturedArgs).toEqual([
+        '/d',
+        '/s',
+        '/c',
+        'C:\\Users\\Dell\\AppData\\Roaming\\npm\\cline.cmd',
+        '--acp',
+      ]);
+    } else {
+      expect(capturedCmd).toBe('C:\\Users\\Dell\\AppData\\Roaming\\npm\\cline.cmd');
+      expect(capturedArgs).toEqual(['--acp']);
+    }
+
+    client.dispose();
+    await expect(startPromise).rejects.toThrow();
   });
 });

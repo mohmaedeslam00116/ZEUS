@@ -3,6 +3,7 @@ import { EventEmitter } from 'node:events';
 import { PassThrough } from 'node:stream';
 import type { ChildProcess } from 'node:child_process';
 import { CodexClient } from './CodexClient';
+import { resolveSpawnTarget } from '../resolveSpawnTarget';
 import { JsonRpcStreamParser, serializeJsonRpc } from '../acp/jsonRpc';
 import type {
   CodexApprovalRequestParams,
@@ -65,9 +66,10 @@ describe('CodexClient Stdio JSON-RPC Protocol & Tool Gating (#59)', () => {
     const startPromise = client.start();
 
     // Verify spawn options (SEC-08 argv-only without shell)
+    const expectedTarget = resolveSpawnTarget('codex', ['app-server']);
     expect(spawnFnSpy).toHaveBeenCalledWith(
-      'codex',
-      ['app-server'],
+      expectedTarget.command,
+      expectedTarget.args,
       expect.objectContaining({
         shell: false,
         windowsHide: true,
@@ -337,5 +339,39 @@ describe('CodexClient Stdio JSON-RPC Protocol & Tool Gating (#59)', () => {
     client.dispose();
 
     await expect(pendingPromise).rejects.toThrow(/CodexClient has been disposed/);
+  });
+
+  it('bridges Windows .cmd and .bat shims via ComSpec preserving SEC-08 argv-only', async () => {
+    let capturedCmd = '';
+    let capturedArgs: readonly string[] = [];
+
+    const client = new CodexClient({
+      binaryPath: 'C:\\Users\\Dell\\AppData\\Roaming\\npm\\codex.cmd',
+      cwd: 'C:\\test\\workspace',
+      env: { ComSpec: 'C:\\Windows\\system32\\cmd.exe' },
+      spawnFn: (cmd, args) => {
+        capturedCmd = cmd;
+        capturedArgs = args as string[];
+        return mockProcess.child;
+      },
+    });
+
+    const startPromise = client.start();
+    if (process.platform === 'win32') {
+      expect(capturedCmd).toBe('C:\\Windows\\system32\\cmd.exe');
+      expect(capturedArgs).toEqual([
+        '/d',
+        '/s',
+        '/c',
+        'C:\\Users\\Dell\\AppData\\Roaming\\npm\\codex.cmd',
+        'app-server',
+      ]);
+    } else {
+      expect(capturedCmd).toBe('C:\\Users\\Dell\\AppData\\Roaming\\npm\\codex.cmd');
+      expect(capturedArgs).toEqual(['app-server']);
+    }
+
+    client.dispose();
+    await expect(startPromise).rejects.toThrow();
   });
 });

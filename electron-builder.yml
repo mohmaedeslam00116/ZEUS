@@ -81,7 +81,7 @@ nsis:
   uninstallerSidebar: assets/installer/uninstallerSidebar.bmp
   installerHeader: assets/installer/installerHeader.bmp
   license: LICENSE
-  createDesktopShortcut: true
+  createDesktopShortcut: always
   createStartMenuShortcut: true
   shortcutName: ZEUS
   # Root-level Start-menu shortcut (no vendor subfolder) — the modern Windows

@@ -56,7 +56,7 @@ function createFakeClientFactory(state: FakeAcpClientState) {
       start: vi.fn().mockImplementation(async (): Promise<AcpInitializeResult> => {
         state.startCalled = true;
         return {
-          protocolVersion: '2024-11-05',
+          protocolVersion: 1,
           agentInfo: { name: options.executablePath, version: '1.0.0' },
         };
       }),

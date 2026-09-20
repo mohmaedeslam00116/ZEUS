@@ -13,6 +13,7 @@ import { spawn, type ChildProcess } from 'node:child_process';
 import path from 'node:path';
 import { CODEX_LIMITS } from '@shared/constants';
 import { killTree } from '../killTree';
+import { resolveSpawnTarget } from '../resolveSpawnTarget';
 import { redactSecrets } from '../../graph/redact';
 import {
   JsonRpcStreamParser,
@@ -78,10 +79,11 @@ export class CodexClient {
     }
 
     const env = sanitizeCodexEnvironment(this.options.env);
+    const target = resolveSpawnTarget(binary, ['app-server'], { env });
 
     const spawnFn = this.options.spawnFn ?? spawn;
     // SEC-08: spawn directly without shell wrapping
-    const child = spawnFn(binary, ['app-server'], {
+    const child = spawnFn(target.command, target.args, {
       cwd: effectiveCwd,
       env,
       stdio: ['pipe', 'pipe', 'pipe'],

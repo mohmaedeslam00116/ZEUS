@@ -63,7 +63,7 @@ export interface AcpAgentCapabilities {
 }
 
 export interface AcpInitializeParams {
-  protocolVersion: string;
+  protocolVersion: number | string;
   clientInfo: {
     name: string;
     version: string;
@@ -72,7 +72,7 @@ export interface AcpInitializeParams {
 }
 
 export interface AcpInitializeResult {
-  protocolVersion: string;
+  protocolVersion: number | string;
   agentInfo?: {
     name: string;
     version?: string;

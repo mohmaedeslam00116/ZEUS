@@ -13,6 +13,7 @@ import path from 'node:path';
 import { spawn, type ChildProcess, type SpawnOptions } from 'node:child_process';
 import { ACP_LIMITS } from '@shared/constants';
 import { killTree } from '../killTree';
+import { resolveSpawnTarget } from '../resolveSpawnTarget';
 import { redactSecrets } from '../../graph/redact';
 import {
   isJsonRpcNotification,
@@ -84,10 +85,13 @@ export class AcpClient {
       throw new Error(`Working directory must be an absolute path: "${cwd}"`);
     }
 
+    const effectiveEnv = env ?? process.env;
+    const target = resolveSpawnTarget(executablePath, args, { env: effectiveEnv });
+
     // SEC-08: argv-only spawning (shell: false by default).
-    const child = spawnFn(executablePath, args, {
+    const child = spawnFn(target.command, target.args, {
       cwd,
-      env: env ?? process.env,
+      env: effectiveEnv,
       windowsHide: true,
       stdio: ['pipe', 'pipe', 'pipe'],
     });
@@ -150,7 +154,7 @@ export class AcpClient {
 
     // Perform ACP capabilities exchange
     const initParams: AcpInitializeParams = {
-      protocolVersion: '2024-11-05',
+      protocolVersion: 1,
       clientInfo: {
         name: 'zeus',
         version: '0.2.0',
