@@ -398,6 +398,7 @@ describe('AgentManager Headless Provider Routing & Dispatch (#56)', () => {
       mockStream,
       expect.any(Object),
       expect.any(Function),
+      undefined,
     );
 
     probeSpy.mockRestore();
@@ -445,6 +446,7 @@ describe('AgentManager Headless Provider Routing & Dispatch (#56)', () => {
       mockStream,
       expect.any(Object),
       expect.any(Function),
+      undefined,
     );
 
     probeSpy.mockRestore();

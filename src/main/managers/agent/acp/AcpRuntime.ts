@@ -50,9 +50,21 @@ export interface AcpRuntimeOptions {
   logger?: (level: 'debug' | 'info' | 'warn' | 'error', message: string, detail?: unknown) => void;
 }
 
+interface ActiveAcpSession {
+  client: AcpClient;
+  acpSessionId: string;
+  cwd: string;
+  currentTurn?: {
+    bridge: ProviderRunBridge;
+    context: ReturnType<typeof newAcpTranslateContext>;
+    gate?: ToolGateFunction;
+    abortSignal: AbortSignal;
+  };
+}
+
 export class AcpRuntime implements AgentRuntimeAdapter {
   readonly provider: 'cline' | 'opencode';
-  private readonly activeClients = new Map<string, AcpClient>();
+  private readonly activeSessions = new Map<string, ActiveAcpSession>();
   private isDisposed = false;
 
   constructor(
@@ -66,7 +78,7 @@ export class AcpRuntime implements AgentRuntimeAdapter {
   }
 
   /**
-   * Executes a single headless agent run turn.
+   * Executes a headless agent run turn, reusing persistent session and child process when available.
    */
   async run(
     sessionId: string,
@@ -77,6 +89,7 @@ export class AcpRuntime implements AgentRuntimeAdapter {
     stream: AgentRuntimeStreamCallbacks,
     bridge?: ProviderRunBridge,
     gate?: ToolGateFunction,
+    resumeSessionId?: string,
   ): Promise<void> {
     if (this.isDisposed) {
       throw new Error(`AcpRuntime for ${this.provider} has been disposed.`);
@@ -96,93 +109,143 @@ export class AcpRuntime implements AgentRuntimeAdapter {
 
     const context = newAcpTranslateContext(sessionId);
 
-    // 1. Discover host profile and sanitize environment
-    const profile = discoverProfile(this.provider, this.options.configDir);
-    const extraEnv: Record<string, string> = {
-      ...(this.options.extraEnv ?? {}),
-      ...(profile.configDir
-        ? { [this.provider === 'cline' ? 'CLINE_DIR' : 'OPENCODE_CONFIG_DIR']: profile.configDir }
-        : {}),
-    };
-    const env = sanitizeEnvironment(extraEnv);
+    let session = this.activeSessions.get(sessionId);
 
-    // 2. Resolve default executable and arguments
-    const executablePath =
-      this.options.executablePath ?? (this.provider === 'cline' ? 'cline' : 'opencode');
-    const args = this.options.args ?? (this.provider === 'cline' ? ['--acp'] : ['acp']);
+    // If existing session process terminated or cwd changed, tear down and recreate
+    if (session) {
+      const isConnected = session.client.isConnected ? session.client.isConnected() : true;
+      if (!isConnected || session.cwd !== cwd) {
+        session.client.dispose();
+        this.activeSessions.delete(sessionId);
+        session = undefined;
+      }
+    }
 
-    // 3. Create ACP Client
-    const clientFactory = this.options.clientFactory ?? ((opts) => new AcpClient(opts));
-    const client = clientFactory({
-      executablePath,
-      args,
-      cwd,
-      env,
-      timeoutMs: this.options.timeoutMs,
-      graceMs: this.options.graceMs,
-      logger:
-        this.options.logger ??
-        ((level, msg) => {
-          effectiveBridge.diag('agent', level === 'warn' ? 'warning' : level, msg);
-        }),
-      onRequestPermission: async (
-        params: AcpPermissionRequestParams,
-        signal?: AbortSignal,
-      ): Promise<AcpPermissionResult> => {
-        // SEC-19: Synchronous tool permission gating
-        if (gate) {
-          try {
-            const decision = await gate(params.toolName, params.input, signal ?? abort.signal);
-            return {
-              approved: decision.behavior === 'allow',
-              reason: decision.message,
-              updatedInput: decision.updatedInput,
-            };
-          } catch (err) {
-            return {
-              approved: false,
-              reason: err instanceof Error ? err.message : 'Tool permission check failed',
-            };
+    if (!session) {
+      // 1. Discover host profile and sanitize environment
+      const profile = discoverProfile(this.provider, this.options.configDir);
+      const extraEnv: Record<string, string> = {
+        ...(this.options.extraEnv ?? {}),
+        ...(profile.configDir
+          ? { [this.provider === 'cline' ? 'CLINE_DIR' : 'OPENCODE_CONFIG_DIR']: profile.configDir }
+          : {}),
+      };
+      const env = sanitizeEnvironment(extraEnv);
+
+      // 2. Resolve default executable and arguments
+      const executablePath =
+        this.options.executablePath ?? (this.provider === 'cline' ? 'cline' : 'opencode');
+      const args = this.options.args ?? (this.provider === 'cline' ? ['--acp'] : ['acp']);
+
+      // 3. Create ACP Client
+      const clientFactory = this.options.clientFactory ?? ((opts) => new AcpClient(opts));
+      const client = clientFactory({
+        executablePath,
+        args,
+        cwd,
+        env,
+        timeoutMs: this.options.timeoutMs,
+        graceMs: this.options.graceMs,
+        logger:
+          this.options.logger ??
+          ((level, msg) => {
+            const currentBridge = this.activeSessions.get(sessionId)?.currentTurn?.bridge ?? effectiveBridge;
+            currentBridge.diag('agent', level === 'warn' ? 'warning' : level, msg);
+          }),
+        onRequestPermission: async (
+          params: AcpPermissionRequestParams,
+          signal?: AbortSignal,
+        ): Promise<AcpPermissionResult> => {
+          const activeTurn = this.activeSessions.get(sessionId)?.currentTurn;
+          const currentGate = activeTurn?.gate ?? gate;
+          const currentSignal = signal ?? activeTurn?.abortSignal ?? abort.signal;
+
+          // SEC-19: Synchronous tool permission gating
+          if (currentGate) {
+            try {
+              const decision = await currentGate(params.toolName, params.input, currentSignal);
+              return {
+                approved: decision.behavior === 'allow',
+                reason: decision.message,
+                updatedInput: decision.updatedInput,
+              };
+            } catch (err) {
+              return {
+                approved: false,
+                reason: err instanceof Error ? err.message : 'Tool permission check failed',
+              };
+            }
           }
-        }
 
-        // Default permission behavior when no explicit gate is passed
-        const approved = permMode === 'acceptEdits';
-        return {
-          approved,
-          reason: approved ? undefined : 'Permission denied: tool requires approval.',
-        };
-      },
-      onNotification: (method: string, params: unknown) => {
-        translateAcpNotification(
-          { jsonrpc: '2.0', method, params },
-          effectiveBridge,
-          context,
-        );
-      },
-    });
+          // Default permission behavior when no explicit gate is passed
+          const approved = permMode === 'acceptEdits';
+          return {
+            approved,
+            reason: approved ? undefined : 'Permission denied: tool requires approval.',
+          };
+        },
+        onNotification: (method: string, params: unknown) => {
+          const activeTurn = this.activeSessions.get(sessionId)?.currentTurn;
+          const targetBridge = activeTurn?.bridge ?? effectiveBridge;
+          const targetContext = activeTurn?.context ?? context;
+          translateAcpNotification(
+            { jsonrpc: '2.0', method, params },
+            targetBridge,
+            targetContext,
+          );
+        },
+      });
 
-    this.activeClients.set(sessionId, client);
-
-    try {
       // 4. Initialization handshake
       await client.start();
 
-      // 5. Extract bilingual instructions if present in prompt
-      let instructions: string | undefined;
-      if (prompt.includes(ARABIC_LOCALE_INSTRUCTION)) {
-        instructions = ARABIC_LOCALE_INSTRUCTION;
+      let acpSessionId: string | null = null;
+
+      // 5. Try loading existing session if resumeSessionId is supplied
+      if (resumeSessionId && client.loadSession) {
+        try {
+          const loaded = await client.loadSession(resumeSessionId, cwd);
+          if (loaded) {
+            acpSessionId = resumeSessionId;
+          }
+        } catch {
+          // Fall back to creating a new session
+        }
       }
 
-      // 6. Create ACP session
-      const acpSessionId = await client.createSession(cwd, instructions);
+      // 6. If not loaded, create new ACP session
+      if (!acpSessionId) {
+        let instructions: string | undefined;
+        if (prompt.includes(ARABIC_LOCALE_INSTRUCTION)) {
+          instructions = ARABIC_LOCALE_INSTRUCTION;
+        }
+        acpSessionId = await client.createSession(cwd, instructions);
+      }
+
       effectiveBridge.onInit(acpSessionId);
 
+      session = {
+        client,
+        acpSessionId,
+        cwd,
+      };
+      this.activeSessions.set(sessionId, session);
+    }
+
+    // Bind current turn context for streaming and gating
+    session.currentTurn = {
+      bridge: effectiveBridge,
+      context,
+      gate,
+      abortSignal: abort.signal,
+    };
+
+    try {
       // 7. Start turn streaming
       effectiveBridge.ensureStreaming();
 
-      const result: AcpSessionPromptResult = await client.prompt(
-        acpSessionId,
+      const result: AcpSessionPromptResult = await session.client.prompt(
+        session.acpSessionId,
         prompt,
         abort.signal,
       );
@@ -197,21 +260,40 @@ export class AcpRuntime implements AgentRuntimeAdapter {
       const ok = result.stopReason !== 'cancelled';
       effectiveBridge.onResult(ok, context.accumulatedText);
       effectiveBridge.finishStreaming(context.accumulatedText);
+
+      if (!ok) {
+        await this.closeSession(sessionId);
+      }
+    } catch (err) {
+      await this.closeSession(sessionId);
+      throw err;
     } finally {
-      client.dispose();
-      this.activeClients.delete(sessionId);
+      if (session) {
+        session.currentTurn = undefined;
+      }
     }
   }
 
   /**
-   * Terminate active child process on shutdown.
+   * Explicitly closes and terminates the ACP client for a session.
+   */
+  async closeSession(sessionId: string): Promise<void> {
+    const session = this.activeSessions.get(sessionId);
+    if (session) {
+      this.activeSessions.delete(sessionId);
+      session.client.dispose();
+    }
+  }
+
+  /**
+   * Terminate active child processes on shutdown.
    */
   dispose(): void {
     if (this.isDisposed) return;
     this.isDisposed = true;
-    for (const client of this.activeClients.values()) {
-      client.dispose();
+    for (const session of this.activeSessions.values()) {
+      session.client.dispose();
     }
-    this.activeClients.clear();
+    this.activeSessions.clear();
   }
 }

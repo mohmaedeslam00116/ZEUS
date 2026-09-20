@@ -230,6 +230,45 @@ export class AcpClient {
   }
 
   /**
+   * Resumes an existing ACP session with the agent (`session/load`).
+   * Returns true if the agent successfully restored the session state, or false if not found.
+   */
+  async loadSession(
+    sessionId: string,
+    cwd: string,
+    mcpServers: unknown[] = [],
+  ): Promise<boolean> {
+    if (!path.isAbsolute(cwd)) {
+      throw new Error(`Session working directory must be an absolute path: "${cwd}"`);
+    }
+    const payload: Record<string, unknown> = {
+      sessionId,
+      cwd,
+      mcpServers,
+    };
+    try {
+      await this.sendRequest('session/load', payload);
+      this.activeSessionId = sessionId;
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Checks whether the underlying child process is active, writable, and not disposed.
+   */
+  isConnected(): boolean {
+    return Boolean(
+      this.child &&
+        !this.child.killed &&
+        this.child.exitCode === null &&
+        this.child.stdin?.writable &&
+        !this.isDisposed,
+    );
+  }
+
+  /**
    * Prompts the agent within an active session (`session/prompt`).
    * Blocks until turn completion while streaming updates and synchronously gating tools.
    */

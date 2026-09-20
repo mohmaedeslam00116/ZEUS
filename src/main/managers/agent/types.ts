@@ -70,5 +70,8 @@ export interface AgentRuntimeAdapter {
     stream: AgentRuntimeStreamCallbacks,
     bridge?: ProviderRunBridge,
     gate?: ToolGateFunction,
+    resumeSessionId?: string,
   ): Promise<void>;
+  closeSession?(sessionId: string): Promise<void>;
+  dispose?(): Promise<void> | void;
 }

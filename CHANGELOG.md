@@ -1557,6 +1557,18 @@ operational.
 
 ## [Unreleased]
 
+## [0.1.0-alpha.6] - 2026-09-21
+
+ZEUS 0.1.0-alpha.6 fixes headless ACP agent conversation memory loss and session continuity across turns:
+
+### Fixed
+
+- **Headless ACP agents (Cline) losing conversational context across turns (`0 Context used`)**:
+  - In multi-turn sessions, `AcpRuntime` previously disposed the underlying child process and ACP session at the end of each turn (`client.dispose()` in `finally`), forcing every subsequent turn to spawn a clean process with an empty session.
+  - Sequential prompts in the same conversation session now maintain and reuse the active child process and ACP session (`activeSessions` registry), preserving full context, conversation history, and tool outputs.
+  - Added support for ACP `session/load` in `AcpClient` to gracefully restore saved sessions from disk across application restarts or session reconnection using persisted provider session IDs.
+  - `AgentManager` now forwards the saved `providerSessionId` to runtime adapters as `resumeSessionId` and coordinates clean process termination when sessions are explicitly closed or forgotten.
+
 ## [0.1.0-alpha.5] - 2026-09-21
 
 ZEUS 0.1.0-alpha.5 resolves headless agent streaming, discovery, and handshake issues across Cline, Codex, and OpenCode on Windows:

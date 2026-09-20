@@ -114,6 +114,8 @@ function createFakeClientFactory(state: FakeAcpClientState) {
           };
         },
       ),
+      isConnected: vi.fn().mockReturnValue(true),
+      loadSession: vi.fn().mockResolvedValue(true),
       cancelSession: vi.fn(),
       dispose: vi.fn().mockImplementation(() => {
         state.disposed = true;
@@ -159,6 +161,8 @@ describe('Headless Cline & OpenCode ACP Runtimes (#58)', () => {
     expect(state.options.args).toEqual(['--acp']);
     expect(state.options.cwd).toBe('/fake/workspace');
     expect(state.sessionParams?.cwd).toBe('/fake/workspace');
+    expect(state.disposed).toBe(false);
+    runtime.dispose();
     expect(state.disposed).toBe(true);
 
     // Verify bridge calls from simulated stream
@@ -204,6 +208,8 @@ describe('Headless Cline & OpenCode ACP Runtimes (#58)', () => {
     expect(state.startCalled).toBe(true);
     expect(state.options.executablePath).toBe('opencode');
     expect(state.options.args).toEqual(['acp']);
+    expect(state.disposed).toBe(false);
+    runtime.dispose();
     expect(state.disposed).toBe(true);
   });
 
@@ -436,5 +442,49 @@ describe('Headless Cline & OpenCode ACP Runtimes (#58)', () => {
     const runtime = new AcpRuntime('cline');
     runtime.dispose();
     expect(() => runtime.dispose()).not.toThrow();
+  });
+
+  it('reuses active client and ACP session across sequential turns in same conversation', async () => {
+    let clientInstantiations = 0;
+    const promptCalls: string[] = [];
+
+    const mockClient = {
+      start: vi.fn().mockResolvedValue({}),
+      createSession: vi.fn().mockResolvedValue('acp-persistent-sess-1'),
+      prompt: vi.fn().mockImplementation((_sessId, promptText) => {
+        promptCalls.push(promptText);
+        return { stopReason: 'endTurn' };
+      }),
+      isConnected: vi.fn().mockReturnValue(true),
+      cancelSession: vi.fn(),
+      dispose: vi.fn(),
+    } as unknown as AcpClient;
+
+    const runtime = new AcpRuntime('cline', {
+      clientFactory: () => {
+        clientInstantiations++;
+        return mockClient;
+      },
+    });
+
+    const stream = createMockStream();
+    const abort1 = new AbortController();
+    const abort2 = new AbortController();
+
+    // Turn 1
+    await runtime.run('session-persistent', 'Turn 1 prompt', '/workspace', abort1, 'ask', stream);
+
+    // Turn 2
+    await runtime.run('session-persistent', 'Turn 2 prompt', '/workspace', abort2, 'ask', stream);
+
+    expect(clientInstantiations).toBe(1);
+    expect(mockClient.createSession).toHaveBeenCalledTimes(1);
+    expect(mockClient.prompt).toHaveBeenCalledTimes(2);
+    expect(promptCalls).toEqual(['Turn 1 prompt', 'Turn 2 prompt']);
+    expect(mockClient.dispose).not.toHaveBeenCalled();
+
+    // Close session
+    await runtime.closeSession?.('session-persistent');
+    expect(mockClient.dispose).toHaveBeenCalledTimes(1);
   });
 });

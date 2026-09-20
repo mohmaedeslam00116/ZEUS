@@ -178,6 +178,19 @@ export class CodexClient {
   }
 
   /**
+   * Checks whether the underlying child process is active, writable, and not disposed.
+   */
+  isConnected(): boolean {
+    return Boolean(
+      this.child &&
+        !this.child.killed &&
+        this.child.exitCode === null &&
+        this.child.stdin?.writable &&
+        !this.disposed,
+    );
+  }
+
+  /**
    * Executes a turn within an active thread, streaming progress and handling approvals.
    */
   async runTurn(

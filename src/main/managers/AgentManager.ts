@@ -3783,7 +3783,18 @@ export class AgentManager {
       this.decideToolUse(sessionId, cwd, permMode, toolName, input, sig ?? abort.signal);
 
     const finalPrompt = injectedContext ? `${injectedContext}\n\n${prompt}` : prompt;
-    await runtime.run(sessionId, finalPrompt, cwd, abort, permMode, stream, bridge, gate);
+    const resumeSessionId = this.loadProviderSession(sessionId, provider);
+    await runtime.run(
+      sessionId,
+      finalPrompt,
+      cwd,
+      abort,
+      permMode,
+      stream,
+      bridge,
+      gate,
+      resumeSessionId,
+    );
   }
 
   /* ---------------------------------------------------------------- */
@@ -7135,6 +7146,13 @@ export class AgentManager {
     getDb()
       .prepare('DELETE FROM agent_provider_sessions WHERE session_id = ? AND provider = ?')
       .run(sessionId, provider);
+    if (provider === 'cline') {
+      void this.clineRuntime?.closeSession?.(sessionId);
+    } else if (provider === 'opencode') {
+      void this.openCodeRuntime?.closeSession?.(sessionId);
+    } else if (provider === 'codex') {
+      void this.codexRuntime?.closeSession?.(sessionId);
+    }
   }
 
   /* ------------------------------------------------------------------ */
