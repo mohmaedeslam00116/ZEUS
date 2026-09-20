@@ -1557,6 +1557,27 @@ operational.
 
 ## [Unreleased]
 
+## [0.1.0-alpha.4] - 2026-09-20
+
+ZEUS 0.1.0-alpha.4 resolves JSON-RPC wire-format incompatibilities with headless
+agents running under the Agent Client Protocol (ACP) and Codex app-server protocols.
+
+### Fixed
+
+- **Headless ACP agent parameter validation failures (`ACP RPC Error [-32602]: Invalid params`)**:
+  - In standard ACP v1, `session/new` enforces `{"required": ["cwd", "mcpServers"]}`.
+    ZEUS previously omitted `mcpServers`, triggering schema rejections (`mcpServers: Invalid input`)
+    in ACP runtimes like Cline and OpenCode. `mcpServers: []` is now always included.
+  - In ACP v1, `session/prompt` requires `prompt` to be an array of `ContentBlock` objects
+    (`[{ type: 'text', text: ... }]`). Raw strings previously caused schema rejection
+    (`prompt: Invalid input: expected array, received string`). Prompts are now normalized
+    into standard ACP content blocks.
+  - Added `clientCapabilities` (fs/terminal) during the initial `initialize` handshake.
+- **Codex turn dispatch error (`Codex RPC Error [-32600]: Invalid request: missing field input`)**:
+  - The Codex app-server wire protocol expects prompts structured under `input` as content
+    blocks rather than a top-level string `prompt`. Requests now supply `input: [{ type: 'text', text: prompt }]`
+    and normalize `turnId` from the returned `turn.id`.
+
 ## [0.1.0-alpha.3] - 2026-09-20
 
 ZEUS 0.1.0-alpha.3 is a critical stability patch resolving Windows installation shortcut

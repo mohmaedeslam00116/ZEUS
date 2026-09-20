@@ -263,7 +263,7 @@ export class AcpClient {
       const promptPayload: AcpContentBlock[] = Array.isArray(promptText)
         ? (promptText as AcpContentBlock[])
         : [{ type: 'text', text: promptText }];
-      const params = {
+      const params: AcpSessionPromptParams = {
         sessionId,
         prompt: promptPayload,
       };

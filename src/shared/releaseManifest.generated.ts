@@ -24,6 +24,53 @@ import type { ReleaseIndexEntry, ReleaseManifestEntry } from './release';
 /** Newest first. */
 export const RELEASE_MANIFESTS: ReleaseManifestEntry[] = [
   {
+    "version": "0.1.0-alpha.4",
+    "date": "2026-09-20",
+    "channel": "preview",
+    "codename": null,
+    "gitTag": "v0.1.0-alpha.4",
+    "commit": null,
+    "buildNumber": null,
+    "summary": "ZEUS 0.1.0-alpha.4 resolves JSON-RPC wire-format incompatibilities with headless\nagents running under the Agent Client Protocol (ACP) and Codex app-server protocols.",
+    "sections": [
+      {
+        "category": "fixed",
+        "title": "Fixed",
+        "items": [
+          {
+            "lead": "Headless ACP agent parameter validation failures (`ACP RPC Error [-32602]: Invalid params`)",
+            "text": ":\n  - In standard ACP v1, `session/new` enforces `{\"required\": [\"cwd\", \"mcpServers\"]}`.\n    ZEUS previously omitted `mcpServers`, triggering schema rejections (`mcpServers: Invalid input`)\n    in ACP runtimes like Cline and OpenCode. `mcpServers: []` is now always included.\n  - In ACP v1, `session/prompt` requires `prompt` to be an array of `ContentBlock` objects\n    (`[{ type: 'text', text: ... }]`). Raw strings previously caused schema rejection\n    (`prompt: Invalid input: expected array, received string`). Prompts are now normalized\n    into standard ACP content blocks.\n  - Added `clientCapabilities` (fs/terminal) during the initial `initialize` handshake."
+          },
+          {
+            "lead": "Codex turn dispatch error (`Codex RPC Error [-32600]: Invalid request: missing field input`)",
+            "text": ":\n  - The Codex app-server wire protocol expects prompts structured under `input` as content\n    blocks rather than a top-level string `prompt`. Requests now supply `input: [{ type: 'text', text: prompt }]`\n    and normalize `turnId` from the returned `turn.id`."
+          }
+        ],
+        "markdown": "- **Headless ACP agent parameter validation failures (`ACP RPC Error [-32602]: Invalid params`)**:\n  - In standard ACP v1, `session/new` enforces `{\"required\": [\"cwd\", \"mcpServers\"]}`.\n    ZEUS previously omitted `mcpServers`, triggering schema rejections (`mcpServers: Invalid input`)\n    in ACP runtimes like Cline and OpenCode. `mcpServers: []` is now always included.\n  - In ACP v1, `session/prompt` requires `prompt` to be an array of `ContentBlock` objects\n    (`[{ type: 'text', text: ... }]`). Raw strings previously caused schema rejection\n    (`prompt: Invalid input: expected array, received string`). Prompts are now normalized\n    into standard ACP content blocks.\n  - Added `clientCapabilities` (fs/terminal) during the initial `initialize` handshake.\n- **Codex turn dispatch error (`Codex RPC Error [-32600]: Invalid request: missing field input`)**:\n  - The Codex app-server wire protocol expects prompts structured under `input` as content\n    blocks rather than a top-level string `prompt`. Requests now supply `input: [{ type: 'text', text: prompt }]`\n    and normalize `turnId` from the returned `turn.id`."
+      }
+    ],
+    "contributors": [],
+    "pullRequests": [],
+    "mergedBranches": [],
+    "assets": [],
+    "signing": [],
+    "stats": {
+      "commits": null,
+      "filesChanged": null,
+      "additions": null,
+      "deletions": null
+    },
+    "links": {
+      "release": "https://github.com/mohmaedeslam00116/ZEUS/releases/tag/v0.1.0-alpha.4",
+      "compare": null,
+      "tag": "https://github.com/mohmaedeslam00116/ZEUS/releases/tag/v0.1.0-alpha.4",
+      "milestone": null
+    },
+    "checksumManifest": "SHA256SUMS",
+    "provenanceRepo": "mohmaedeslam00116/ZEUS",
+    "markdown": "ZEUS 0.1.0-alpha.4 resolves JSON-RPC wire-format incompatibilities with headless\nagents running under the Agent Client Protocol (ACP) and Codex app-server protocols.\n\n### Fixed\n\n- **Headless ACP agent parameter validation failures (`ACP RPC Error [-32602]: Invalid params`)**:\n  - In standard ACP v1, `session/new` enforces `{\"required\": [\"cwd\", \"mcpServers\"]}`.\n    ZEUS previously omitted `mcpServers`, triggering schema rejections (`mcpServers: Invalid input`)\n    in ACP runtimes like Cline and OpenCode. `mcpServers: []` is now always included.\n  - In ACP v1, `session/prompt` requires `prompt` to be an array of `ContentBlock` objects\n    (`[{ type: 'text', text: ... }]`). Raw strings previously caused schema rejection\n    (`prompt: Invalid input: expected array, received string`). Prompts are now normalized\n    into standard ACP content blocks.\n  - Added `clientCapabilities` (fs/terminal) during the initial `initialize` handshake.\n- **Codex turn dispatch error (`Codex RPC Error [-32600]: Invalid request: missing field input`)**:\n  - The Codex app-server wire protocol expects prompts structured under `input` as content\n    blocks rather than a top-level string `prompt`. Requests now supply `input: [{ type: 'text', text: prompt }]`\n    and normalize `turnId` from the returned `turn.id`."
+  },
+  {
     "version": "0.1.0-alpha.3",
     "date": "2026-09-20",
     "channel": "preview",
@@ -231,6 +278,13 @@ export const RELEASE_MANIFESTS: ReleaseManifestEntry[] = [
 
 /** Every released version, newest first. */
 export const RELEASE_INDEX: ReleaseIndexEntry[] = [
+  {
+    "version": "0.1.0-alpha.4",
+    "date": "2026-09-20",
+    "channel": "preview",
+    "summary": "ZEUS 0.1.0-alpha.4 resolves JSON-RPC wire-format incompatibilities with headless\nagents running under the Agent Client Protocol (ACP) and Codex app-server protocols.",
+    "detailed": true
+  },
   {
     "version": "0.1.0-alpha.3",
     "date": "2026-09-20",
