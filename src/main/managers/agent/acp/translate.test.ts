@@ -232,4 +232,88 @@ describe('Direct ACP to AgentEvent Mapping (#58)', () => {
       status: 'done',
     });
   });
+
+  it('translates standard ACP v1 nested agent_message_chunk to queueDelta', () => {
+    const bridge = createMockBridge();
+    const ctx = newAcpTranslateContext('sess-1');
+
+    const notif = {
+      jsonrpc: '2.0' as const,
+      method: 'session/update',
+      params: {
+        sessionId: 'sess-1',
+        update: {
+          sessionUpdate: 'agent_message_chunk',
+          content: { type: 'text', text: 'Hello from Cline!' },
+        },
+      } as AcpSessionUpdateParams,
+    };
+
+    translateAcpNotification(notif, bridge, ctx);
+
+    expect(bridge.queueDelta).toHaveBeenCalledWith('Hello from Cline!');
+    expect(ctx.accumulatedText).toBe('Hello from Cline!');
+  });
+
+  it('translates standard ACP v1 nested agent_thought_chunk to onThinking', () => {
+    const bridge = createMockBridge();
+    const ctx = newAcpTranslateContext('sess-1');
+
+    const notif = {
+      jsonrpc: '2.0' as const,
+      method: 'session/update',
+      params: {
+        sessionId: 'sess-1',
+        update: {
+          sessionUpdate: 'agent_thought_chunk',
+          content: { type: 'text', text: 'Thinking deeply...' },
+        },
+      } as AcpSessionUpdateParams,
+    };
+
+    translateAcpNotification(notif, bridge, ctx);
+
+    expect(bridge.onThinking).toHaveBeenCalledWith('Thinking deeply...');
+  });
+
+  it('translates standard ACP v1 nested tool_call and tool_call_update', () => {
+    const bridge = createMockBridge();
+    const ctx = newAcpTranslateContext('sess-1');
+
+    const callNotif = {
+      jsonrpc: '2.0' as const,
+      method: 'session/update',
+      params: {
+        sessionId: 'sess-1',
+        update: {
+          sessionUpdate: 'tool_call',
+          toolCallId: 'call-99',
+          toolName: 'WriteFile',
+          input: { path: 'a.txt', content: 'abc' },
+        },
+      } as AcpSessionUpdateParams,
+    };
+
+    translateAcpNotification(callNotif, bridge, ctx);
+    expect(bridge.onToolUse).toHaveBeenCalledWith('call-99', 'WriteFile', { path: 'a.txt', content: 'abc' });
+    expect(ctx.openCalls.has('call-99')).toBe(true);
+
+    const resultNotif = {
+      jsonrpc: '2.0' as const,
+      method: 'session/update',
+      params: {
+        sessionId: 'sess-1',
+        update: {
+          sessionUpdate: 'tool_call_update',
+          toolCallId: 'call-99',
+          status: 'done',
+          output: 'File written successfully',
+        },
+      } as AcpSessionUpdateParams,
+    };
+
+    translateAcpNotification(resultNotif, bridge, ctx);
+    expect(bridge.onToolResult).toHaveBeenCalledWith('call-99', 'done', 'File written successfully');
+    expect(ctx.openCalls.has('call-99')).toBe(false);
+  });
 });

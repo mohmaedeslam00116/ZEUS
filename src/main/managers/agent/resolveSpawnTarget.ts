@@ -94,28 +94,59 @@ export function resolveSpawnTarget(
     return { command, args: [...args] };
   }
 
-  // 4. Bare command lookup on Windows PATH
+  // 4. Bare command lookup on Windows PATH and standard directories
   const pathEnv = env.PATH || env.Path || '';
   const dirs = pathEnv
     .split(';')
     .filter((d) => Boolean(d) && pathOps.isAbsolute(d));
 
-  for (const dir of dirs) {
-    for (const testExt of WINDOWS_SEARCH_EXTENSIONS) {
-      const candidate = pathOps.join(dir, `${command}${testExt}`);
+  const localAppData = env.LOCALAPPDATA || '';
+  const programFiles = env.ProgramFiles || 'C:\\Program Files';
+  const programFilesX86 = env['ProgramFiles(x86)'] || 'C:\\Program Files (x86)';
+  const userProfile = env.USERPROFILE || '';
+
+  const winCommonPaths = [
+    userProfile ? pathOps.join(userProfile, 'AppData', 'Roaming', 'npm') : null,
+    localAppData ? pathOps.join(localAppData, 'Programs', '@opencode-aidesktop') : null,
+    localAppData ? pathOps.join(localAppData, 'Programs', 'OpenCode') : null,
+    pathOps.join(programFiles, 'OpenCode'),
+    pathOps.join(programFilesX86, 'OpenCode'),
+    'D:\\Program Files\\OpenCode',
+    'D:\\Program Files (x86)\\OpenCode',
+  ].filter((p): p is string => Boolean(p));
+
+  for (const p of winCommonPaths) {
+    if (!dirs.includes(p)) {
       try {
-        if (fsExists(candidate)) {
-          const foundExt = pathOps.extname(candidate).toLowerCase();
-          if (WINDOWS_SHIM_EXTENSIONS.includes(foundExt)) {
-            return {
-              command: comSpec,
-              args: ['/d', '/s', '/c', candidate, ...args],
-            };
-          }
-          return { command: candidate, args: [...args] };
+        if (fsExists(p)) {
+          dirs.push(p);
         }
       } catch {
         // Ignore unreadable paths
+      }
+    }
+  }
+
+  const candidateCommands = command === 'opencode' ? ['opencode', 'opencode-cli'] : [command];
+
+  for (const cmdName of candidateCommands) {
+    for (const dir of dirs) {
+      for (const testExt of WINDOWS_SEARCH_EXTENSIONS) {
+        const candidate = pathOps.join(dir, `${cmdName}${testExt}`);
+        try {
+          if (fsExists(candidate)) {
+            const foundExt = pathOps.extname(candidate).toLowerCase();
+            if (WINDOWS_SHIM_EXTENSIONS.includes(foundExt)) {
+              return {
+                command: comSpec,
+                args: ['/d', '/s', '/c', candidate, ...args],
+              };
+            }
+            return { command: candidate, args: [...args] };
+          }
+        } catch {
+          // Ignore unreadable paths
+        }
       }
     }
   }

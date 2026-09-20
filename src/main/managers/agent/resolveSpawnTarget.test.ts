@@ -115,6 +115,27 @@ describe('resolveSpawnTarget', () => {
       });
     });
 
+    it('resolves opencode to opencode-cli.exe in common Windows directory fallback', () => {
+      const fakeFiles = new Set([
+        'D:\\Program Files\\OpenCode\\opencode-cli.exe',
+        'D:\\Program Files\\OpenCode',
+      ]);
+
+      const result = resolveSpawnTarget('opencode', ['acp'], {
+        platform: 'win32',
+        env: {
+          PATH: 'C:\\Windows\\system32',
+          ComSpec: 'cmd.exe',
+        },
+        fsExists: (p) => fakeFiles.has(p),
+      });
+
+      expect(result).toEqual({
+        command: 'D:\\Program Files\\OpenCode\\opencode-cli.exe',
+        args: ['acp'],
+      });
+    });
+
     it('falls back to returning original command if not found on PATH', () => {
       const result = resolveSpawnTarget('nonexistent-agent', ['--help'], {
         platform: 'win32',

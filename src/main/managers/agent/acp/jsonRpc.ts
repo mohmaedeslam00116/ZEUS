@@ -102,11 +102,15 @@ export class JsonRpcStreamParser {
 
     try {
       const parsed = JSON.parse(rawLine) as unknown;
-      if (typeof parsed === 'object' && parsed !== null && 'jsonrpc' in parsed) {
+      if (
+        typeof parsed === 'object' &&
+        parsed !== null &&
+        ('jsonrpc' in parsed || 'id' in parsed || 'method' in parsed)
+      ) {
         this.onMessage(parsed as JsonRpcMessage);
       } else {
         this.onError?.(
-          new Error('Invalid JSON-RPC frame: missing "jsonrpc" header'),
+          new Error('Invalid JSON-RPC frame: missing "jsonrpc", "id", or "method" header'),
           rawLine,
         );
       }

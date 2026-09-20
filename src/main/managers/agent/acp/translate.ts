@@ -47,6 +47,82 @@ export function translateAcpNotification(
   if (notif.method === 'session/update') {
     const params = (notif.params ?? {}) as AcpSessionUpdateParams;
 
+    // 1. Standard ACP v1 nested sessionUpdate structure (e.g. from Cline / OpenCode)
+    if (params.update && typeof params.update === 'object') {
+      const update = params.update;
+      const sessionUpdate = update.sessionUpdate;
+
+      switch (sessionUpdate) {
+        case 'agent_message_chunk': {
+          let text = '';
+          if (typeof update.content === 'string') {
+            text = update.content;
+          } else if (Array.isArray(update.content)) {
+            text = update.content
+              .map((c) => (typeof c === 'object' && c && 'text' in c ? String(c.text ?? '') : ''))
+              .join('');
+          } else if (typeof update.content === 'object' && update.content !== null) {
+            text = String(update.content.text ?? '');
+          }
+          if (text) {
+            context.accumulatedText += text;
+            bridge.queueDelta(text);
+          }
+          break;
+        }
+
+        case 'agent_thought_chunk': {
+          let thought = '';
+          if (typeof update.content === 'string') {
+            thought = update.content;
+          } else if (Array.isArray(update.content)) {
+            thought = update.content
+              .map((c) => (typeof c === 'object' && c && 'text' in c ? String(c.text ?? '') : ''))
+              .join('');
+          } else if (typeof update.content === 'object' && update.content !== null) {
+            thought = String(update.content.text ?? '');
+          }
+          if (thought) {
+            bridge.onThinking?.(thought);
+          }
+          break;
+        }
+
+        case 'tool_call': {
+          const id = update.toolCallId ?? `call_${Math.random().toString(36).slice(2, 8)}`;
+          const name = update.toolName ?? update.title ?? 'tool';
+          const input = (update.input ?? update.rawInput ?? {}) as Record<string, unknown>;
+          context.openCalls.add(id);
+          bridge.onToolUse(id, name, input);
+          break;
+        }
+
+        case 'tool_call_update':
+        case 'tool_result': {
+          const id = update.toolCallId ?? '';
+          const status = update.status === 'error' ? 'error' : 'done';
+          const output = update.output ?? '';
+          context.openCalls.delete(id);
+          bridge.onToolResult(id, status, output);
+          break;
+        }
+
+        case 'session_info_update': {
+          bridge.diag('activity', 'info', 'Session updated', undefined);
+          break;
+        }
+
+        default: {
+          break;
+        }
+      }
+
+      if (update.usage) {
+        applyUsage(update.usage, context, bridge);
+      }
+    }
+
+    // 2. Flat kind structure (legacy/internal ACP framing)
     switch (params.kind) {
       case 'textDelta': {
         const text = params.delta ?? '';
@@ -98,7 +174,7 @@ export function translateAcpNotification(
 
       default: {
         // Unknown or future update kind -> safely ignore or record debug diagnostic
-        if (params.delta) {
+        if (params.delta && !params.update) {
           bridge.diag('stream', 'debug', `Unrecognized ACP update kind: ${String(params.kind)}`, params.delta);
         }
         break;

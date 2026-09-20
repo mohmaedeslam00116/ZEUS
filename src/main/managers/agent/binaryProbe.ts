@@ -116,7 +116,33 @@ export async function probeBinary(
     .filter((d) => Boolean(d) && pathOps.isAbsolute(d));
 
   // Add standard user and system binary directories for GUI apps
-  if (platform !== 'win32') {
+  if (platform === 'win32') {
+    const localAppData = env.LOCALAPPDATA || '';
+    const programFiles = env.ProgramFiles || 'C:\\Program Files';
+    const programFilesX86 = env['ProgramFiles(x86)'] || 'C:\\Program Files (x86)';
+    const userProfile = env.USERPROFILE || os.homedir();
+
+    const winCommonPaths = [
+      pathOps.join(userProfile, 'AppData', 'Roaming', 'npm'),
+      pathOps.join(localAppData, 'Programs', '@opencode-aidesktop'),
+      pathOps.join(localAppData, 'Programs', 'OpenCode'),
+      pathOps.join(programFiles, 'OpenCode'),
+      pathOps.join(programFilesX86, 'OpenCode'),
+      'D:\\Program Files\\OpenCode',
+      'D:\\Program Files (x86)\\OpenCode',
+    ];
+    for (const p of winCommonPaths) {
+      if (p && !dirs.includes(p)) {
+        try {
+          if (fsExists(p)) {
+            dirs.push(p);
+          }
+        } catch {
+          // Skip unreadable path
+        }
+      }
+    }
+  } else {
     const home = env.HOME || os.homedir();
     const commonPaths = [
       pathOps.join(home, '.local', 'bin'),
@@ -132,36 +158,47 @@ export async function probeBinary(
   // Windows extensions vs POSIX
   const extensions = platform === 'win32' ? ['.exe', '.cmd', '.bat', ''] : [''];
 
-  // 2. Direct filesystem scan in PATH directories
+  const candidateNames =
+    providerOrBinary === 'opencode'
+      ? ['opencode', 'opencode-cli']
+      : [binaryName];
+
+  // 2. Direct filesystem scan in PATH and standard directories
   let foundPath: string | undefined;
-  for (const dir of dirs) {
-    for (const ext of extensions) {
-      const candidate = pathOps.join(dir, `${binaryName}${ext}`);
-      try {
-        if (fsExists(candidate)) {
-          foundPath = candidate;
-          break;
+  for (const name of candidateNames) {
+    for (const dir of dirs) {
+      for (const ext of extensions) {
+        const candidate = pathOps.join(dir, `${name}${ext}`);
+        try {
+          if (fsExists(candidate)) {
+            foundPath = candidate;
+            break;
+          }
+        } catch {
+          // Skip unreadable path
         }
-      } catch {
-        // Skip unreadable path
       }
+      if (foundPath) break;
     }
     if (foundPath) break;
   }
 
   // 3. System lookup fallback (`where.exe` on Windows, `which` on POSIX)
   if (!foundPath) {
-    try {
-      const lookupCmd = platform === 'win32' ? 'where.exe' : 'which';
-      const result = await execFn(lookupCmd, [binaryName], { timeout: timeoutMs });
-      if (result.ok && result.stdout) {
-        const firstHit = result.stdout.split(/\r?\n/)[0]?.trim();
-        if (firstHit && pathOps.isAbsolute(firstHit) && fsExists(firstHit)) {
-          foundPath = firstHit;
+    for (const name of candidateNames) {
+      try {
+        const lookupCmd = platform === 'win32' ? 'where.exe' : 'which';
+        const result = await execFn(lookupCmd, [name], { timeout: timeoutMs });
+        if (result.ok && result.stdout) {
+          const firstHit = result.stdout.split(/\r?\n/)[0]?.trim();
+          if (firstHit && pathOps.isAbsolute(firstHit) && fsExists(firstHit)) {
+            foundPath = firstHit;
+            break;
+          }
         }
+      } catch {
+        // Lookup failed or timed out
       }
-    } catch {
-      // Lookup failed or timed out
     }
   }
 

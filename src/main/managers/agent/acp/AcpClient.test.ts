@@ -130,6 +130,23 @@ describe('JSON-RPC 2.0 Framing & Parsing (#57)', () => {
     expect(received[0]).toEqual({ jsonrpc: '2.0', method: 'ok' });
   });
 
+  it('parses valid frames where jsonrpc header is omitted (e.g. Codex app-server responses)', () => {
+    const received: JsonRpcMessage[] = [];
+    const errors: string[] = [];
+    const parser = new JsonRpcStreamParser(
+      (msg) => received.push(msg),
+      (err) => errors.push(err.message),
+    );
+
+    parser.feed('{"id":1,"result":{"userAgent":"codex"}}\n');
+    parser.feed('{"method":"remoteControl/status/changed","params":{"status":"disabled"}}\n');
+
+    expect(errors).toHaveLength(0);
+    expect(received).toHaveLength(2);
+    expect(received[0]).toEqual({ id: 1, result: { userAgent: 'codex' } });
+    expect(received[1]).toEqual({ method: 'remoteControl/status/changed', params: { status: 'disabled' } });
+  });
+
   it('type-guards identify requests, notifications, and responses accurately', () => {
     const req = { jsonrpc: '2.0', id: 1, method: 'ping' } as const;
     const notif = { jsonrpc: '2.0', method: 'update' } as const;

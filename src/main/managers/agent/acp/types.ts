@@ -162,9 +162,35 @@ export interface AcpPermissionResult {
 /* ACP Streaming Notification Types                                 */
 /* ---------------------------------------------------------------- */
 
+export interface AcpSessionUpdateObject {
+  sessionUpdate?: string;
+  content?:
+    | {
+        type?: string;
+        text?: string;
+        [key: string]: unknown;
+      }
+    | Array<{
+        type?: string;
+        text?: string;
+        [key: string]: unknown;
+      }>
+    | string;
+  toolCallId?: string;
+  toolName?: string;
+  title?: string;
+  rawInput?: unknown;
+  input?: Record<string, unknown>;
+  status?: string;
+  output?: string;
+  usage?: AcpUsageMetrics;
+  [key: string]: unknown;
+}
+
 export interface AcpSessionUpdateParams {
   sessionId: string;
-  kind: 'textDelta' | 'thoughtDelta' | 'toolUse' | 'toolResult' | 'progress' | 'usage';
+  update?: AcpSessionUpdateObject;
+  kind?: 'textDelta' | 'thoughtDelta' | 'toolUse' | 'toolResult' | 'progress' | 'usage' | string;
   delta?: string;
   toolCallId?: string;
   toolName?: string;
