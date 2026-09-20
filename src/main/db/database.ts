@@ -814,6 +814,8 @@ function migrate(database: Database.Database): void {
   // and without this the raw prompt reappeared in the transcript on every
   // reload. NULL for every ordinary prompt, which is the overwhelming majority.
   addColumnIfMissing(database, 'agent_messages', 'display', { type: 'TEXT' });
+  // Model thinking / chain-of-thought deltas. NULL when the provider emits no thoughts.
+  addColumnIfMissing(database, 'agent_messages', 'thinking', { type: 'TEXT' });
 
   // Plan Mode state machine (schema v19). `rev` is the concurrency token: every
   // mutating plan IPC carries the rev it believes it is acting on, and the

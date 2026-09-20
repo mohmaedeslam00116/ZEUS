@@ -194,6 +194,7 @@ export interface AcpSessionUpdateParams {
   delta?: string;
   toolCallId?: string;
   toolName?: string;
+  title?: string;
   input?: Record<string, unknown>;
   output?: string;
   status?: 'done' | 'error';

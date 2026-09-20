@@ -90,8 +90,32 @@ export function translateAcpNotification(
 
         case 'tool_call': {
           const id = update.toolCallId ?? `call_${Math.random().toString(36).slice(2, 8)}`;
-          const name = update.toolName ?? update.title ?? 'tool';
-          const input = (update.input ?? update.rawInput ?? {}) as Record<string, unknown>;
+          let name = update.toolName;
+          let targetStr: string | undefined;
+          if (!name && update.title) {
+            const colonIdx = update.title.indexOf(':');
+            if (colonIdx > 0) {
+              name = update.title.slice(0, colonIdx).trim();
+              targetStr = update.title.slice(colonIdx + 1).trim();
+            } else {
+              name = update.title.trim();
+            }
+          }
+          name = name || 'tool';
+          const input = { ...((update.input ?? update.rawInput ?? {}) as Record<string, unknown>) };
+          if (targetStr && !input.url && !input.path && !input.command && !input.query && !input.file_path) {
+            if (targetStr.startsWith('http://') || targetStr.startsWith('https://')) {
+              input.url = targetStr;
+            } else if (targetStr.startsWith('{') && targetStr.endsWith('}')) {
+              try {
+                Object.assign(input, JSON.parse(targetStr));
+              } catch {
+                input.target = targetStr;
+              }
+            } else {
+              input.target = targetStr;
+            }
+          }
           context.openCalls.add(id);
           bridge.onToolUse(id, name, input);
           break;
@@ -143,8 +167,26 @@ export function translateAcpNotification(
 
       case 'toolUse': {
         const id = params.toolCallId ?? `call_${Math.random().toString(36).slice(2, 8)}`;
-        const name = params.toolName ?? 'tool';
-        const input = params.input ?? {};
+        let name = params.toolName;
+        let targetStr: string | undefined;
+        if (!name && params.title) {
+          const colonIdx = params.title.indexOf(':');
+          if (colonIdx > 0) {
+            name = params.title.slice(0, colonIdx).trim();
+            targetStr = params.title.slice(colonIdx + 1).trim();
+          } else {
+            name = params.title.trim();
+          }
+        }
+        name = name || 'tool';
+        const input = { ...((params.input ?? {}) as Record<string, unknown>) };
+        if (targetStr && !input.url && !input.path && !input.command && !input.query && !input.file_path) {
+          if (targetStr.startsWith('http://') || targetStr.startsWith('https://')) {
+            input.url = targetStr;
+          } else {
+            input.target = targetStr;
+          }
+        }
         context.openCalls.add(id);
         bridge.onToolUse(id, name, input);
         break;

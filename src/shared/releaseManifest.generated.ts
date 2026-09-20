@@ -24,6 +24,60 @@ import type { ReleaseIndexEntry, ReleaseManifestEntry } from './release';
 /** Newest first. */
 export const RELEASE_MANIFESTS: ReleaseManifestEntry[] = [
   {
+    "version": "0.1.0-alpha.7",
+    "date": "2026-09-21",
+    "channel": "preview",
+    "codename": null,
+    "gitTag": "v0.1.0-alpha.7",
+    "commit": null,
+    "buildNumber": null,
+    "summary": "ZEUS 0.1.0-alpha.7 introduces a dedicated collapsible thinking/reasoning process display and fixes tool invocation row layout and RTL alignment issues:",
+    "sections": [
+      {
+        "category": "added",
+        "title": "Added",
+        "items": [
+          {
+            "lead": "Collapsible thinking/reasoning process display (`ThinkingBlock`)",
+            "text": ":\n  - The model's internal thinking and chain-of-thought reasoning stream is now displayed in its own dedicated, collapsible accordion block separate from conversational text.\n  - Features real-time status badges (\"Thinking...\" / \"يفكّر الآن...\" while actively reasoning, and \"Completed\" / \"مكتمل\" once settled), a monospace pre-wrap transcript view with copy and toggle controls, and full bidirectional layout support.\n  - Persisted in SQLite `agent_messages` (`thinking` column) so reasoning chains are preserved across session reload and app restarts."
+          }
+        ],
+        "markdown": "- **Collapsible thinking/reasoning process display (`ThinkingBlock`)**:\n  - The model's internal thinking and chain-of-thought reasoning stream is now displayed in its own dedicated, collapsible accordion block separate from conversational text.\n  - Features real-time status badges (\"Thinking...\" / \"يفكّر الآن...\" while actively reasoning, and \"Completed\" / \"مكتمل\" once settled), a monospace pre-wrap transcript view with copy and toggle controls, and full bidirectional layout support.\n  - Persisted in SQLite `agent_messages` (`thinking` column) so reasoning chains are preserved across session reload and app restarts."
+      },
+      {
+        "category": "fixed",
+        "title": "Fixed",
+        "items": [
+          {
+            "lead": "Duplicated tool invocation rows and mangled RTL display in conversation view",
+            "text": ":\n  - Fixed duplicate string rendering where colon-delimited tool titles (emitted by Cline and ACP providers like `fetch_web_content: https://...`) were displayed twice on the same line.\n  - Separated tool command names from arguments during ACP event translation, cleanly populating `call.name`, `call.target`, and `call.input`.\n  - Reordered the tool call status dot to lead the invocation row, preventing layout reversal in RTL mode.\n  - Added explicit LTR directional enforcement (`dir=\"ltr\"`) and monospace formatting for command paths and URLs to eliminate text scrambling and left-edge truncation."
+          }
+        ],
+        "markdown": "- **Duplicated tool invocation rows and mangled RTL display in conversation view**:\n  - Fixed duplicate string rendering where colon-delimited tool titles (emitted by Cline and ACP providers like `fetch_web_content: https://...`) were displayed twice on the same line.\n  - Separated tool command names from arguments during ACP event translation, cleanly populating `call.name`, `call.target`, and `call.input`.\n  - Reordered the tool call status dot to lead the invocation row, preventing layout reversal in RTL mode.\n  - Added explicit LTR directional enforcement (`dir=\"ltr\"`) and monospace formatting for command paths and URLs to eliminate text scrambling and left-edge truncation."
+      }
+    ],
+    "contributors": [],
+    "pullRequests": [],
+    "mergedBranches": [],
+    "assets": [],
+    "signing": [],
+    "stats": {
+      "commits": null,
+      "filesChanged": null,
+      "additions": null,
+      "deletions": null
+    },
+    "links": {
+      "release": "https://github.com/mohmaedeslam00116/ZEUS/releases/tag/v0.1.0-alpha.7",
+      "compare": null,
+      "tag": "https://github.com/mohmaedeslam00116/ZEUS/releases/tag/v0.1.0-alpha.7",
+      "milestone": null
+    },
+    "checksumManifest": "SHA256SUMS",
+    "provenanceRepo": "mohmaedeslam00116/ZEUS",
+    "markdown": "ZEUS 0.1.0-alpha.7 introduces a dedicated collapsible thinking/reasoning process display and fixes tool invocation row layout and RTL alignment issues:\n\n### Added\n\n- **Collapsible thinking/reasoning process display (`ThinkingBlock`)**:\n  - The model's internal thinking and chain-of-thought reasoning stream is now displayed in its own dedicated, collapsible accordion block separate from conversational text.\n  - Features real-time status badges (\"Thinking...\" / \"يفكّر الآن...\" while actively reasoning, and \"Completed\" / \"مكتمل\" once settled), a monospace pre-wrap transcript view with copy and toggle controls, and full bidirectional layout support.\n  - Persisted in SQLite `agent_messages` (`thinking` column) so reasoning chains are preserved across session reload and app restarts.\n\n### Fixed\n\n- **Duplicated tool invocation rows and mangled RTL display in conversation view**:\n  - Fixed duplicate string rendering where colon-delimited tool titles (emitted by Cline and ACP providers like `fetch_web_content: https://...`) were displayed twice on the same line.\n  - Separated tool command names from arguments during ACP event translation, cleanly populating `call.name`, `call.target`, and `call.input`.\n  - Reordered the tool call status dot to lead the invocation row, preventing layout reversal in RTL mode.\n  - Added explicit LTR directional enforcement (`dir=\"ltr\"`) and monospace formatting for command paths and URLs to eliminate text scrambling and left-edge truncation."
+  },
+  {
     "version": "0.1.0-alpha.6",
     "date": "2026-09-21",
     "channel": "preview",
@@ -210,72 +264,18 @@ export const RELEASE_MANIFESTS: ReleaseManifestEntry[] = [
     "checksumManifest": "SHA256SUMS",
     "provenanceRepo": "mohmaedeslam00116/ZEUS",
     "markdown": "ZEUS 0.1.0-alpha.3 is a critical stability patch resolving Windows installation shortcut\ndisappearance after updates and fixing the `spawn ENOENT` failure when running headless\nagents (Cline, OpenCode, Codex) installed via npm on Windows.\n\n### Fixed\n\n- **Windows Desktop and Start Menu shortcuts wiped during updates & reinstalls**:\n  - `customInit` in `assets/installer/installer.nsh` previously scrubbed `ZEUS.lnk` during\n    pre-install cleanup. Combined with electron-builder's `$keepShortcuts = \"true\"` upgrade logic,\n    the installer skipped recreating shortcuts, leaving updated machines without Desktop or\n    Start Menu launchers.\n  - Removed shortcut deletion from `customInit`, and added an automated safety net in `customInstall`\n    to ensure `$newStartMenuLink` and `$newDesktopLink` exist and notify Windows Shell.\n  - Enabled `createDesktopShortcut: always` in `electron-builder.yml`.\n- **Headless agent spawning failure on Windows (`spawn cline ENOENT`)**:\n  - On Windows, npm global CLIs (`cline`, `opencode`, `codex`) are `.cmd` / `.bat` shell shims.\n    Node's `child_process.spawn()` with `shell: false` fails with `ENOENT` because Win32\n    `CreateProcessW` only directly executes `.exe` binaries.\n  - Introduced `resolveSpawnTarget` utility that bridges `.cmd` and `.bat` shims via\n    `%ComSpec% /d /s /c` with static argv arrays, preserving SEC-08 (no `shell: true`).\n  - Corrected ACP protocol initialization in `AcpClient`: updated `protocolVersion` to integer `1`\n    per ACP standard, eliminating parameter validation rejections from Cline and OpenCode."
-  },
-  {
-    "version": "0.1.0-alpha.2",
-    "date": "2026-09-19",
-    "channel": "preview",
-    "codename": null,
-    "gitTag": "v0.1.0-alpha.2",
-    "commit": null,
-    "buildNumber": null,
-    "summary": "ZEUS 0.1.0-alpha.2 delivers the complete ZEUS v0.2.0 milestone, introducing comprehensive\nbidirectional Arabic localization across the application shell and expanding the coding agent\necosystem to support headless Cline, OpenCode, and OpenAI Codex behind ZEUS's provider-neutral\norchestration seam.",
-    "sections": [
-      {
-        "category": "other",
-        "title": "Major user-visible changes",
-        "items": [
-          {
-            "lead": "Bidirectional Arabic localization & RTL layout system (ADR-0011)",
-            "text": ":\n  - Added Arabic (`'ar'`) and English (`'en'`) language switching in Settings › Appearance with\n    zero-restart, instantaneous in-memory catalog updates.\n  - Implemented Canvas-Only RTL as default, preserving physical muscle-memory navigation for the\n    Sessions sidebar and Activity drawer while presenting the central conversation and prompt\n    canvas in natural right-to-left layout.\n  - Optional Full Mirror mode (`'full-rtl'`) flips the entire desktop chrome when preferred.\n  - Cairo Arabic typography (`--font-sans-ar`) with relaxed leading to prevent diacritic clipping.\n  - Strict LTR isolation (`unicode-bidi: isolate; direction: ltr !important`) enforced across all\n    code blocks, diff views, file paths, and terminal streams."
-          },
-          {
-            "lead": "Bilingual agent prompt guidance & English Conventional Commits",
-            "text": ":\n  - Centralized `LocaleContext` in `AgentManager`: when Arabic interface or guidance is active,\n    agents are instructed to reason and converse in Modern Standard Arabic while keeping all code,\n    terminal commands, symbol names, file paths, and parameters strictly in ASCII/English.\n  - Automated git commit generation (`COMMIT_SYSTEM_PROMPT`) preserves standard English\n    Conventional Commits (`feat:`, `fix:`) for global CI/CD compatibility."
-          },
-          {
-            "lead": "Headless agent provider expansion (Cline, OpenCode, OpenAI Codex)",
-            "text": ":\n  - Support for autonomous CLI agents running headlessly behind ZEUS's unified permission core:\n    `cline`, `opencode`, and `codex`.\n  - Added `AcpRuntime` driving `cline --acp` and `opencode acp` via stdio JSON-RPC Agent Client Protocol.\n  - Added native `CodexRuntime` interfacing directly with `codex app-server` over stdio JSON-RPC,\n    eliminating harness-level tool approval bypasses.\n  - Automatic local credential and profile discovery (`~/.codex/auth.json`, `~/.cline`, `~/.config/opencode`),\n    allowing ChatGPT Plus/Pro subscribers to use Codex without pay-per-token API keys.\n  - Settings › Agent displays live CLI probe availability and actionable copy-paste installation commands."
-          },
-          {
-            "lead": "Strict security & permission invariants (SEC-14, SEC-16, SEC-19)",
-            "text": ":\n  - Synchronous fail-closed tool permission gating (`decideToolUse`) for all tool calls from Cline,\n    OpenCode, and Codex, blocking execution until approved by user or session policy.\n  - Crown-jewel database and secrets paths (`userData/zeus.db`, `userData/secrets/`) strictly off-limits.\n  - Stdio debug streams and diagnostic logging automatically redact API tokens, bearer keys, and credentials.\n  - Complete process and abort-signal isolation across concurrent multi-provider sessions."
-          }
-        ],
-        "markdown": "- **Bidirectional Arabic localization & RTL layout system (ADR-0011)**:\n  - Added Arabic (`'ar'`) and English (`'en'`) language switching in Settings › Appearance with\n    zero-restart, instantaneous in-memory catalog updates.\n  - Implemented Canvas-Only RTL as default, preserving physical muscle-memory navigation for the\n    Sessions sidebar and Activity drawer while presenting the central conversation and prompt\n    canvas in natural right-to-left layout.\n  - Optional Full Mirror mode (`'full-rtl'`) flips the entire desktop chrome when preferred.\n  - Cairo Arabic typography (`--font-sans-ar`) with relaxed leading to prevent diacritic clipping.\n  - Strict LTR isolation (`unicode-bidi: isolate; direction: ltr !important`) enforced across all\n    code blocks, diff views, file paths, and terminal streams.\n- **Bilingual agent prompt guidance & English Conventional Commits**:\n  - Centralized `LocaleContext` in `AgentManager`: when Arabic interface or guidance is active,\n    agents are instructed to reason and converse in Modern Standard Arabic while keeping all code,\n    terminal commands, symbol names, file paths, and parameters strictly in ASCII/English.\n  - Automated git commit generation (`COMMIT_SYSTEM_PROMPT`) preserves standard English\n    Conventional Commits (`feat:`, `fix:`) for global CI/CD compatibility.\n- **Headless agent provider expansion (Cline, OpenCode, OpenAI Codex)**:\n  - Support for autonomous CLI agents running headlessly behind ZEUS's unified permission core:\n    `cline`, `opencode`, and `codex`.\n  - Added `AcpRuntime` driving `cline --acp` and `opencode acp` via stdio JSON-RPC Agent Client Protocol.\n  - Added native `CodexRuntime` interfacing directly with `codex app-server` over stdio JSON-RPC,\n    eliminating harness-level tool approval bypasses.\n  - Automatic local credential and profile discovery (`~/.codex/auth.json`, `~/.cline`, `~/.config/opencode`),\n    allowing ChatGPT Plus/Pro subscribers to use Codex without pay-per-token API keys.\n  - Settings › Agent displays live CLI probe availability and actionable copy-paste installation commands.\n- **Strict security & permission invariants (SEC-14, SEC-16, SEC-19)**:\n  - Synchronous fail-closed tool permission gating (`decideToolUse`) for all tool calls from Cline,\n    OpenCode, and Codex, blocking execution until approved by user or session policy.\n  - Crown-jewel database and secrets paths (`userData/zeus.db`, `userData/secrets/`) strictly off-limits.\n  - Stdio debug streams and diagnostic logging automatically redact API tokens, bearer keys, and credentials.\n  - Complete process and abort-signal isolation across concurrent multi-provider sessions."
-      },
-      {
-        "category": "other",
-        "title": "Installing (Windows, unsigned)",
-        "items": [],
-        "markdown": "1. Download `ZEUS-Setup-0.1.0-alpha.2-x64.exe` from this release.\n2. If SmartScreen appears, choose **More info** → **Run anyway** — expected for an unsigned build.\n   Verify the SHA-256 checksum against `SHA256SUMS`.\n3. The installer is per-user (no administrator rights required). If updating from `v0.1.0-alpha.1`,\n   ZEUS will detect this update automatically via the in-app update channel."
-      }
-    ],
-    "contributors": [],
-    "pullRequests": [],
-    "mergedBranches": [],
-    "assets": [],
-    "signing": [],
-    "stats": {
-      "commits": null,
-      "filesChanged": null,
-      "additions": null,
-      "deletions": null
-    },
-    "links": {
-      "release": "https://github.com/mohmaedeslam00116/ZEUS/releases/tag/v0.1.0-alpha.2",
-      "compare": null,
-      "tag": "https://github.com/mohmaedeslam00116/ZEUS/releases/tag/v0.1.0-alpha.2",
-      "milestone": null
-    },
-    "checksumManifest": "SHA256SUMS",
-    "provenanceRepo": "mohmaedeslam00116/ZEUS",
-    "markdown": "ZEUS 0.1.0-alpha.2 delivers the complete ZEUS v0.2.0 milestone, introducing comprehensive\nbidirectional Arabic localization across the application shell and expanding the coding agent\necosystem to support headless Cline, OpenCode, and OpenAI Codex behind ZEUS's provider-neutral\norchestration seam.\n\n### Major user-visible changes\n\n- **Bidirectional Arabic localization & RTL layout system (ADR-0011)**:\n  - Added Arabic (`'ar'`) and English (`'en'`) language switching in Settings › Appearance with\n    zero-restart, instantaneous in-memory catalog updates.\n  - Implemented Canvas-Only RTL as default, preserving physical muscle-memory navigation for the\n    Sessions sidebar and Activity drawer while presenting the central conversation and prompt\n    canvas in natural right-to-left layout.\n  - Optional Full Mirror mode (`'full-rtl'`) flips the entire desktop chrome when preferred.\n  - Cairo Arabic typography (`--font-sans-ar`) with relaxed leading to prevent diacritic clipping.\n  - Strict LTR isolation (`unicode-bidi: isolate; direction: ltr !important`) enforced across all\n    code blocks, diff views, file paths, and terminal streams.\n- **Bilingual agent prompt guidance & English Conventional Commits**:\n  - Centralized `LocaleContext` in `AgentManager`: when Arabic interface or guidance is active,\n    agents are instructed to reason and converse in Modern Standard Arabic while keeping all code,\n    terminal commands, symbol names, file paths, and parameters strictly in ASCII/English.\n  - Automated git commit generation (`COMMIT_SYSTEM_PROMPT`) preserves standard English\n    Conventional Commits (`feat:`, `fix:`) for global CI/CD compatibility.\n- **Headless agent provider expansion (Cline, OpenCode, OpenAI Codex)**:\n  - Support for autonomous CLI agents running headlessly behind ZEUS's unified permission core:\n    `cline`, `opencode`, and `codex`.\n  - Added `AcpRuntime` driving `cline --acp` and `opencode acp` via stdio JSON-RPC Agent Client Protocol.\n  - Added native `CodexRuntime` interfacing directly with `codex app-server` over stdio JSON-RPC,\n    eliminating harness-level tool approval bypasses.\n  - Automatic local credential and profile discovery (`~/.codex/auth.json`, `~/.cline`, `~/.config/opencode`),\n    allowing ChatGPT Plus/Pro subscribers to use Codex without pay-per-token API keys.\n  - Settings › Agent displays live CLI probe availability and actionable copy-paste installation commands.\n- **Strict security & permission invariants (SEC-14, SEC-16, SEC-19)**:\n  - Synchronous fail-closed tool permission gating (`decideToolUse`) for all tool calls from Cline,\n    OpenCode, and Codex, blocking execution until approved by user or session policy.\n  - Crown-jewel database and secrets paths (`userData/zeus.db`, `userData/secrets/`) strictly off-limits.\n  - Stdio debug streams and diagnostic logging automatically redact API tokens, bearer keys, and credentials.\n  - Complete process and abort-signal isolation across concurrent multi-provider sessions.\n\n### Installing (Windows, unsigned)\n\n1. Download `ZEUS-Setup-0.1.0-alpha.2-x64.exe` from this release.\n2. If SmartScreen appears, choose **More info** → **Run anyway** — expected for an unsigned build.\n   Verify the SHA-256 checksum against `SHA256SUMS`.\n3. The installer is per-user (no administrator rights required). If updating from `v0.1.0-alpha.1`,\n   ZEUS will detect this update automatically via the in-app update channel."
   }
 ];
 
 /** Every released version, newest first. */
 export const RELEASE_INDEX: ReleaseIndexEntry[] = [
+  {
+    "version": "0.1.0-alpha.7",
+    "date": "2026-09-21",
+    "channel": "preview",
+    "summary": "ZEUS 0.1.0-alpha.7 introduces a dedicated collapsible thinking/reasoning process display and fixes tool invocation row layout and RTL alignment issues:",
+    "detailed": true
+  },
   {
     "version": "0.1.0-alpha.6",
     "date": "2026-09-21",
@@ -309,7 +309,7 @@ export const RELEASE_INDEX: ReleaseIndexEntry[] = [
     "date": "2026-09-19",
     "channel": "preview",
     "summary": "ZEUS 0.1.0-alpha.2 delivers the complete ZEUS v0.2.0 milestone, introducing comprehensive\nbidirectional Arabic localization across the application shell and expanding the coding agent\necosystem to support headless Cline, OpenCode, and OpenAI Codex behind ZEUS's provider-neutral\norchestration seam.",
-    "detailed": true
+    "detailed": false
   },
   {
     "version": "0.1.0-alpha.1",

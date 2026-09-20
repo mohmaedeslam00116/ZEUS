@@ -250,8 +250,12 @@ function resolveClaudeExecutable(): string | undefined {
 /* ------------------------------------------------------------------ */
 const READ_TOOLS = new Set([
   'Read', 'Glob', 'Grep', 'LS', 'WebSearch', 'WebFetch', 'NotebookRead', 'TodoWrite',
+  'read_files', 'read_file', 'web_search', 'fetch_web_content', 'fetch', 'search_codebase', 'find_by_name', 'list_dir',
 ]);
-const WRITE_TOOLS = new Set(['Write', 'Edit', 'MultiEdit', 'NotebookEdit', 'Delete']);
+const WRITE_TOOLS = new Set([
+  'Write', 'Edit', 'MultiEdit', 'NotebookEdit', 'Delete',
+  'write_file', 'edit_file', 'replace_file_content', 'delete_file', 'new_file',
+]);
 
 /**
  * Zeus's own MCP tools that may run without a permission prompt.
@@ -290,7 +294,7 @@ function bareMcpToolName(toolName: string): string {
   const parts = toolName.split('__');
   return parts.length >= 3 ? parts.slice(2).join('__') : toolName;
 }
-const COMMAND_TOOLS = new Set(['Bash', 'BashOutput', 'KillBash', 'KillShell']);
+const COMMAND_TOOLS = new Set(['Bash', 'BashOutput', 'KillBash', 'KillShell', 'run_commands', 'execute_command']);
 
 /** The SDK tool the agent calls to present its plan and exit planning mode. */
 const EXIT_PLAN_TOOL = 'ExitPlanMode';
@@ -543,8 +547,16 @@ function isPlanSafeBuiltin(name: string, input: Record<string, unknown>): boolea
 }
 
 function filePathOf(input: Record<string, unknown>): string | undefined {
-  const v = input.file_path ?? input.path ?? input.notebook_path;
-  return typeof v === 'string' ? v : undefined;
+  const v = input.file_path ?? input.path ?? input.notebook_path ?? input.file ?? input.target;
+  if (typeof v === 'string') return v;
+  if (Array.isArray(input.files) && input.files.length > 0) {
+    const first = input.files[0];
+    if (typeof first === 'string') return first;
+    if (typeof first === 'object' && first !== null && 'path' in first) {
+      return String((first as { path: unknown }).path);
+    }
+  }
+  return undefined;
 }
 
 /** Strip token-like secrets before anything reaches the logger. */
@@ -2879,6 +2891,7 @@ export class AgentManager {
     stream: {
       ensureStreaming: () => ChatMessage;
       queueDelta: (text: string) => void;
+      queueThinking?: (text: string) => void;
       finishStreaming: (finalText?: string) => void;
     },
   ): Promise<void> {
@@ -2934,6 +2947,7 @@ export class AgentManager {
         stream.ensureStreaming();
       },
       queueDelta: stream.queueDelta,
+      onThinking: stream.queueThinking,
       finishStreaming: stream.finishStreaming,
       onToolUse: (id, name, input, parentCallId) =>
         this.onToolUse(sessionId, id, name, input, parentCallId),
@@ -3116,18 +3130,28 @@ export class AgentManager {
 
     let streaming: ChatMessage | null = null;
     // Coalesced-delta state: `pendingDelta` accrues streamed text between flushes;
+    // `pendingThinkingDelta` accrues reasoning thoughts;
     // `flushTimer` bounds the latency of a partial buffer (see DELTA_FLUSH_*).
     let pendingDelta = '';
+    let pendingThinkingDelta = '';
     let flushTimer: NodeJS.Timeout | null = null;
     const flushDelta = (): void => {
       if (flushTimer) {
         clearTimeout(flushTimer);
         flushTimer = null;
       }
-      if (!streaming || pendingDelta.length === 0) return;
+      if (!streaming || (pendingDelta.length === 0 && pendingThinkingDelta.length === 0)) return;
       const text = pendingDelta;
+      const thinking = pendingThinkingDelta || undefined;
       pendingDelta = '';
-      this.pushEvent({ kind: 'message-delta', sessionId, messageId: streaming.id, text });
+      pendingThinkingDelta = '';
+      this.pushEvent({
+        kind: 'message-delta',
+        sessionId,
+        messageId: streaming.id,
+        text,
+        ...(thinking ? { thinking } : {}),
+      });
     };
     const ensureStreaming = (): ChatMessage => {
       if (!streaming) {
@@ -3152,6 +3176,13 @@ export class AgentManager {
       if (pendingDelta.length >= DELTA_FLUSH_CHARS) flushDelta();
       else if (!flushTimer) flushTimer = setTimeout(flushDelta, DELTA_FLUSH_MS);
     };
+    const queueThinking = (text: string): void => {
+      const m = ensureStreaming();
+      m.thinking = (m.thinking ?? '') + text;
+      pendingThinkingDelta += text;
+      if (pendingThinkingDelta.length >= DELTA_FLUSH_CHARS) flushDelta();
+      else if (!flushTimer) flushTimer = setTimeout(flushDelta, DELTA_FLUSH_MS);
+    };
     const finishStreaming = (finalText?: string): void => {
       // Drop any buffered partial — the `message-done` below carries the full,
       // authoritative text and the renderer replaces (not appends) on done.
@@ -3160,6 +3191,7 @@ export class AgentManager {
         flushTimer = null;
       }
       pendingDelta = '';
+      pendingThinkingDelta = '';
       if (!streaming) return;
       if (typeof finalText === 'string' && finalText.length > 0) streaming.text = finalText;
       streaming.streaming = false;
@@ -3203,6 +3235,7 @@ export class AgentManager {
           await this.runCursorOnce(sessionId, prompt, cwd, abort, permMode, {
             ensureStreaming,
             queueDelta,
+            queueThinking,
             finishStreaming,
           });
         } finally {
@@ -3220,6 +3253,7 @@ export class AgentManager {
             await this.runHarnessOnce(sessionId, prompt, cwd, abort, permMode, {
               ensureStreaming,
               queueDelta,
+              queueThinking,
               finishStreaming,
             });
           } finally {
@@ -3236,6 +3270,7 @@ export class AgentManager {
           await this.runHarnessOnce(sessionId, prompt, cwd, abort, permMode, {
             ensureStreaming,
             queueDelta,
+            queueThinking,
             finishStreaming,
           });
         } finally {
@@ -3249,6 +3284,7 @@ export class AgentManager {
           await this.runHeadlessOnce(routing.provider, sessionId, prompt, cwd, abort, permMode, {
             ensureStreaming,
             queueDelta,
+            queueThinking,
             finishStreaming,
           });
         } finally {
@@ -3701,6 +3737,7 @@ export class AgentManager {
     stream: {
       ensureStreaming: () => ChatMessage;
       queueDelta: (text: string) => void;
+      queueThinking?: (text: string) => void;
       finishStreaming: (finalText?: string) => void;
     },
   ): Promise<void> {
@@ -3746,6 +3783,7 @@ export class AgentManager {
         stream.ensureStreaming();
       },
       queueDelta: stream.queueDelta,
+      onThinking: stream.queueThinking,
       finishStreaming: stream.finishStreaming,
       onToolUse: (id, name, input, parentCallId) =>
         this.onToolUse(sessionId, id, name, input, parentCallId),
@@ -3817,6 +3855,7 @@ export class AgentManager {
     stream: {
       ensureStreaming: () => ChatMessage;
       queueDelta: (text: string) => void;
+      queueThinking?: (text: string) => void;
       finishStreaming: (finalText?: string) => void;
     },
   ): Promise<void> {
@@ -3973,6 +4012,7 @@ export class AgentManager {
         stream.ensureStreaming();
       },
       queueDelta: stream.queueDelta,
+      onThinking: stream.queueThinking,
       finishStreaming: stream.finishStreaming,
       onToolUse: (id, name, input) => {
         if (classifyTool(name) !== 'read') gatedToolSeen = true;
@@ -6937,7 +6977,7 @@ export class AgentManager {
   private persistMessage(m: ChatMessage): void {
     getDb()
       .prepare(
-        'INSERT OR REPLACE INTO agent_messages (id, session_id, role, text, created_at, display) VALUES (?, ?, ?, ?, ?, ?)',
+        'INSERT OR REPLACE INTO agent_messages (id, session_id, role, text, created_at, display, thinking) VALUES (?, ?, ?, ?, ?, ?, ?)',
       )
       .run(
         m.id,
@@ -6947,13 +6987,14 @@ export class AgentManager {
         m.createdAt,
         // NULL for every ordinary prompt; the raw text stays authoritative.
         m.display ? JSON.stringify(m.display) : null,
+        m.thinking ?? null,
       );
   }
 
   private loadMessages(sessionId: string): ChatMessage[] {
     const rows = getDb()
       .prepare(
-        'SELECT id, session_id, role, text, created_at, display FROM agent_messages WHERE session_id = ? ORDER BY created_at ASC',
+        'SELECT id, session_id, role, text, created_at, display, thinking FROM agent_messages WHERE session_id = ? ORDER BY created_at ASC',
       )
       .all(sessionId) as Array<{
       id: string;
@@ -6962,6 +7003,7 @@ export class AgentManager {
       text: string;
       created_at: number;
       display: string | null;
+      thinking: string | null;
     }>;
     // Rehydrate the attachment chips of sent turns (message_id links the rows).
     const byMessage = new Map<string, ChatMessage['attachments']>();
@@ -6982,6 +7024,7 @@ export class AgentManager {
       createdAt: r.created_at,
       attachments: byMessage.get(r.id),
       ...(parseDisplay(r.display) ? { display: parseDisplay(r.display) } : {}),
+      ...(r.thinking ? { thinking: r.thinking } : {}),
     }));
   }
 
@@ -7990,23 +8033,38 @@ function summarizeTool(name: string, input: Record<string, unknown>, risk: ToolR
   }
   switch (name) {
     case 'Read':
+    case 'read_files':
+    case 'read_file':
       return `Read ${file ? shortPath(file) : 'a file'}`;
     case 'Write':
+    case 'write_file':
+    case 'new_file':
       return `Create ${file ? shortPath(file) : 'a file'}`;
     case 'Edit':
     case 'MultiEdit':
+    case 'edit_file':
+    case 'replace_file_content':
       return `Edit ${file ? shortPath(file) : 'a file'}`;
     case 'Delete':
+    case 'delete_file':
       return `Delete ${file ? shortPath(file) : 'a file'}`;
     case 'Bash':
-      return `Run ${truncate(String(input.command ?? 'a command'), 60)}`;
+    case 'run_commands':
+    case 'execute_command':
+      return `Run ${truncate(String(input.command ?? input.cmd ?? 'a command'), 60)}`;
     case 'Grep':
-      return `Search "${truncate(String(input.pattern ?? ''), 40)}"`;
+    case 'search_codebase':
+      return `Search "${truncate(String(input.pattern ?? input.query ?? ''), 40)}"`;
     case 'Glob':
-      return `Find ${truncate(String(input.pattern ?? ''), 40)}`;
+    case 'find_by_name':
+    case 'list_dir':
+      return `Find ${truncate(String(input.pattern ?? input.dir ?? input.path ?? ''), 40)}`;
     case 'WebSearch':
+    case 'web_search':
       return `Web search: ${truncate(String(input.query ?? ''), 40)}`;
     case 'WebFetch':
+    case 'fetch_web_content':
+    case 'fetch':
       return `Fetch ${truncate(String(input.url ?? ''), 40)}`;
     default:
       return risk === 'command' ? `Run ${name}` : name;
@@ -8018,10 +8076,10 @@ function toolTarget(name: string, input: Record<string, unknown>): string | unde
   // For a subagent the target is what it was asked to do, so the single inline
   // row reads "Explore agent — find every call site of resolveSessionRoot".
   if (isSubagentTool(name)) return subagentDescriptionOf(input);
-  if (name === 'WebSearch') return truncate(String(input.query ?? ''), 120) || undefined;
-  if (name === 'WebFetch') return truncate(String(input.url ?? ''), 160) || undefined;
-  if (name === 'Bash') return truncate(String(input.command ?? ''), 120) || undefined;
-  if (name === 'Grep') return truncate(String(input.pattern ?? ''), 80) || undefined;
+  if (name === 'WebSearch' || name === 'web_search') return truncate(String(input.query ?? ''), 120) || undefined;
+  if (name === 'WebFetch' || name === 'fetch_web_content' || name === 'fetch') return truncate(String(input.url ?? ''), 160) || undefined;
+  if (name === 'Bash' || name === 'run_commands' || name === 'execute_command') return truncate(String(input.command ?? input.cmd ?? ''), 120) || undefined;
+  if (name === 'Grep' || name === 'search_codebase') return truncate(String(input.pattern ?? input.query ?? ''), 80) || undefined;
   const file = filePathOf(input);
   return file ? shortPath(file) : undefined;
 }

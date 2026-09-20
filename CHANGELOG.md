@@ -1557,6 +1557,25 @@ operational.
 
 ## [Unreleased]
 
+## [0.1.0-alpha.7] - 2026-09-21
+
+ZEUS 0.1.0-alpha.7 introduces a dedicated collapsible thinking/reasoning process display and fixes tool invocation row layout and RTL alignment issues:
+
+### Added
+
+- **Collapsible thinking/reasoning process display (`ThinkingBlock`)**:
+  - The model's internal thinking and chain-of-thought reasoning stream is now displayed in its own dedicated, collapsible accordion block separate from conversational text.
+  - Features real-time status badges ("Thinking..." / "يفكّر الآن..." while actively reasoning, and "Completed" / "مكتمل" once settled), a monospace pre-wrap transcript view with copy and toggle controls, and full bidirectional layout support.
+  - Persisted in SQLite `agent_messages` (`thinking` column) so reasoning chains are preserved across session reload and app restarts.
+
+### Fixed
+
+- **Duplicated tool invocation rows and mangled RTL display in conversation view**:
+  - Fixed duplicate string rendering where colon-delimited tool titles (emitted by Cline and ACP providers like `fetch_web_content: https://...`) were displayed twice on the same line.
+  - Separated tool command names from arguments during ACP event translation, cleanly populating `call.name`, `call.target`, and `call.input`.
+  - Reordered the tool call status dot to lead the invocation row, preventing layout reversal in RTL mode.
+  - Added explicit LTR directional enforcement (`dir="ltr"`) and monospace formatting for command paths and URLs to eliminate text scrambling and left-edge truncation.
+
 ## [0.1.0-alpha.6] - 2026-09-21
 
 ZEUS 0.1.0-alpha.6 fixes headless ACP agent conversation memory loss and session continuity across turns:

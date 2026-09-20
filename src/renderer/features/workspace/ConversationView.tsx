@@ -14,7 +14,7 @@
  * turn renders as a compact right-aligned bubble.
  */
 import { memo, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { Check, ChevronRight, CircleAlert, TriangleAlert } from 'lucide-react';
+import { Brain, Check, ChevronRight, CircleAlert, TriangleAlert } from 'lucide-react';
 import type { AgentActivityItem, AgentToolCall, AttachmentMeta, ChatMessage, PermissionRequest } from '@shared/types';
 import { Logo } from '@/renderer/components/brand/Logo';
 import { HelixLoader, Spinner } from '@/renderer/components/ui';
@@ -681,18 +681,75 @@ const AssistantBlock = memo(function AssistantBlock({
   );
 });
 
+/**
+ * A dedicated, collapsible block for the model's thinking / reasoning process.
+ * Separates thought chains from conversational speech, styled cleanly with an
+ * expandable accordion and live indicator during streaming.
+ */
+function ThinkingBlock({ thinking, live }: { thinking: string; live?: boolean }) {
+  const [open, setOpen] = useState(false);
+  const isArabic = /[\u0600-\u06FF]/.test(thinking);
+
+  return (
+    <div className="my-1 flex flex-col rounded-lg border border-line/60 bg-surface-2/30 text-[12px] transition-colors">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="flex items-center gap-2 px-2.5 py-1.5 text-start font-medium text-muted hover:text-fg hover:bg-surface-2/60 rounded-lg transition-colors"
+      >
+        <Brain size={14} className={cn('shrink-0 text-accent', live && 'animate-pulse')} />
+        <span className="text-[11.5px] font-medium tracking-wide">
+          {isArabic ? 'عملية التفكير' : 'Thinking Process'}
+        </span>
+        {live ? (
+          <span className="flex items-center gap-1.5 text-[10.5px] text-accent">
+            <span className="h-1.5 w-1.5 rounded-full bg-accent animate-ping" />
+            <span>{isArabic ? 'يفكّر الآن…' : 'Thinking…'}</span>
+          </span>
+        ) : (
+          <span className="text-[10.5px] text-faint">
+            {isArabic ? 'مكتمل' : 'Completed'}
+          </span>
+        )}
+        <ChevronRight
+          size={13}
+          className={cn('ms-auto text-faint transition-transform rtl-flip', open && 'rotate-90')}
+        />
+      </button>
+      {open && (
+        <div
+          dir={isArabic ? 'rtl' : 'ltr'}
+          className="border-t border-line/40 px-3 py-2 text-[11.5px] leading-relaxed text-muted/90 font-mono whitespace-pre-wrap max-h-96 overflow-y-auto selection:bg-accent/20"
+        >
+          {thinking}
+        </div>
+      )}
+    </div>
+  );
+}
+
 /** One streamed assistant text block. Purely presentational: the turn's actions
  *  live on the user bubble, so the agent's output stays chrome-free and reads as
  *  one continuous stream rather than a stack of separately-framed blocks. */
 function AssistantText({ message }: { message: ChatMessage }) {
-  // A streaming message with no text yet is the pre-first-token moment — reserve
-  // the reply's shape with a shimmer skeleton until the first delta lands.
-  if (message.streaming && message.text.trim().length === 0) return <MessageSkeleton />;
+  const hasText = message.text.trim().length > 0;
+  const hasThinking = !!message.thinking && message.thinking.trim().length > 0;
+
+  // A streaming message with no text yet and no thinking is the pre-first-token moment
+  if (message.streaming && !hasText && !hasThinking) return <MessageSkeleton />;
+
   return (
-    <div>
-      <Markdown text={message.text} streaming={message.streaming} />
-      {message.streaming && (
-        <span className="ms-0.5 inline-block h-3.5 w-[2px] translate-y-0.5 animate-pulse bg-accent align-middle" />
+    <div className="flex flex-col gap-2">
+      {message.thinking && message.thinking.trim().length > 0 && (
+        <ThinkingBlock thinking={message.thinking} live={message.streaming && !hasText} />
+      )}
+      {hasText && (
+        <div>
+          <Markdown text={message.text} streaming={message.streaming} />
+          {message.streaming && (
+            <span className="ms-0.5 inline-block h-3.5 w-[2px] translate-y-0.5 animate-pulse bg-accent align-middle" />
+          )}
+        </div>
       )}
     </div>
   );
@@ -709,7 +766,12 @@ function openGit(path?: string): void {
  *  icons by design — the tool NAME (subtle mono) is the identifier. Keeps the
  *  expandable detail and the Git / terminal click-throughs. */
 function InlineEventRow({ call }: { call: AgentToolCall }) {
-  const isWeb = call.name === 'WebSearch' || call.name === 'WebFetch';
+  const isWeb =
+    call.name === 'WebSearch' ||
+    call.name === 'WebFetch' ||
+    call.name === 'web_search' ||
+    call.name === 'fetch_web_content' ||
+    call.name === 'fetch';
   const [open, setOpen] = useState(false);
   // A file-edit tool carries a structured change + diff preview; prefer showing
   // the Shiki diff on expand over the plain-text `detail`.
@@ -719,6 +781,15 @@ function InlineEventRow({ call }: { call: AgentToolCall }) {
   const hasRead = !!call.read?.content;
   const expandable = hasDiff || hasRead || (!!call.detail && call.detail !== call.target);
 
+  const nameLower = call.name.toLowerCase();
+  const summaryLower = (call.summary ?? '').toLowerCase();
+  const isDuplicateSummary =
+    !call.summary ||
+    summaryLower === nameLower ||
+    summaryLower === `run ${nameLower}` ||
+    summaryLower.startsWith(`${nameLower}:`) ||
+    (Boolean(call.target) && summaryLower.includes((call.target ?? '').toLowerCase()));
+
   return (
     <div className="flex flex-col gap-1">
       <div className="flex items-center gap-2">
@@ -727,19 +798,24 @@ function InlineEventRow({ call }: { call: AgentToolCall }) {
           onClick={() => expandable && setOpen((v) => !v)}
           disabled={!expandable}
           className={cn(
-            'flex min-w-0 flex-1 items-center gap-2 rounded px-1 py-0.5 text-start',
+            'flex min-w-0 flex-1 items-center gap-2 rounded px-1.5 py-0.5 text-start',
             expandable ? 'transition-colors hover:bg-surface-2' : 'cursor-default',
           )}
         >
+          <span className="flex shrink-0 items-center justify-center">
+            <ToolStatus status={call.status} />
+          </span>
           <span
             className={cn(
               'shrink-0 font-mono text-[11px] font-medium leading-none',
-              call.risk === 'command' ? 'text-warning' : 'text-faint',
+              call.risk === 'command' ? 'text-warning' : call.risk === 'write' ? 'text-success' : 'text-faint',
             )}
           >
             {call.name}
           </span>
-          <span className="shrink-0 text-[12px] text-muted">{call.summary}</span>
+          {!isDuplicateSummary && (
+            <span className="shrink-0 text-[12px] text-muted">{call.summary}</span>
+          )}
           {call.change && (
             <span className="flex shrink-0 items-center gap-1.5">
               <span
@@ -761,10 +837,11 @@ function InlineEventRow({ call }: { call: AgentToolCall }) {
           )}
           {call.target && (
             <span
+              dir="ltr"
               className={cn(
                 // File paths and commands read as code — mono everywhere, with
                 // the web tools keeping their accent link tone.
-                'min-w-0 flex-1 truncate font-mono text-[11.5px]',
+                'min-w-0 flex-1 truncate font-mono text-[11.5px] text-start',
                 isWeb ? 'text-accent-fg' : 'text-faint',
               )}
               title={call.target}
@@ -794,7 +871,6 @@ function InlineEventRow({ call }: { call: AgentToolCall }) {
               Git
             </button>
           )}
-          <ToolStatus status={call.status} />
           {expandable && (
             <ChevronRight size={13} className={cn('text-faint transition-transform rtl-flip', open && 'rotate-90')} />
           )}

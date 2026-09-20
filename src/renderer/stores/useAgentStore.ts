@@ -190,7 +190,7 @@ export const useAgentStore = create<AgentStoreState>((set, get) => {
   // burst into a single render aligned to the display refresh. Any non-delta
   // event flushes the buffer first so `message-done` carries the full text and
   // timeline ordering is preserved.
-  const deltaBuffer = new Map<string, { sessionId: string; text: string }>(); // key: messageId
+  const deltaBuffer = new Map<string, { sessionId: string; text: string; thinking?: string }>(); // key: messageId
   let rafHandle: number | null = null;
 
   const scheduleFlush = (): void => {
@@ -209,11 +209,11 @@ export const useAgentStore = create<AgentStoreState>((set, get) => {
       rafHandle = null;
     }
     if (deltaBuffer.size === 0) return;
-    // messageId -> accumulated text, and the set of sessions touched this frame.
-    const appends = new Map<string, string>(); // key: messageId
+    // messageId -> accumulated text and thinking, and the set of sessions touched this frame.
+    const appends = new Map<string, { text: string; thinking?: string }>(); // key: messageId
     const sessions = new Set<string>();
     for (const [messageId, entry] of deltaBuffer) {
-      appends.set(messageId, entry.text);
+      appends.set(messageId, { text: entry.text, thinking: entry.thinking });
       sessions.add(entry.sessionId);
     }
     deltaBuffer.clear();
@@ -225,7 +225,13 @@ export const useAgentStore = create<AgentStoreState>((set, get) => {
           ...prev,
           messages: prev.messages.map((m) => {
             const add = appends.get(m.id);
-            return add ? { ...m, text: m.text + add, streaming: true } : m;
+            if (!add) return m;
+            return {
+              ...m,
+              text: m.text + add.text,
+              thinking: add.thinking ? (m.thinking ?? '') + add.thinking : m.thinking,
+              streaming: true,
+            };
           }),
         };
       }
@@ -255,8 +261,18 @@ export const useAgentStore = create<AgentStoreState>((set, get) => {
     // Streamed text: accumulate and apply on the next frame (see deltaBuffer).
     if (event.kind === 'message-delta') {
       const existing = deltaBuffer.get(event.messageId);
-      if (existing) existing.text += event.text;
-      else deltaBuffer.set(event.messageId, { sessionId: event.sessionId, text: event.text });
+      if (existing) {
+        existing.text += event.text;
+        if (event.thinking) {
+          existing.thinking = (existing.thinking ?? '') + event.thinking;
+        }
+      } else {
+        deltaBuffer.set(event.messageId, {
+          sessionId: event.sessionId,
+          text: event.text,
+          thinking: event.thinking,
+        });
+      }
       scheduleFlush();
       return;
     }

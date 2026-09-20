@@ -2736,11 +2736,14 @@ export interface ChatMessage {
    * document rendered beneath it. Absent means "render `text` as before", so
    * every ordinary prompt is completely unaffected.
    *
+  /**
    * This is a **renderer hint only**. It never changes what reaches the provider,
    * and the raw view still reveals the true sent text — nothing is hidden from
    * someone auditing the transcript.
    */
   display?: { text: string; body?: string };
+  /** Model thinking / chain-of-thought deltas streamed during reasoning. */
+  thinking?: string;
 }
 
 /* ------------------------------------------------------------------ */
@@ -3327,7 +3330,7 @@ export interface AgentSessionSnapshot {
  */
 export type AgentEvent =
   | { kind: 'message-start'; sessionId: string; message: ChatMessage }
-  | { kind: 'message-delta'; sessionId: string; messageId: string; text: string }
+  | { kind: 'message-delta'; sessionId: string; messageId: string; text: string; thinking?: string }
   | { kind: 'message-done'; sessionId: string; message: ChatMessage }
   | { kind: 'tool-start'; sessionId: string; call: AgentToolCall }
   | {
