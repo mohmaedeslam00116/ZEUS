@@ -40,9 +40,11 @@ import { registerGhHandlers } from './ghHandlers';
 import { registerUpdateHandlers } from './updateHandlers';
 import { registerReleaseHandlers } from './releaseHandlers';
 import { registerCursorHandlers } from './cursorHandlers';
+import { registerProviderHandlers } from './providerHandlers';
 import { registerMcpHandlers } from './mcpHandlers';
 import { registerGraphHandlers } from './graphHandlers';
 import { registerRuntimeHandlers } from './runtimeHandlers';
+import type { ProviderAuthManager } from '../managers/agent/ProviderAuthManager';
 
 export interface IpcDeps {
   settings: SettingsManager;
@@ -62,6 +64,7 @@ export interface IpcDeps {
   gh: GhManager;
   updates: AutoUpdateManager;
   cursorAuth: CursorAuthManager;
+  providerAuth: ProviderAuthManager;
   mcp: McpManager;
   graph: WorkGraphManager;
   runtime: RuntimeTelemetryManager;
@@ -122,6 +125,7 @@ export function registerAllIpc(deps: IpcDeps): void {
   // the only thing main owns here is the save dialog.
   registerReleaseHandlers();
   registerCursorHandlers(deps.cursorAuth, () => deps.agent.hasActiveRuns());
+  registerProviderHandlers(deps.providerAuth);
   registerMcpHandlers(deps.mcp);
   registerGraphHandlers(deps.graph);
   registerRuntimeHandlers(deps.runtime);

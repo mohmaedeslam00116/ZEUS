@@ -57,7 +57,7 @@ const REDACT_PATTERNS: RegExp[] = [
   // word character, so `\bapi_key\b` never matches inside `ANTHROPIC_API_KEY`
   // and `\btoken\b` never matches inside `CLAUDE_CODE_OAUTH_TOKEN`. These are
   // the names the harness sandbox forwards from the host environment.
-  /\b(token|secret|password|passwd|apikey|api_key|cursor_api_key|anthropic_api_key|anthropic_auth_token|claude_code_oauth_token|openai_api_key|codex_api_key|ai_gateway_api_key|access_key|private_key)\b(\s*[:=]\s*)(["']?)[^\s"'&]{4,400}\3/gi,
+  /\b(token|secret|password|passwd|apikey|api_key|cursor_api_key|anthropic_api_key|anthropic_auth_token|claude_code_oauth_token|openai_api_key|codex_api_key|ai_gateway_api_key|gemini_api_key|google_api_key|deepseek_api_key|openrouter_api_key|kilo_api_key|access_key|private_key)\b(\s*[:=]\s*)(["']?)[^\s"'&]{4,400}\3/gi,
   // URL userinfo credentials (https://user:pass@host).
   /(\w+:\/\/)([^\s/:@]{1,128}):([^\s/@]{1,256})@/g,
   // Cursor API keys (crsr_… — lenient shape; the prefix is not contractual).

@@ -4,6 +4,7 @@ import type {
   AppLayoutDirection,
   AppLocale,
   AppSettings,
+  MultiProviderSettings,
   WorkspaceConfig,
 } from './types';
 
@@ -26,8 +27,9 @@ import type {
  * else" indistinguishable. **31 removes the voice subsystem entirely**: the
  * `voice` settings category no longer exists, and migration v30 → v31 deletes
  * the persisted `voice` key from settings files written by older builds.
+ * **33 introduces multi-provider native agent hub (`settings.providers`)**.
  */
-export const SETTINGS_VERSION = 32;
+export const SETTINGS_VERSION = 33;
 
 /**
  * Every valid right-drawer tab id, in display order. The renderer's
@@ -1098,6 +1100,24 @@ export const APP_LAYOUT_DIRECTIONS: readonly AppLayoutDirection[] = ['canvas-rtl
 /** Supported agent language guidance modes. */
 export const AGENT_LANGUAGE_GUIDANCE: readonly AgentLanguageGuidance[] = ['follow-ui', 'auto', 'en', 'ar'];
 
+/** Hard limits on provider endpoint configuration fields. */
+export const PROVIDER_LIMITS = {
+  baseUrlMax: 512,
+  orgIdMax: 128,
+  apiKeyMax: 512,
+} as const;
+
+/** Default settings for first-party native agent providers. */
+export const DEFAULT_PROVIDERS_SETTINGS: MultiProviderSettings = {
+  gemini: { enabled: true, autoDetectLocalAuth: true },
+  anthropic: { enabled: true, autoDetectLocalAuth: true },
+  openai: { enabled: true, autoDetectLocalAuth: true },
+  deepseek: { enabled: true, autoDetectLocalAuth: true },
+  openrouter: { enabled: true, autoDetectLocalAuth: true },
+  ollama: { enabled: true, baseUrl: 'http://localhost:11434', autoDetectLocalAuth: true },
+  kilo: { enabled: true, baseUrl: 'https://api.kilo.ai/v1', autoDetectLocalAuth: true },
+};
+
 /** Default window size used on first launch (no persisted state yet). */
 export const WINDOW_DEFAULT = { width: 1440, height: 900 } as const;
 
@@ -1415,6 +1435,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
     // release.
     channel: 'beta',
   },
+  providers: DEFAULT_PROVIDERS_SETTINGS,
 };
 
 export function clamp(value: number, min: number, max: number): number {

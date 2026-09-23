@@ -6,7 +6,14 @@
  * and broadcast to all renderers whenever they change.
  */
 import { BrowserWindow } from 'electron';
-import type { AppSettings, DeepPartial, PersistedDocument } from '@shared/types';
+import type {
+  AppSettings,
+  DeepPartial,
+  MultiProviderSettings,
+  NativeProviderId,
+  PersistedDocument,
+} from '@shared/types';
+import { NATIVE_PROVIDER_IDS } from '@shared/types';
 import {
   ACTIVITY_TAB_IDS,
   AGENT_CONNECTION_LIMITS,
@@ -19,6 +26,7 @@ import {
   CHAT_FONTS,
   CURSOR_LIMITS,
   CURSOR_MODEL_ID_RE,
+  DEFAULT_PROVIDERS_SETTINGS,
   DEFAULT_SETTINGS,
   HARNESS_LABELS,
   DOCUMENT_LIMITS,
@@ -29,6 +37,7 @@ import {
   MCP_LIMITS,
   MEMORY_LIMITS,
   PLAN_LIMITS,
+  PROVIDER_LIMITS,
   RESUME_LIMITS,
   SANDBOX_DOMAIN_RE,
   SANDBOX_LIMITS,
@@ -672,6 +681,52 @@ export function normalizeSettings(input: Partial<AppSettings>): AppSettings {
     mcp.injectIntoClaude = !!mcp.injectIntoClaude;
     mcp.injectIntoCursor = !!mcp.injectIntoCursor;
     if (!['quiet', 'normal', 'verbose'].includes(mcp.logVerbosity)) mcp.logVerbosity = 'normal';
+
+    // Multi-Provider Hub (SETTINGS_VERSION 32 -> 33: `settings.providers` introduced)
+    if (!merged.providers || typeof merged.providers !== 'object' || Array.isArray(merged.providers)) {
+      merged.providers = { ...DEFAULT_PROVIDERS_SETTINGS };
+    }
+    // Strip any unknown or stale provider keys from merged.providers
+    for (const key of Object.keys(merged.providers)) {
+      if (!NATIVE_PROVIDER_IDS.includes(key as NativeProviderId)) {
+        delete (merged.providers as Record<string, unknown>)[key];
+      }
+    }
+    for (const id of NATIVE_PROVIDER_IDS) {
+      const def = DEFAULT_PROVIDERS_SETTINGS[id];
+      const cur = (merged.providers as Partial<MultiProviderSettings>)[id];
+      if (!cur || typeof cur !== 'object' || Array.isArray(cur)) {
+        merged.providers[id] = { ...def };
+        continue;
+      }
+      cur.enabled = cur.enabled !== false;
+      cur.autoDetectLocalAuth = cur.autoDetectLocalAuth !== false;
+      if (typeof cur.baseUrl === 'string') {
+        const trimmed = cur.baseUrl.trim();
+        if (
+          trimmed.length > 0 &&
+          trimmed.length <= PROVIDER_LIMITS.baseUrlMax &&
+          !trimmed.includes('\0') &&
+          /^(https?:\/\/)/i.test(trimmed)
+        ) {
+          cur.baseUrl = trimmed;
+        } else {
+          cur.baseUrl = def.baseUrl;
+        }
+      } else {
+        cur.baseUrl = def.baseUrl;
+      }
+      if (typeof cur.organizationId === 'string') {
+        const trimmed = cur.organizationId.trim();
+        if (trimmed.length > 0 && trimmed.length <= PROVIDER_LIMITS.orgIdMax && !trimmed.includes('\0')) {
+          cur.organizationId = trimmed;
+        } else {
+          delete cur.organizationId;
+        }
+      } else {
+        delete cur.organizationId;
+      }
+    }
 
     return merged;
 }

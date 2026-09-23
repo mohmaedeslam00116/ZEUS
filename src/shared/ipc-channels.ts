@@ -96,6 +96,13 @@ export const IpcChannels = {
   agentCursorRemoveApiKey: 'agent:cursorRemoveApiKey',
   agentCursorUpdateCli: 'agent:cursorUpdateCli',
 
+  // Multi-provider hub & credential management (Spec #61 / #62)
+  providersGetStates: 'providers:getStates',
+  providersSetApiKey: 'providers:setApiKey',
+  providersRemoveApiKey: 'providers:removeApiKey',
+  providersDiscoverLocalAuth: 'providers:discoverLocalAuth',
+  providersImportDiscoveredAuth: 'providers:importDiscoveredAuth',
+
   /**
    * The harness's one-time setup plan — its verbatim commands, so the consent
    * dialog shows what will actually run rather than a hardcoded copy.

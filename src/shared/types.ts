@@ -891,6 +891,76 @@ export interface AppSettings {
     /** How chatty MCP diagnostics are (probe failures, spawn errors). */
     logVerbosity: 'quiet' | 'normal' | 'verbose';
   };
+  /**
+   * Multi-provider LLM hub (Spec #61 / #62). Configuration for first-party
+   * native agent providers (Google Gemini, Anthropic, OpenAI, DeepSeek,
+   * OpenRouter, Local Ollama, and Kilo Gateway).
+   *
+   * API keys are stored encrypted via Electron `safeStorage` in SecretStore
+   * and never persisted in plaintext in this settings file.
+   */
+  providers: MultiProviderSettings;
+}
+
+/** Supported native LLM providers in ZEUS Multi-Provider Hub (Spec #61 / #62). */
+export type NativeProviderId =
+  | 'gemini'
+  | 'anthropic'
+  | 'openai'
+  | 'deepseek'
+  | 'openrouter'
+  | 'ollama'
+  | 'kilo';
+
+export const NATIVE_PROVIDER_IDS: readonly NativeProviderId[] = [
+  'gemini',
+  'anthropic',
+  'openai',
+  'deepseek',
+  'openrouter',
+  'ollama',
+  'kilo',
+] as const;
+
+/** Per-provider settings persisted in `settings.json`. No secrets. */
+export interface SingleProviderSettings {
+  /** Whether this provider is enabled for model discovery and agent execution. */
+  enabled: boolean;
+  /** Optional custom base URL (e.g. custom Ollama endpoint or OpenAI-compatible gateway). */
+  baseUrl?: string;
+  /** Optional organization or project ID (e.g. for OpenAI / Anthropic). */
+  organizationId?: string;
+  /** Whether to auto-discover and reuse credentials from local Cline / OpenCode installations. */
+  autoDetectLocalAuth: boolean;
+}
+
+/** Complete multi-provider settings map in `AppSettings.providers`. */
+export type MultiProviderSettings = Record<NativeProviderId, SingleProviderSettings>;
+
+/** Key presence and origin metadata safe to surface to the renderer (never plaintext keys). */
+export interface ProviderKeyMetadata {
+  configured: boolean;
+  updatedAt?: number;
+  source?: 'secret-store' | 'discovered-cline' | 'discovered-opencode' | 'env';
+}
+
+/** Complete renderer-facing state of a provider. */
+export interface ProviderPublicState {
+  id: NativeProviderId;
+  enabled: boolean;
+  baseUrl?: string;
+  organizationId?: string;
+  autoDetectLocalAuth: boolean;
+  keyMetadata: ProviderKeyMetadata;
+}
+
+/** Discovered authentication information on host (no secrets exposed). */
+export interface DiscoveredProviderAuth {
+  provider: NativeProviderId;
+  source: 'cline' | 'opencode' | 'env';
+  hasKey: boolean;
+  baseUrl?: string;
+  model?: string;
 }
 
 /** A dotted-path key into {@link AppSettings} (kept loose for ergonomics). */

@@ -30,6 +30,7 @@ import type {
   CursorAuthState,
   CursorUpdateResult,
   DeepPartial,
+  DiscoveredProviderAuth,
   FileHistoryEntry,
   FileReadResult,
   FileTree,
@@ -60,6 +61,8 @@ import type {
   MemoryListFilter,
   MemoryTier,
   MemoryUpdateInput,
+  NativeProviderId,
+  ProviderPublicState,
   RepoConfigState,
   RepoDelta,
   ResumeState,
@@ -888,6 +891,24 @@ const mcpApi = {
     subscribe<{ id: string; runtime: McpServerRuntime }>(IpcEvents.mcpServerStatus, cb),
 };
 
+const providersApi = {
+  /** Public status of all native providers (never includes API keys). */
+  getStates: (): Promise<ProviderPublicState[]> =>
+    ipcRenderer.invoke(IpcChannels.providersGetStates),
+  /** Store encrypted API key for a provider via safeStorage. */
+  setApiKey: (provider: NativeProviderId, key: string): Promise<void> =>
+    ipcRenderer.invoke(IpcChannels.providersSetApiKey, provider, key),
+  /** Remove stored API key for a provider. */
+  removeApiKey: (provider: NativeProviderId): Promise<void> =>
+    ipcRenderer.invoke(IpcChannels.providersRemoveApiKey, provider),
+  /** Discover credentials from local tool configurations (Cline, OpenCode, env). */
+  discoverLocalAuth: (): Promise<DiscoveredProviderAuth[]> =>
+    ipcRenderer.invoke(IpcChannels.providersDiscoverLocalAuth),
+  /** Import a discovered credential into encrypted secret store. */
+  importDiscoveredAuth: (provider: NativeProviderId): Promise<boolean> =>
+    ipcRenderer.invoke(IpcChannels.providersImportDiscoveredAuth, provider),
+};
+
 const zeusApi = {
   window: windowApi,
   settings: settingsApi,
@@ -912,6 +933,7 @@ const zeusApi = {
   mcp: mcpApi,
   graph: graphApi,
   runtime: runtimeApi,
+  providers: providersApi,
 };
 
 contextBridge.exposeInMainWorld('zeus', zeusApi);

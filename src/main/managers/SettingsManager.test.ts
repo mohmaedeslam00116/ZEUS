@@ -163,6 +163,38 @@ describe('normalizeSettings — the worktree-autoSetup v31→v32 migration', () 
   });
 });
 
+describe('normalizeSettings — the multi-provider v32→v33 migration', () => {
+  it('stamps current version and populates default providers on pre-33 files', () => {
+    const legacy = base();
+    legacy.version = 32;
+    delete (legacy as Partial<AppSettings>).providers;
+    const out = normalizeSettings(legacy);
+    expect(out.version).toBe(33);
+    expect(out.providers).toBeDefined();
+    expect(out.providers.gemini.enabled).toBe(true);
+    expect(out.providers.ollama.baseUrl).toBe('http://localhost:11434');
+    expect(out.providers.kilo.baseUrl).toBe('https://api.kilo.ai/v1');
+  });
+
+  it('validates baseUrl and organizationId boundaries', () => {
+    const out = normalizeSettings({
+      providers: {
+        gemini: { enabled: true, autoDetectLocalAuth: true, baseUrl: 'https://custom.gemini.api', organizationId: 'my-org' },
+        ollama: { enabled: false, autoDetectLocalAuth: false, baseUrl: 'invalid-url-protocol' as never },
+        openrouter: { enabled: true, autoDetectLocalAuth: true, baseUrl: 'https://openrouter.ai/api/v1\0injected' as never },
+      } as never,
+    });
+    expect(out.providers.gemini.baseUrl).toBe('https://custom.gemini.api');
+    expect(out.providers.gemini.organizationId).toBe('my-org');
+    // invalid-url-protocol falls back to default baseUrl for ollama
+    expect(out.providers.ollama.baseUrl).toBe('http://localhost:11434');
+    expect(out.providers.ollama.enabled).toBe(false);
+    expect(out.providers.ollama.autoDetectLocalAuth).toBe(false);
+    // null byte is rejected, falls back to default
+    expect(out.providers.openrouter.baseUrl).toBeUndefined();
+  });
+});
+
 describe('normalizeSettings — allowlist filtering (renderer-supplied arrays)', () => {
   it('filters sandbox allowedDomains to the domain regex and caps the count', () => {
     const out = normalized({
