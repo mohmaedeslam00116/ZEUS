@@ -41,6 +41,7 @@ import { SecretStore } from './secrets/SecretStore';
 import { CursorAuthManager } from './managers/cursor/CursorAuthManager';
 import { CursorRuntime } from './managers/cursor/CursorRuntime';
 import { ProviderAuthManager } from './managers/agent/ProviderAuthManager';
+import { ModelCatalogManager } from './managers/agent/catalog/ModelCatalogManager';
 import { AcpRuntime } from './managers/agent/acp/AcpRuntime';
 import { CodexRuntime } from './managers/agent/codex/CodexRuntime';
 import { harnessById, harnessIdForRun } from './managers/agent/harnessRegistry';
@@ -138,6 +139,7 @@ function bootstrap(): void {
   let cursorAuth: CursorAuthManager;
   let cursorRuntime: CursorRuntime;
   let providerAuth: ProviderAuthManager;
+  let modelCatalog: ModelCatalogManager;
   let harnessRuntime: HarnessRuntime;
   let harnessSandbox: LocalWorktreeSandboxProvider;
   let mcp: McpManager;
@@ -203,6 +205,7 @@ function bootstrap(): void {
     cursorAuth = new CursorAuthManager(new SecretStore(), settings);
     cursorRuntime = new CursorRuntime(cursorAuth);
     providerAuth = new ProviderAuthManager(new SecretStore(), settings);
+    modelCatalog = new ModelCatalogManager(getDb(), providerAuth, settings);
     fileSystem = new FileSystemManager(workspace);
     terminal = new TerminalManager(workspace, settings);
     git = new GitManager(workspace, settings);
@@ -508,6 +511,7 @@ function bootstrap(): void {
       updates,
       cursorAuth,
       providerAuth,
+      modelCatalog,
       mcp,
       graph: workGraph,
       runtime,

@@ -12,6 +12,7 @@ import fs from 'node:fs';
 import { app } from 'electron';
 import { logger } from '../logger';
 import { WORKSPACE_SCHEMA_VERSION } from '@shared/constants';
+import type { ModelInfo, NativeProviderId } from '@shared/types';
 
 let db: Database.Database | null = null;
 
@@ -764,6 +765,23 @@ function migrate(database: Database.Database): void {
     );
     CREATE INDEX IF NOT EXISTS idx_telemetry_rollups
       ON telemetry_run_rollups (session_id, started_at DESC);
+
+    -- Dynamic Multi-Provider Model Catalog Cache (Spec #61 / #63).
+    -- Persists dynamically queried models per provider with 24-hour TTL and offline fallback.
+    CREATE TABLE IF NOT EXISTS provider_model_catalog (
+      provider          TEXT NOT NULL,
+      model_id          TEXT NOT NULL,
+      name              TEXT NOT NULL,
+      is_free           INTEGER NOT NULL DEFAULT 0,
+      context_len       INTEGER NOT NULL DEFAULT 0,
+      supports_thinking INTEGER NOT NULL DEFAULT 0,
+      supports_tools    INTEGER NOT NULL DEFAULT 0,
+      description       TEXT,
+      fetched_at        INTEGER NOT NULL,
+      PRIMARY KEY (provider, model_id)
+    );
+    CREATE INDEX IF NOT EXISTS idx_provider_model_catalog_provider
+      ON provider_model_catalog (provider, fetched_at DESC);
   `);
 
   // Idempotent column additions for databases created before a column existed.
@@ -883,3 +901,92 @@ function migrate(database: Database.Database): void {
       .run(String(WORKSPACE_SCHEMA_VERSION), 'schema_version');
   }
 }
+
+/**
+ * Replace cached models for a provider inside a single transaction (SEC-15: all bound parameters).
+ */
+export function replaceCachedModels(
+  database: Database.Database,
+  provider: NativeProviderId,
+  models: ModelInfo[],
+  fetchedAt: number,
+): void {
+  const deleteStmt = database.prepare('DELETE FROM provider_model_catalog WHERE provider = ?');
+  const insertStmt = database.prepare(`
+    INSERT INTO provider_model_catalog (
+      provider, model_id, name, is_free, context_len,
+      supports_thinking, supports_tools, description, fetched_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `);
+
+  const runTx = database.transaction(() => {
+    deleteStmt.run(provider);
+    for (const m of models) {
+      insertStmt.run(
+        provider,
+        m.id,
+        m.name,
+        m.isFree ? 1 : 0,
+        m.contextLength,
+        m.supportsThinking ? 1 : 0,
+        m.supportsTools ? 1 : 0,
+        m.description || null,
+        fetchedAt,
+      );
+    }
+  });
+  runTx();
+}
+
+/**
+ * Retrieve cached models for a single provider or across all providers.
+ * Results are sorted with free models first, then alphabetically by name.
+ */
+export function getCachedModels(
+  database: Database.Database,
+  provider?: NativeProviderId,
+): Array<ModelInfo & { fetchedAt: number }> {
+  const query = provider
+    ? 'SELECT * FROM provider_model_catalog WHERE provider = ? ORDER BY is_free DESC, name ASC'
+    : 'SELECT * FROM provider_model_catalog ORDER BY provider ASC, is_free DESC, name ASC';
+
+  const stmt = database.prepare(query);
+  const rows = (provider ? stmt.all(provider) : stmt.all()) as Array<{
+    provider: NativeProviderId;
+    model_id: string;
+    name: string;
+    is_free: number;
+    context_len: number;
+    supports_thinking: number;
+    supports_tools: number;
+    description: string | null;
+    fetched_at: number;
+  }>;
+
+  return rows.map((r) => ({
+    id: r.model_id,
+    name: r.name,
+    provider: r.provider,
+    isFree: r.is_free === 1,
+    contextLength: r.context_len,
+    supportsThinking: r.supports_thinking === 1,
+    supportsTools: r.supports_tools === 1,
+    description: r.description ?? undefined,
+    fetchedAt: r.fetched_at,
+  }));
+}
+
+/**
+ * Remove cached models for a provider, or clear the entire model catalog cache.
+ */
+export function clearCachedModels(
+  database: Database.Database,
+  provider?: NativeProviderId,
+): void {
+  if (provider) {
+    database.prepare('DELETE FROM provider_model_catalog WHERE provider = ?').run(provider);
+  } else {
+    database.prepare('DELETE FROM provider_model_catalog').run();
+  }
+}
+

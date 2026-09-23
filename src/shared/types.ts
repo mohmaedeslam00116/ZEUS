@@ -963,6 +963,47 @@ export interface DiscoveredProviderAuth {
   model?: string;
 }
 
+/** Normalized model descriptor for the native multi-provider catalog (Ticket #63). */
+export interface ModelInfo {
+  /** Unique composite identifier, e.g. "openrouter:deepseek/deepseek-r1:free" or "gemini:gemini-2.5-flash". */
+  id: string;
+  /** Human-readable display name, e.g. "DeepSeek R1 (free)" or "Gemini 2.5 Flash". */
+  name: string;
+  /** Owning native provider identifier. */
+  provider: NativeProviderId;
+  /** Whether this model is in a zero-cost / free tier. */
+  isFree: boolean;
+  /** Maximum context window size in tokens. */
+  contextLength: number;
+  /** Context window size alias for spec compatibility. */
+  contextWindow?: number;
+  /** Whether the model supports dedicated reasoning / thinking generation. */
+  supportsThinking: boolean;
+  /** Reasoning support alias for spec compatibility. */
+  supportsReasoning?: boolean;
+  /** Whether the model supports function / tool calling. */
+  supportsTools: boolean;
+  /** Whether the model supports image / multimodal inputs. */
+  supportsVision?: boolean;
+  /** Optional pricing info per million tokens or vendor unit. */
+  pricing?: {
+    prompt: number;
+    completion: number;
+  };
+  /** Optional brief description or modality details. */
+  description?: string;
+  /** Timestamp when this model was fetched into cache. */
+  fetchedAt?: number;
+}
+
+/** Options for querying the model catalog. */
+export interface ModelCatalogListOptions {
+  /** When true, bypasses the 24-hour cache and forces a live network fetch. */
+  forceRefresh?: boolean;
+  /** When true, restricts results to zero-cost / free-tier models. */
+  onlyFree?: boolean;
+}
+
 /** A dotted-path key into {@link AppSettings} (kept loose for ergonomics). */
 export type SettingsKey = string;
 

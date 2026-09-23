@@ -41,10 +41,12 @@ import { registerUpdateHandlers } from './updateHandlers';
 import { registerReleaseHandlers } from './releaseHandlers';
 import { registerCursorHandlers } from './cursorHandlers';
 import { registerProviderHandlers } from './providerHandlers';
+import { registerModelHandlers } from './modelHandlers';
 import { registerMcpHandlers } from './mcpHandlers';
 import { registerGraphHandlers } from './graphHandlers';
 import { registerRuntimeHandlers } from './runtimeHandlers';
 import type { ProviderAuthManager } from '../managers/agent/ProviderAuthManager';
+import type { ModelCatalogManager } from '../managers/agent/catalog/ModelCatalogManager';
 
 export interface IpcDeps {
   settings: SettingsManager;
@@ -65,6 +67,7 @@ export interface IpcDeps {
   updates: AutoUpdateManager;
   cursorAuth: CursorAuthManager;
   providerAuth: ProviderAuthManager;
+  modelCatalog: ModelCatalogManager;
   mcp: McpManager;
   graph: WorkGraphManager;
   runtime: RuntimeTelemetryManager;
@@ -126,6 +129,7 @@ export function registerAllIpc(deps: IpcDeps): void {
   registerReleaseHandlers();
   registerCursorHandlers(deps.cursorAuth, () => deps.agent.hasActiveRuns());
   registerProviderHandlers(deps.providerAuth);
+  registerModelHandlers(deps.modelCatalog);
   registerMcpHandlers(deps.mcp);
   registerGraphHandlers(deps.graph);
   registerRuntimeHandlers(deps.runtime);

@@ -103,6 +103,10 @@ export const IpcChannels = {
   providersDiscoverLocalAuth: 'providers:discoverLocalAuth',
   providersImportDiscoveredAuth: 'providers:importDiscoveredAuth',
 
+  // Dynamic Model Catalog Service (Spec #61 / #63)
+  modelsList: 'models:list',
+  modelsRefresh: 'models:refresh',
+
   /**
    * The harness's one-time setup plan — its verbatim commands, so the consent
    * dialog shows what will actually run rather than a hardcoded copy.

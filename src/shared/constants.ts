@@ -1107,6 +1107,13 @@ export const PROVIDER_LIMITS = {
   apiKeyMax: 512,
 } as const;
 
+/** Dynamic model catalog limits and TTL defaults (Ticket #63). */
+export const MODEL_CATALOG_LIMITS = {
+  maxModelsPerProvider: 200,
+  defaultTtlMs: 24 * 60 * 60 * 1000, // 24 hours
+  fetchTimeoutMs: 10_000, // 10 seconds
+} as const;
+
 /** Default settings for first-party native agent providers. */
 export const DEFAULT_PROVIDERS_SETTINGS: MultiProviderSettings = {
   gemini: { enabled: true, autoDetectLocalAuth: true },

@@ -61,6 +61,8 @@ import type {
   MemoryListFilter,
   MemoryTier,
   MemoryUpdateInput,
+  ModelCatalogListOptions,
+  ModelInfo,
   NativeProviderId,
   ProviderPublicState,
   RepoConfigState,
@@ -909,6 +911,15 @@ const providersApi = {
     ipcRenderer.invoke(IpcChannels.providersImportDiscoveredAuth, provider),
 };
 
+const modelsApi = {
+  /** List cached or live models across providers, optionally filtered by provider and options. */
+  list: (provider?: NativeProviderId, opts?: ModelCatalogListOptions): Promise<ModelInfo[]> =>
+    ipcRenderer.invoke(IpcChannels.modelsList, provider, opts),
+  /** Force refresh model catalog from remote provider APIs bypassing cache. */
+  refresh: (provider?: NativeProviderId): Promise<ModelInfo[]> =>
+    ipcRenderer.invoke(IpcChannels.modelsRefresh, provider),
+};
+
 const zeusApi = {
   window: windowApi,
   settings: settingsApi,
@@ -934,6 +945,7 @@ const zeusApi = {
   graph: graphApi,
   runtime: runtimeApi,
   providers: providersApi,
+  models: modelsApi,
 };
 
 contextBridge.exposeInMainWorld('zeus', zeusApi);
