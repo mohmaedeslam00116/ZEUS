@@ -11,6 +11,7 @@ import { fetchWebContentTool } from './fetchWebContent';
 import { memorySaveTool, memoryRecallTool, memoryForgetTool } from './memory';
 import { listDirectoryTreeTool } from './directoryTree';
 import { viewCodeSymbolsTool } from './codeSymbols';
+import { askFollowupQuestionTool, attemptCompletionTool } from './interactive';
 import { executeNativeTool } from './executor';
 import { toOpenAiTools, toAnthropicTools, toGeminiTools } from './registry';
 import * as transport from '../transport';
@@ -702,23 +703,242 @@ export function helper(): void {}
     });
   });
 
+  describe('ask_followup_question', () => {
+    it('rejects missing or empty question parameter', async () => {
+      const res = await askFollowupQuestionTool.execute(
+        { question: '' },
+        { workspaceRoot: tmpDir, sessionId: 's1' },
+      );
+      expect(res.success).toBe(false);
+      expect(res.output).toContain('non-empty string');
+    });
+
+    it('rejects question exceeding 2000 characters', async () => {
+      const longQuestion = 'a'.repeat(2001);
+      const res = await askFollowupQuestionTool.execute(
+        { question: longQuestion },
+        { workspaceRoot: tmpDir, sessionId: 's1' },
+      );
+      expect(res.success).toBe(false);
+      expect(res.output).toContain('exceeds the maximum length of 2000 characters');
+    });
+
+    it('returns answer from askUserQuestion handler when provided', async () => {
+      const mockAsk = vi.fn().mockResolvedValue('PostgreSQL');
+      const res = await askFollowupQuestionTool.execute(
+        {
+          question: 'Which database do you prefer?',
+          options: ['PostgreSQL', 'SQLite', 'MongoDB'],
+        },
+        {
+          workspaceRoot: tmpDir,
+          sessionId: 's1',
+          askUserQuestion: mockAsk,
+        },
+      );
+
+      expect(mockAsk).toHaveBeenCalledWith(
+        'Which database do you prefer?',
+        ['PostgreSQL', 'SQLite', 'MongoDB'],
+        undefined,
+      );
+      expect(res.success).toBe(true);
+      expect(res.output).toBe('PostgreSQL');
+    });
+
+    it('handles error thrown by askUserQuestion gracefully', async () => {
+      const mockAsk = vi.fn().mockRejectedValue(new Error('Prompt dismissed by user'));
+      const res = await askFollowupQuestionTool.execute(
+        { question: 'Continue?' },
+        {
+          workspaceRoot: tmpDir,
+          sessionId: 's1',
+          askUserQuestion: mockAsk,
+        },
+      );
+
+      expect(res.success).toBe(false);
+      expect(res.output).toContain('Failed to receive answer from user: Prompt dismissed by user');
+    });
+
+    it('returns error when askUserQuestion handler is omitted', async () => {
+      const res = await askFollowupQuestionTool.execute(
+        {
+          question: 'Which database?',
+          options: ['PostgreSQL', 'SQLite'],
+        },
+        { workspaceRoot: tmpDir, sessionId: 's1' },
+      );
+
+      expect(res.success).toBe(false);
+      expect(res.output).toContain('No askUserQuestion handler is available in the current execution context');
+    });
+
+    it('rejects non-array options parameter', async () => {
+      const res = await askFollowupQuestionTool.execute(
+        { question: 'Pick one', options: 'invalid' as unknown as string[] },
+        { workspaceRoot: tmpDir, sessionId: 's1' },
+      );
+      expect(res.success).toBe(false);
+      expect(res.output).toContain('"options" must be an array of strings');
+    });
+
+    it('rejects options exceeding 10 choices', async () => {
+      const elevenOptions = Array.from({ length: 11 }, (_, i) => `Opt ${i + 1}`);
+      const res = await askFollowupQuestionTool.execute(
+        { question: 'Pick one', options: elevenOptions },
+        { workspaceRoot: tmpDir, sessionId: 's1' },
+      );
+      expect(res.success).toBe(false);
+      expect(res.output).toContain('"options" cannot exceed 10 choices');
+    });
+
+    it('rejects option item exceeding 120 characters', async () => {
+      const longOption = 'a'.repeat(121);
+      const res = await askFollowupQuestionTool.execute(
+        { question: 'Pick one', options: [longOption] },
+        { workspaceRoot: tmpDir, sessionId: 's1' },
+      );
+      expect(res.success).toBe(false);
+      expect(res.output).toContain('exceeds maximum length of 120 characters');
+    });
+
+    it('rejects empty or whitespace-only option items', async () => {
+      const res = await askFollowupQuestionTool.execute(
+        { question: 'Pick one', options: ['Valid', '   '] },
+        { workspaceRoot: tmpDir, sessionId: 's1' },
+      );
+      expect(res.success).toBe(false);
+      expect(res.output).toContain('Each item in "options" must be a non-empty string');
+    });
+
+    it('rejects when abortSignal is already aborted', async () => {
+      const abort = new AbortController();
+      abort.abort();
+
+      const res = await askFollowupQuestionTool.execute(
+        { question: 'Will this run?' },
+        {
+          workspaceRoot: tmpDir,
+          sessionId: 's1',
+          abortSignal: abort.signal,
+        },
+      );
+
+      expect(res.success).toBe(false);
+      expect(res.output).toContain('Turn was aborted');
+    });
+  });
+
+  describe('attempt_completion', () => {
+    it('rejects missing or empty result parameter', async () => {
+      const res = await attemptCompletionTool.execute(
+        { result: '' },
+        { workspaceRoot: tmpDir, sessionId: 's1' },
+      );
+      expect(res.success).toBe(false);
+      expect(res.output).toContain('non-empty string');
+    });
+
+    it('rejects result exceeding 10000 characters', async () => {
+      const longResult = 'a'.repeat(10001);
+      const res = await attemptCompletionTool.execute(
+        { result: longResult },
+        { workspaceRoot: tmpDir, sessionId: 's1' },
+      );
+      expect(res.success).toBe(false);
+      expect(res.output).toContain('"result" exceeds maximum length of 10000 characters');
+    });
+
+    it('rejects non-string command parameter', async () => {
+      const res = await attemptCompletionTool.execute(
+        { result: 'Done', command: 12345 as unknown as string },
+        { workspaceRoot: tmpDir, sessionId: 's1' },
+      );
+      expect(res.success).toBe(false);
+      expect(res.output).toContain('"command" must be a string if provided');
+    });
+
+    it('rejects command exceeding 500 characters', async () => {
+      const longCmd = 'a'.repeat(501);
+      const res = await attemptCompletionTool.execute(
+        { result: 'Done', command: longCmd },
+        { workspaceRoot: tmpDir, sessionId: 's1' },
+      );
+      expect(res.success).toBe(false);
+      expect(res.output).toContain('"command" exceeds maximum length of 500 characters');
+    });
+
+    it('handles onTaskCompletion callback error safely', async () => {
+      const throwingCallback = vi.fn().mockImplementation(() => {
+        throw new Error('Callback failed');
+      });
+      const res = await attemptCompletionTool.execute(
+        { result: 'Done' },
+        { workspaceRoot: tmpDir, sessionId: 's1', onTaskCompletion: throwingCallback },
+      );
+      expect(res.success).toBe(false);
+      expect(res.output).toContain('Task completion callback error: Callback failed');
+    });
+
+    it('formats completion output with result and optional command', async () => {
+      const onCompletion = vi.fn();
+      const res = await attemptCompletionTool.execute(
+        {
+          result: 'Refactored auth module and added unit tests.',
+          command: 'npm test',
+        },
+        {
+          workspaceRoot: tmpDir,
+          sessionId: 's1',
+          onTaskCompletion: onCompletion,
+        },
+      );
+
+      expect(onCompletion).toHaveBeenCalledWith(
+        'Refactored auth module and added unit tests.',
+        'npm test',
+      );
+      expect(res.success).toBe(true);
+      expect(res.output).toContain('Task Completion Summary:\nRefactored auth module and added unit tests.');
+      expect(res.output).toContain('Verification Command:\nnpm test');
+    });
+
+    it('formats completion output without command when command is omitted', async () => {
+      const res = await attemptCompletionTool.execute(
+        { result: 'Everything completed.' },
+        { workspaceRoot: tmpDir, sessionId: 's1' },
+      );
+
+      expect(res.success).toBe(true);
+      expect(res.output).toBe('Task Completion Summary:\nEverything completed.');
+      expect(res.output).not.toContain('Verification Command');
+    });
+  });
+
   describe('Provider Tool Schema Formatters', () => {
     it('formats tools for OpenAI, Anthropic, and Gemini', () => {
       const openAi = toOpenAiTools();
-      expect(openAi.length).toBe(11);
+      expect(openAi.length).toBe(13);
       expect(openAi[0].type).toBe('function');
       expect(openAi.some((t) => t.function.name === 'memory_save')).toBe(true);
       expect(openAi.some((t) => t.function.name === 'list_directory_tree')).toBe(true);
       expect(openAi.some((t) => t.function.name === 'view_code_symbols')).toBe(true);
+      expect(openAi.some((t) => t.function.name === 'ask_followup_question')).toBe(true);
+      expect(openAi.some((t) => t.function.name === 'attempt_completion')).toBe(true);
 
       const anthropic = toAnthropicTools();
-      expect(anthropic.length).toBe(11);
+      expect(anthropic.length).toBe(13);
       expect(anthropic.some((t) => t.name === 'memory_save')).toBe(true);
+      expect(anthropic.some((t) => t.name === 'ask_followup_question')).toBe(true);
+      expect(anthropic.some((t) => t.name === 'attempt_completion')).toBe(true);
 
       const gemini = toGeminiTools();
       expect(gemini.length).toBe(1);
-      expect(gemini[0].functionDeclarations.length).toBe(11);
+      expect(gemini[0].functionDeclarations.length).toBe(13);
       expect(gemini[0].functionDeclarations.some((t) => t.name === 'memory_save')).toBe(true);
+      expect(gemini[0].functionDeclarations.some((t) => t.name === 'ask_followup_question')).toBe(true);
+      expect(gemini[0].functionDeclarations.some((t) => t.name === 'attempt_completion')).toBe(true);
     });
   });
 });

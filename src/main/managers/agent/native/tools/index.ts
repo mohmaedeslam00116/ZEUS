@@ -13,5 +13,6 @@ export * from './fetchWebContent';
 export * from './memory';
 export * from './directoryTree';
 export * from './codeSymbols';
+export * from './interactive';
 export * from './registry';
 export * from './executor';

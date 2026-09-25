@@ -84,6 +84,19 @@ export class NativeAgentRuntime implements AgentRuntimeAdapter {
     this.memoryManager = memory;
   }
 
+  private askUserQuestionHandler?: (
+    sessionId: string,
+    question: string,
+    options?: string[],
+    signal?: AbortSignal,
+  ) => Promise<string>;
+
+  setAskUserQuestionHandler(
+    handler: (sessionId: string, question: string, options?: string[], signal?: AbortSignal) => Promise<string>,
+  ): void {
+    this.askUserQuestionHandler = handler;
+  }
+
   /**
    * Executes a streaming run turn against the resolved native provider API.
    */
@@ -282,35 +295,57 @@ export class NativeAgentRuntime implements AgentRuntimeAdapter {
       // best-effort
     }
 
-    // Synchronously execute each tool call through 3-Layer Security Gating
-    for (const tc of streamResult.toolCalls) {
-      if (abort.signal.aborted) break;
+      let taskCompleted = false;
+      let taskCompletionSummary = '';
 
-      const toolContext: NativeToolExecutionContext = {
-        workspaceRoot: cwd,
-        sessionId,
-        abortSignal: abort.signal,
-        memoryManager: this.memoryManager,
-        workspaceId,
-      };
+      // Synchronously execute each tool call through 3-Layer Security Gating
+      for (const tc of streamResult.toolCalls) {
+        if (abort.signal.aborted) break;
 
-          const toolResult = await executeNativeTool({
-            id: tc.id,
-            name: tc.name,
-            input: tc.input,
-            context: toolContext,
-            gate,
-            bridge: effectiveBridge,
-          });
+        const askHandler = this.askUserQuestionHandler;
+        const toolContext: NativeToolExecutionContext = {
+          workspaceRoot: cwd,
+          sessionId,
+          abortSignal: abort.signal,
+          memoryManager: this.memoryManager,
+          workspaceId,
+          askUserQuestion: askHandler
+            ? (q, opts, sig) => askHandler(sessionId, q, opts, sig)
+            : undefined,
+          onTaskCompletion: (result, cmd) => {
+            taskCompleted = true;
+            taskCompletionSummary = cmd ? `${result}\n\nVerification Command:\n${cmd}` : result;
+          },
+        };
 
-          conversationMessages.push({
-            role: 'tool',
-            name: tc.name,
-            toolCallId: tc.id,
-            content: toolResult.output,
-          });
+        const toolResult = await executeNativeTool({
+          id: tc.id,
+          name: tc.name,
+          input: tc.input,
+          context: toolContext,
+          gate,
+          bridge: effectiveBridge,
+        });
+
+        conversationMessages.push({
+          role: 'tool',
+          name: tc.name,
+          toolCallId: tc.id,
+          content: toolResult.output,
+        });
+
+        if (tc.name === 'attempt_completion' && toolResult.success) {
+          taskCompleted = true;
+          taskCompletionSummary = toolResult.output;
+          break;
         }
       }
+
+      if (taskCompleted) {
+        fullText = taskCompletionSummary || fullText;
+        break;
+      }
+    }
 
       effectiveBridge.finishStreaming(fullText);
       effectiveBridge.onResult(true, fullText);

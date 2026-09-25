@@ -252,6 +252,7 @@ const READ_TOOLS = new Set([
   'Read', 'Glob', 'Grep', 'LS', 'WebSearch', 'WebFetch', 'NotebookRead', 'TodoWrite',
   'read_files', 'read_file', 'web_search', 'fetch_web_content', 'fetch', 'search_codebase', 'find_by_name', 'list_dir',
   'list_directory_tree', 'view_code_symbols', 'memory_recall',
+  'ask_followup_question', 'attempt_completion',
 ]);
 const WRITE_TOOLS = new Set([
   'Write', 'Edit', 'MultiEdit', 'NotebookEdit', 'Delete',
@@ -281,6 +282,9 @@ const AUTO_ALLOWED_INTERNAL_TOOLS = new Set([
   // navigation & code structure
   'list_directory_tree',
   'view_code_symbols',
+  // interactive tools
+  'ask_followup_question',
+  'attempt_completion',
   // zeus_search — retrieval
   'search_project',
   'find_files',
@@ -1091,6 +1095,51 @@ export class AgentManager {
   /** Inject the first-party Native agent runtime adapter. */
   setNativeRuntime(runtime: AgentRuntimeAdapter): void {
     this.nativeRuntime = runtime;
+    runtime.setAskUserQuestionHandler?.(
+      (sessionId: string, question: string, options?: string[], signal?: AbortSignal) =>
+        this.askFollowupQuestion(sessionId, question, options, signal),
+    );
+  }
+
+  /**
+   * Surface a clarifying question from the first-party native agent runtime to the user
+   * and pause execution until the user responds.
+   */
+  async askFollowupQuestion(
+    sessionId: string,
+    question: string,
+    options?: string[],
+    signal?: AbortSignal,
+  ): Promise<string> {
+    const rawOptions = (options ?? []).slice(0, 10);
+    const clarificationInput = {
+      questions: [
+        {
+          question,
+          header: 'Clarification',
+          options: rawOptions.map((opt) => ({ label: opt, description: '' })),
+          multiSelect: false,
+        },
+      ],
+    };
+    const res = await this.requestClarification(
+      sessionId,
+      clarificationInput,
+      signal ?? new AbortController().signal,
+    );
+    if (res.behavior === 'deny') {
+      return res.message ?? 'User declined to answer.';
+    }
+    const updated = res.updatedInput;
+    if (updated?.response && typeof updated.response === 'string' && updated.response.trim()) {
+      return updated.response.trim();
+    }
+    if (updated?.answers && typeof updated.answers === 'object') {
+      const ans = (updated.answers as Record<string, unknown>)[question];
+      if (typeof ans === 'string' && ans.trim()) return ans.trim();
+      if (Array.isArray(ans) && ans.length > 0) return ans.join(', ');
+    }
+    return 'Answer received.';
   }
 
   /**
@@ -8199,6 +8248,10 @@ function summarizeTool(name: string, input: Record<string, unknown>, risk: ToolR
     case 'fetch_web_content':
     case 'fetch':
       return `Fetch ${truncate(String(input.url ?? ''), 40)}`;
+    case 'ask_followup_question':
+      return `Ask: ${truncate(String(input.question ?? ''), 50)}`;
+    case 'attempt_completion':
+      return 'Complete task';
     default:
       return risk === 'command' ? `Run ${name}` : name;
   }
@@ -8213,6 +8266,8 @@ function toolTarget(name: string, input: Record<string, unknown>): string | unde
   if (name === 'WebFetch' || name === 'fetch_web_content' || name === 'fetch') return truncate(String(input.url ?? ''), 160) || undefined;
   if (name === 'Bash' || name === 'run_commands' || name === 'execute_command') return truncate(String(input.command ?? input.cmd ?? ''), 120) || undefined;
   if (name === 'Grep' || name === 'search_codebase') return truncate(String(input.pattern ?? input.query ?? ''), 80) || undefined;
+  if (name === 'ask_followup_question') return truncate(String(input.question ?? ''), 120) || undefined;
+  if (name === 'attempt_completion') return truncate(String(input.result ?? ''), 120) || undefined;
   const file = filePathOf(input);
   return file ? shortPath(file) : undefined;
 }
@@ -8232,6 +8287,12 @@ function permissionDetail(name: string, input: Record<string, unknown>): string 
     return `- ${truncate(oldS, 200)}\n+ ${truncate(newS, 200)}`;
   }
   if (name === 'Write') return truncate(String(input.content ?? ''), 400);
+  if (name === 'ask_followup_question') return truncate(String(input.question ?? ''), 2_000);
+  if (name === 'attempt_completion') {
+    const res = truncate(String(input.result ?? ''), 2_000);
+    const cmd = input.command ? `\nCommand: ${truncate(String(input.command), 500)}` : '';
+    return `${res}${cmd}`;
+  }
   const file = filePathOf(input);
   return file;
 }
@@ -8396,7 +8457,7 @@ function normalizeQuestions(input: Record<string, unknown>): ClarificationQuesti
         : 'Question';
     const rawOptions = Array.isArray(rec.options) ? rec.options : [];
     const options: ClarificationOption[] = [];
-    for (const o of rawOptions.slice(0, 4)) {
+    for (const o of rawOptions.slice(0, 10)) {
       if (!o || typeof o !== 'object') continue;
       const orec = o as Record<string, unknown>;
       const label = typeof orec.label === 'string' ? orec.label.trim() : '';
@@ -8404,7 +8465,6 @@ function normalizeQuestions(input: Record<string, unknown>): ClarificationQuesti
       const description = typeof orec.description === 'string' ? orec.description.trim() : '';
       options.push({ label, description });
     }
-    if (options.length < 1) continue;
     out.push({ question, header, options, multiSelect: rec.multiSelect === true });
   }
   return out;

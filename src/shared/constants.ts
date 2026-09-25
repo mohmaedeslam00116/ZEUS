@@ -1174,6 +1174,14 @@ export const NATIVE_RUNTIME_LIMITS = {
     codeSymbolsMaxCount: 100,
     codeSymbolsMaxFileSize: 1024 * 1024,
   },
+  /** Interactive tool limits (XP-01 bounded outputs). */
+  interactive: {
+    maxQuestionLength: 2_000,
+    maxOptionsCount: 10,
+    maxOptionLength: 120,
+    maxResultLength: 10_000,
+    maxCommandLength: 500,
+  },
 } as const;
 
 /** Default settings for first-party native agent providers. */

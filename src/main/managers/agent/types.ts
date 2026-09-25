@@ -74,4 +74,7 @@ export interface AgentRuntimeAdapter {
   ): Promise<void>;
   closeSession?(sessionId: string): Promise<void>;
   dispose?(): Promise<void> | void;
+  setAskUserQuestionHandler?(
+    handler: (sessionId: string, question: string, options?: string[], signal?: AbortSignal) => Promise<string>,
+  ): void;
 }

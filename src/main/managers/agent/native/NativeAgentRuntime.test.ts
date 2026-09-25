@@ -10,6 +10,7 @@ import type { ProviderAuthManager } from '../ProviderAuthManager';
 import type { ModelCatalogManager } from '../catalog/ModelCatalogManager';
 import type { SettingsManager } from '../../SettingsManager';
 import type { ProviderRunBridge } from '../providerBridge';
+import type { ToolGateFunction } from '../types';
 import type { AppSettings, SessionPermissionMode } from '@shared/types';
 import { DEFAULT_SETTINGS } from '@shared/constants';
 
@@ -477,6 +478,168 @@ describe('NativeAgentRuntime', () => {
     } finally {
       await fs.promises.rm(testWs, { recursive: true, force: true });
     }
+  });
+
+  it('handles ask_followup_question in multi-turn loop and resumes with user response', async () => {
+    mockSettings.agent.model = 'openai:gpt-4o';
+    vi.spyOn(mockAuthManager, 'getEffectiveApiKey').mockReturnValue('mock-openai-key');
+
+    const turn1Sse = [
+      'data: {"choices":[{"delta":{"tool_calls":[{"index":0,"id":"call_q1","type":"function","function":{"name":"ask_followup_question","arguments":"{\\"question\\":\\"Which framework?\\",\\"options\\":[\\"React\\",\\"Vue\\"]}"}}]}}]}\n\n',
+      'data: [DONE]\n\n',
+    ];
+
+    const turn2Sse = [
+      'data: {"choices":[{"delta":{"content":"Setting up React project."}}]}\n\n',
+      'data: [DONE]\n\n',
+    ];
+
+    const postSpy = vi
+      .spyOn(transport, 'guardedPostSse')
+      .mockResolvedValueOnce(mockSseChunks(turn1Sse))
+      .mockResolvedValueOnce(mockSseChunks(turn2Sse));
+
+    const askHandler = vi.fn().mockResolvedValue('React');
+    runtime.setAskUserQuestionHandler(askHandler);
+
+    const queuedDeltas: string[] = [];
+    const mockBridge: ProviderRunBridge = {
+      ensureStreaming: vi.fn(),
+      queueDelta: (d) => queuedDeltas.push(d),
+      finishStreaming: vi.fn(),
+      onToolUse: vi.fn(),
+      onToolResult: vi.fn(),
+      onInit: vi.fn(),
+      onResult: vi.fn(),
+      diag: vi.fn(),
+    };
+    const mockGate: ToolGateFunction = vi.fn().mockResolvedValue({ behavior: 'allow' });
+
+    await runtime.run(
+      's-interactive-1',
+      'Start setup',
+      os.tmpdir(),
+      new AbortController(),
+      'auto' as SessionPermissionMode,
+      {
+        ensureStreaming: vi.fn(),
+        queueDelta: (d) => queuedDeltas.push(d),
+        finishStreaming: vi.fn(),
+      },
+      mockBridge,
+      mockGate,
+    );
+
+    expect(askHandler).toHaveBeenCalledWith('s-interactive-1', 'Which framework?', ['React', 'Vue'], expect.any(Object));
+    expect(postSpy).toHaveBeenCalledTimes(2);
+    expect(mockBridge.onToolResult).toHaveBeenCalledWith('call_q1', 'done', 'React');
+    expect(mockBridge.onResult).toHaveBeenCalledWith(true, 'Setting up React project.');
+  });
+
+  it('handles attempt_completion and terminates multi-turn loop immediately', async () => {
+    mockSettings.agent.model = 'openai:gpt-4o';
+    vi.spyOn(mockAuthManager, 'getEffectiveApiKey').mockReturnValue('mock-openai-key');
+
+    const turn1Sse = [
+      'data: {"choices":[{"delta":{"tool_calls":[{"index":0,"id":"call_c1","type":"function","function":{"name":"attempt_completion","arguments":"{\\"result\\":\\"Refactoring complete.\\",\\"command\\":\\"npm test\\"}"}}]}}]}\n\n',
+      'data: [DONE]\n\n',
+    ];
+
+    const postSpy = vi
+      .spyOn(transport, 'guardedPostSse')
+      .mockResolvedValueOnce(mockSseChunks(turn1Sse));
+
+    const queuedDeltas: string[] = [];
+    const mockBridge: ProviderRunBridge = {
+      ensureStreaming: vi.fn(),
+      queueDelta: (d) => queuedDeltas.push(d),
+      finishStreaming: vi.fn(),
+      onToolUse: vi.fn(),
+      onToolResult: vi.fn(),
+      onInit: vi.fn(),
+      onResult: vi.fn(),
+      diag: vi.fn(),
+    };
+    const mockGate: ToolGateFunction = vi.fn().mockResolvedValue({ behavior: 'allow' });
+
+    await runtime.run(
+      's-interactive-2',
+      'Complete task',
+      os.tmpdir(),
+      new AbortController(),
+      'auto' as SessionPermissionMode,
+      {
+        ensureStreaming: vi.fn(),
+        queueDelta: (d) => queuedDeltas.push(d),
+        finishStreaming: vi.fn(),
+      },
+      mockBridge,
+      mockGate,
+    );
+
+    // Only 1 turn was made because attempt_completion terminated the loop
+    expect(postSpy).toHaveBeenCalledTimes(1);
+    expect(mockBridge.onToolUse).toHaveBeenCalledWith(
+      'call_c1',
+      'attempt_completion',
+      { result: 'Refactoring complete.', command: 'npm test' },
+    );
+    expect(mockBridge.onToolResult).toHaveBeenCalledWith(
+      'call_c1',
+      'done',
+      expect.stringContaining('Task Completion Summary:\nRefactoring complete.'),
+    );
+    expect(mockBridge.onResult).toHaveBeenCalledWith(
+      true,
+      expect.stringContaining('Task Completion Summary:\nRefactoring complete.'),
+    );
+  });
+
+  it('breaks immediately from tool execution loop when attempt_completion is encountered', async () => {
+    mockSettings.agent.model = 'openai:gpt-4o';
+    vi.spyOn(mockAuthManager, 'getEffectiveApiKey').mockReturnValue('mock-openai-key');
+
+    const turn1Sse = [
+      'data: {"choices":[{"delta":{"tool_calls":[' +
+        '{"index":0,"id":"call_c1","type":"function","function":{"name":"attempt_completion","arguments":"{\\"result\\":\\"Done.\\"}"}},' +
+        '{"index":1,"id":"call_c2","type":"function","function":{"name":"run_command","arguments":"{\\"command\\":\\"ls\\"}"}}' +
+      ']}}]}\n\n',
+      'data: [DONE]\n\n',
+    ];
+
+    vi.spyOn(transport, 'guardedPostSse').mockResolvedValueOnce(mockSseChunks(turn1Sse));
+
+    const queuedDeltas: string[] = [];
+    const mockBridge: ProviderRunBridge = {
+      ensureStreaming: vi.fn(),
+      queueDelta: (d) => queuedDeltas.push(d),
+      finishStreaming: vi.fn(),
+      onToolUse: vi.fn(),
+      onToolResult: vi.fn(),
+      onInit: vi.fn(),
+      onResult: vi.fn(),
+      diag: vi.fn(),
+    };
+    const mockGate: ToolGateFunction = vi.fn().mockResolvedValue({ behavior: 'allow' });
+
+    await runtime.run(
+      's-interactive-3',
+      'Complete task and ignore extra tools',
+      os.tmpdir(),
+      new AbortController(),
+      'auto' as SessionPermissionMode,
+      {
+        ensureStreaming: vi.fn(),
+        queueDelta: (d) => queuedDeltas.push(d),
+        finishStreaming: vi.fn(),
+      },
+      mockBridge,
+      mockGate,
+    );
+
+    expect(mockBridge.onToolUse).toHaveBeenCalledWith('call_c1', 'attempt_completion', { result: 'Done.' });
+    expect(mockBridge.onToolUse).not.toHaveBeenCalledWith('call_c2', 'run_command', expect.anything());
+    expect(mockBridge.onResult).toHaveBeenCalledWith(true, expect.stringContaining('Task Completion Summary:\nDone.'));
   });
 });
 

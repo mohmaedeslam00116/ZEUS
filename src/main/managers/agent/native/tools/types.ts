@@ -50,6 +50,12 @@ export interface NativeToolExecutionContext {
   onOutputChunk?: (text: string) => void;
   memoryManager?: NativeToolMemoryManager;
   workspaceId?: string | null;
+  askUserQuestion?: (
+    question: string,
+    options?: string[],
+    signal?: AbortSignal,
+  ) => Promise<string>;
+  onTaskCompletion?: (result: string, command?: string) => void;
 }
 
 export interface NativeToolResult {

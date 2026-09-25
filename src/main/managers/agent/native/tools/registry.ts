@@ -10,6 +10,7 @@ import { fetchWebContentTool } from './fetchWebContent';
 import { memorySaveTool, memoryRecallTool, memoryForgetTool } from './memory';
 import { listDirectoryTreeTool } from './directoryTree';
 import { viewCodeSymbolsTool } from './codeSymbols';
+import { askFollowupQuestionTool, attemptCompletionTool } from './interactive';
 import type { NativeTool } from './types';
 
 export const NATIVE_TOOLS: Record<string, NativeTool> = {
@@ -24,6 +25,8 @@ export const NATIVE_TOOLS: Record<string, NativeTool> = {
   memory_forget: memoryForgetTool,
   list_directory_tree: listDirectoryTreeTool,
   view_code_symbols: viewCodeSymbolsTool,
+  ask_followup_question: askFollowupQuestionTool,
+  attempt_completion: attemptCompletionTool,
 };
 
 export function getAllNativeTools(): NativeTool[] {
