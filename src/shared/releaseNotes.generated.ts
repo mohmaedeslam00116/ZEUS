@@ -22,6 +22,27 @@ export interface ReleaseNotesEntry {
 /** Newest first. */
 export const RELEASE_NOTES: ReleaseNotesEntry[] = [
   {
+    version: '0.1.0-alpha.8',
+    date: '2026-09-25',
+    markdown: `ZEUS 0.1.0-alpha.8 delivers the first-party Native Agent Engine and Multi-Provider Hub (Master Spec #61):
+
+### Added
+
+- **First-Party Native Agent Runtime (\`NativeAgentRuntime\`)**:
+  - Direct HTTP/SSE streaming connection to Google Gemini, Anthropic Claude, OpenAI, DeepSeek, OpenRouter, local Ollama, and Kilo Gateway without external CLI dependencies.
+  - Context Compactor with sliding window token management, SQLite message history hydration, and bilingual Arabic \`LocaleContext\` guidance.
+  - Native Thinking/Reasoning block support separating model thought streams from conversation text.
+- **Native Tool Suite with 3-Layer Security Gating (SEC-19)**:
+  - Built-in file system tools (\`read_file\`, \`write_file\`, \`edit_file\` with unified diff preview), sandboxed command execution (\`run_command\`), codebase search (\`search_codebase\`), and SSRF-guarded web fetch (\`fetch_web_content\`).
+  - Synchronous 3-layer security gating: workspace containment & crown jewels protection, interactive user permission approval, and sandboxed execution.
+- **Dynamic Model Catalog Service**:
+  - Live model discovery per provider with 24-hour TTL SQLite caching and offline fallback.
+  - Free vs Paid tier badging and context window size metadata.
+- **Modern Model Selector & Provider Settings UI**:
+  - Filterable, keyboard-accessible dropdown with Free/Paid badges, context metrics, and provider grouping.
+  - Dedicated "AI Providers" settings tab with API key encryption in \`SafeStorage\`, custom base URLs, test connection button, and one-click import from Cline / OpenCode.`,
+  },
+  {
     version: '0.1.0-alpha.7',
     date: '2026-09-21',
     markdown: `ZEUS 0.1.0-alpha.7 introduces a dedicated collapsible thinking/reasoning process display and fixes tool invocation row layout and RTL alignment issues:
@@ -92,32 +113,6 @@ agents running under the Agent Client Protocol (ACP) and Codex app-server protoc
   - The Codex app-server wire protocol expects prompts structured under \`input\` as content
     blocks rather than a top-level string \`prompt\`. Requests now supply \`input: [{ type: 'text', text: prompt }]\`
     and normalize \`turnId\` from the returned \`turn.id\`.`,
-  },
-  {
-    version: '0.1.0-alpha.3',
-    date: '2026-09-20',
-    markdown: `ZEUS 0.1.0-alpha.3 is a critical stability patch resolving Windows installation shortcut
-disappearance after updates and fixing the \`spawn ENOENT\` failure when running headless
-agents (Cline, OpenCode, Codex) installed via npm on Windows.
-
-### Fixed
-
-- **Windows Desktop and Start Menu shortcuts wiped during updates & reinstalls**:
-  - \`customInit\` in \`assets/installer/installer.nsh\` previously scrubbed \`ZEUS.lnk\` during
-    pre-install cleanup. Combined with electron-builder's \`$keepShortcuts = "true"\` upgrade logic,
-    the installer skipped recreating shortcuts, leaving updated machines without Desktop or
-    Start Menu launchers.
-  - Removed shortcut deletion from \`customInit\`, and added an automated safety net in \`customInstall\`
-    to ensure \`$newStartMenuLink\` and \`$newDesktopLink\` exist and notify Windows Shell.
-  - Enabled \`createDesktopShortcut: always\` in \`electron-builder.yml\`.
-- **Headless agent spawning failure on Windows (\`spawn cline ENOENT\`)**:
-  - On Windows, npm global CLIs (\`cline\`, \`opencode\`, \`codex\`) are \`.cmd\` / \`.bat\` shell shims.
-    Node's \`child_process.spawn()\` with \`shell: false\` fails with \`ENOENT\` because Win32
-    \`CreateProcessW\` only directly executes \`.exe\` binaries.
-  - Introduced \`resolveSpawnTarget\` utility that bridges \`.cmd\` and \`.bat\` shims via
-    \`%ComSpec% /d /s /c\` with static argv arrays, preserving SEC-08 (no \`shell: true\`).
-  - Corrected ACP protocol initialization in \`AcpClient\`: updated \`protocolVersion\` to integer \`1\`
-    per ACP standard, eliminating parameter validation rejections from Cline and OpenCode.`,
   },
 ];
 

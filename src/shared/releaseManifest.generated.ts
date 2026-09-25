@@ -24,6 +24,61 @@ import type { ReleaseIndexEntry, ReleaseManifestEntry } from './release';
 /** Newest first. */
 export const RELEASE_MANIFESTS: ReleaseManifestEntry[] = [
   {
+    "version": "0.1.0-alpha.8",
+    "date": "2026-09-25",
+    "channel": "preview",
+    "codename": null,
+    "gitTag": "v0.1.0-alpha.8",
+    "commit": null,
+    "buildNumber": null,
+    "summary": "ZEUS 0.1.0-alpha.8 delivers the first-party Native Agent Engine and Multi-Provider Hub (Master Spec #61):",
+    "sections": [
+      {
+        "category": "added",
+        "title": "Added",
+        "items": [
+          {
+            "lead": "First-Party Native Agent Runtime (`NativeAgentRuntime`)",
+            "text": ":\n  - Direct HTTP/SSE streaming connection to Google Gemini, Anthropic Claude, OpenAI, DeepSeek, OpenRouter, local Ollama, and Kilo Gateway without external CLI dependencies.\n  - Context Compactor with sliding window token management, SQLite message history hydration, and bilingual Arabic `LocaleContext` guidance.\n  - Native Thinking/Reasoning block support separating model thought streams from conversation text."
+          },
+          {
+            "lead": "Native Tool Suite with 3-Layer Security Gating (SEC-19)",
+            "text": ":\n  - Built-in file system tools (`read_file`, `write_file`, `edit_file` with unified diff preview), sandboxed command execution (`run_command`), codebase search (`search_codebase`), and SSRF-guarded web fetch (`fetch_web_content`).\n  - Synchronous 3-layer security gating: workspace containment & crown jewels protection, interactive user permission approval, and sandboxed execution."
+          },
+          {
+            "lead": "Dynamic Model Catalog Service",
+            "text": ":\n  - Live model discovery per provider with 24-hour TTL SQLite caching and offline fallback.\n  - Free vs Paid tier badging and context window size metadata."
+          },
+          {
+            "lead": "Modern Model Selector & Provider Settings UI",
+            "text": ":\n  - Filterable, keyboard-accessible dropdown with Free/Paid badges, context metrics, and provider grouping.\n  - Dedicated \"AI Providers\" settings tab with API key encryption in `SafeStorage`, custom base URLs, test connection button, and one-click import from Cline / OpenCode."
+          }
+        ],
+        "markdown": "- **First-Party Native Agent Runtime (`NativeAgentRuntime`)**:\n  - Direct HTTP/SSE streaming connection to Google Gemini, Anthropic Claude, OpenAI, DeepSeek, OpenRouter, local Ollama, and Kilo Gateway without external CLI dependencies.\n  - Context Compactor with sliding window token management, SQLite message history hydration, and bilingual Arabic `LocaleContext` guidance.\n  - Native Thinking/Reasoning block support separating model thought streams from conversation text.\n- **Native Tool Suite with 3-Layer Security Gating (SEC-19)**:\n  - Built-in file system tools (`read_file`, `write_file`, `edit_file` with unified diff preview), sandboxed command execution (`run_command`), codebase search (`search_codebase`), and SSRF-guarded web fetch (`fetch_web_content`).\n  - Synchronous 3-layer security gating: workspace containment & crown jewels protection, interactive user permission approval, and sandboxed execution.\n- **Dynamic Model Catalog Service**:\n  - Live model discovery per provider with 24-hour TTL SQLite caching and offline fallback.\n  - Free vs Paid tier badging and context window size metadata.\n- **Modern Model Selector & Provider Settings UI**:\n  - Filterable, keyboard-accessible dropdown with Free/Paid badges, context metrics, and provider grouping.\n  - Dedicated \"AI Providers\" settings tab with API key encryption in `SafeStorage`, custom base URLs, test connection button, and one-click import from Cline / OpenCode."
+      }
+    ],
+    "contributors": [],
+    "pullRequests": [],
+    "mergedBranches": [],
+    "assets": [],
+    "signing": [],
+    "stats": {
+      "commits": null,
+      "filesChanged": null,
+      "additions": null,
+      "deletions": null
+    },
+    "links": {
+      "release": "https://github.com/mohmaedeslam00116/ZEUS/releases/tag/v0.1.0-alpha.8",
+      "compare": null,
+      "tag": "https://github.com/mohmaedeslam00116/ZEUS/releases/tag/v0.1.0-alpha.8",
+      "milestone": null
+    },
+    "checksumManifest": "SHA256SUMS",
+    "provenanceRepo": "mohmaedeslam00116/ZEUS",
+    "markdown": "ZEUS 0.1.0-alpha.8 delivers the first-party Native Agent Engine and Multi-Provider Hub (Master Spec #61):\n\n### Added\n\n- **First-Party Native Agent Runtime (`NativeAgentRuntime`)**:\n  - Direct HTTP/SSE streaming connection to Google Gemini, Anthropic Claude, OpenAI, DeepSeek, OpenRouter, local Ollama, and Kilo Gateway without external CLI dependencies.\n  - Context Compactor with sliding window token management, SQLite message history hydration, and bilingual Arabic `LocaleContext` guidance.\n  - Native Thinking/Reasoning block support separating model thought streams from conversation text.\n- **Native Tool Suite with 3-Layer Security Gating (SEC-19)**:\n  - Built-in file system tools (`read_file`, `write_file`, `edit_file` with unified diff preview), sandboxed command execution (`run_command`), codebase search (`search_codebase`), and SSRF-guarded web fetch (`fetch_web_content`).\n  - Synchronous 3-layer security gating: workspace containment & crown jewels protection, interactive user permission approval, and sandboxed execution.\n- **Dynamic Model Catalog Service**:\n  - Live model discovery per provider with 24-hour TTL SQLite caching and offline fallback.\n  - Free vs Paid tier badging and context window size metadata.\n- **Modern Model Selector & Provider Settings UI**:\n  - Filterable, keyboard-accessible dropdown with Free/Paid badges, context metrics, and provider grouping.\n  - Dedicated \"AI Providers\" settings tab with API key encryption in `SafeStorage`, custom base URLs, test connection button, and one-click import from Cline / OpenCode."
+  },
+  {
     "version": "0.1.0-alpha.7",
     "date": "2026-09-21",
     "channel": "preview",
@@ -217,58 +272,18 @@ export const RELEASE_MANIFESTS: ReleaseManifestEntry[] = [
     "checksumManifest": "SHA256SUMS",
     "provenanceRepo": "mohmaedeslam00116/ZEUS",
     "markdown": "ZEUS 0.1.0-alpha.4 resolves JSON-RPC wire-format incompatibilities with headless\nagents running under the Agent Client Protocol (ACP) and Codex app-server protocols.\n\n### Fixed\n\n- **Headless ACP agent parameter validation failures (`ACP RPC Error [-32602]: Invalid params`)**:\n  - In standard ACP v1, `session/new` enforces `{\"required\": [\"cwd\", \"mcpServers\"]}`.\n    ZEUS previously omitted `mcpServers`, triggering schema rejections (`mcpServers: Invalid input`)\n    in ACP runtimes like Cline and OpenCode. `mcpServers: []` is now always included.\n  - In ACP v1, `session/prompt` requires `prompt` to be an array of `ContentBlock` objects\n    (`[{ type: 'text', text: ... }]`). Raw strings previously caused schema rejection\n    (`prompt: Invalid input: expected array, received string`). Prompts are now normalized\n    into standard ACP content blocks.\n  - Added `clientCapabilities` (fs/terminal) during the initial `initialize` handshake.\n- **Codex turn dispatch error (`Codex RPC Error [-32600]: Invalid request: missing field input`)**:\n  - The Codex app-server wire protocol expects prompts structured under `input` as content\n    blocks rather than a top-level string `prompt`. Requests now supply `input: [{ type: 'text', text: prompt }]`\n    and normalize `turnId` from the returned `turn.id`."
-  },
-  {
-    "version": "0.1.0-alpha.3",
-    "date": "2026-09-20",
-    "channel": "preview",
-    "codename": null,
-    "gitTag": "v0.1.0-alpha.3",
-    "commit": null,
-    "buildNumber": null,
-    "summary": "ZEUS 0.1.0-alpha.3 is a critical stability patch resolving Windows installation shortcut\ndisappearance after updates and fixing the `spawn ENOENT` failure when running headless\nagents (Cline, OpenCode, Codex) installed via npm on Windows.",
-    "sections": [
-      {
-        "category": "fixed",
-        "title": "Fixed",
-        "items": [
-          {
-            "lead": "Windows Desktop and Start Menu shortcuts wiped during updates & reinstalls",
-            "text": ":\n  - `customInit` in `assets/installer/installer.nsh` previously scrubbed `ZEUS.lnk` during\n    pre-install cleanup. Combined with electron-builder's `$keepShortcuts = \"true\"` upgrade logic,\n    the installer skipped recreating shortcuts, leaving updated machines without Desktop or\n    Start Menu launchers.\n  - Removed shortcut deletion from `customInit`, and added an automated safety net in `customInstall`\n    to ensure `$newStartMenuLink` and `$newDesktopLink` exist and notify Windows Shell.\n  - Enabled `createDesktopShortcut: always` in `electron-builder.yml`."
-          },
-          {
-            "lead": "Headless agent spawning failure on Windows (`spawn cline ENOENT`)",
-            "text": ":\n  - On Windows, npm global CLIs (`cline`, `opencode`, `codex`) are `.cmd` / `.bat` shell shims.\n    Node's `child_process.spawn()` with `shell: false` fails with `ENOENT` because Win32\n    `CreateProcessW` only directly executes `.exe` binaries.\n  - Introduced `resolveSpawnTarget` utility that bridges `.cmd` and `.bat` shims via\n    `%ComSpec% /d /s /c` with static argv arrays, preserving SEC-08 (no `shell: true`).\n  - Corrected ACP protocol initialization in `AcpClient`: updated `protocolVersion` to integer `1`\n    per ACP standard, eliminating parameter validation rejections from Cline and OpenCode."
-          }
-        ],
-        "markdown": "- **Windows Desktop and Start Menu shortcuts wiped during updates & reinstalls**:\n  - `customInit` in `assets/installer/installer.nsh` previously scrubbed `ZEUS.lnk` during\n    pre-install cleanup. Combined with electron-builder's `$keepShortcuts = \"true\"` upgrade logic,\n    the installer skipped recreating shortcuts, leaving updated machines without Desktop or\n    Start Menu launchers.\n  - Removed shortcut deletion from `customInit`, and added an automated safety net in `customInstall`\n    to ensure `$newStartMenuLink` and `$newDesktopLink` exist and notify Windows Shell.\n  - Enabled `createDesktopShortcut: always` in `electron-builder.yml`.\n- **Headless agent spawning failure on Windows (`spawn cline ENOENT`)**:\n  - On Windows, npm global CLIs (`cline`, `opencode`, `codex`) are `.cmd` / `.bat` shell shims.\n    Node's `child_process.spawn()` with `shell: false` fails with `ENOENT` because Win32\n    `CreateProcessW` only directly executes `.exe` binaries.\n  - Introduced `resolveSpawnTarget` utility that bridges `.cmd` and `.bat` shims via\n    `%ComSpec% /d /s /c` with static argv arrays, preserving SEC-08 (no `shell: true`).\n  - Corrected ACP protocol initialization in `AcpClient`: updated `protocolVersion` to integer `1`\n    per ACP standard, eliminating parameter validation rejections from Cline and OpenCode."
-      }
-    ],
-    "contributors": [],
-    "pullRequests": [],
-    "mergedBranches": [],
-    "assets": [],
-    "signing": [],
-    "stats": {
-      "commits": null,
-      "filesChanged": null,
-      "additions": null,
-      "deletions": null
-    },
-    "links": {
-      "release": "https://github.com/mohmaedeslam00116/ZEUS/releases/tag/v0.1.0-alpha.3",
-      "compare": null,
-      "tag": "https://github.com/mohmaedeslam00116/ZEUS/releases/tag/v0.1.0-alpha.3",
-      "milestone": null
-    },
-    "checksumManifest": "SHA256SUMS",
-    "provenanceRepo": "mohmaedeslam00116/ZEUS",
-    "markdown": "ZEUS 0.1.0-alpha.3 is a critical stability patch resolving Windows installation shortcut\ndisappearance after updates and fixing the `spawn ENOENT` failure when running headless\nagents (Cline, OpenCode, Codex) installed via npm on Windows.\n\n### Fixed\n\n- **Windows Desktop and Start Menu shortcuts wiped during updates & reinstalls**:\n  - `customInit` in `assets/installer/installer.nsh` previously scrubbed `ZEUS.lnk` during\n    pre-install cleanup. Combined with electron-builder's `$keepShortcuts = \"true\"` upgrade logic,\n    the installer skipped recreating shortcuts, leaving updated machines without Desktop or\n    Start Menu launchers.\n  - Removed shortcut deletion from `customInit`, and added an automated safety net in `customInstall`\n    to ensure `$newStartMenuLink` and `$newDesktopLink` exist and notify Windows Shell.\n  - Enabled `createDesktopShortcut: always` in `electron-builder.yml`.\n- **Headless agent spawning failure on Windows (`spawn cline ENOENT`)**:\n  - On Windows, npm global CLIs (`cline`, `opencode`, `codex`) are `.cmd` / `.bat` shell shims.\n    Node's `child_process.spawn()` with `shell: false` fails with `ENOENT` because Win32\n    `CreateProcessW` only directly executes `.exe` binaries.\n  - Introduced `resolveSpawnTarget` utility that bridges `.cmd` and `.bat` shims via\n    `%ComSpec% /d /s /c` with static argv arrays, preserving SEC-08 (no `shell: true`).\n  - Corrected ACP protocol initialization in `AcpClient`: updated `protocolVersion` to integer `1`\n    per ACP standard, eliminating parameter validation rejections from Cline and OpenCode."
   }
 ];
 
 /** Every released version, newest first. */
 export const RELEASE_INDEX: ReleaseIndexEntry[] = [
+  {
+    "version": "0.1.0-alpha.8",
+    "date": "2026-09-25",
+    "channel": "preview",
+    "summary": "ZEUS 0.1.0-alpha.8 delivers the first-party Native Agent Engine and Multi-Provider Hub (Master Spec #61):",
+    "detailed": true
+  },
   {
     "version": "0.1.0-alpha.7",
     "date": "2026-09-21",
@@ -302,7 +317,7 @@ export const RELEASE_INDEX: ReleaseIndexEntry[] = [
     "date": "2026-09-20",
     "channel": "preview",
     "summary": "ZEUS 0.1.0-alpha.3 is a critical stability patch resolving Windows installation shortcut\ndisappearance after updates and fixing the `spawn ENOENT` failure when running headless\nagents (Cline, OpenCode, Codex) installed via npm on Windows.",
-    "detailed": true
+    "detailed": false
   },
   {
     "version": "0.1.0-alpha.2",

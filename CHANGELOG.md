@@ -1557,6 +1557,26 @@ operational.
 
 ## [Unreleased]
 
+## [0.1.0-alpha.8] - 2026-09-25
+
+ZEUS 0.1.0-alpha.8 delivers the first-party Native Agent Engine and Multi-Provider Hub (Master Spec #61):
+
+### Added
+
+- **First-Party Native Agent Runtime (`NativeAgentRuntime`)**:
+  - Direct HTTP/SSE streaming connection to Google Gemini, Anthropic Claude, OpenAI, DeepSeek, OpenRouter, local Ollama, and Kilo Gateway without external CLI dependencies.
+  - Context Compactor with sliding window token management, SQLite message history hydration, and bilingual Arabic `LocaleContext` guidance.
+  - Native Thinking/Reasoning block support separating model thought streams from conversation text.
+- **Native Tool Suite with 3-Layer Security Gating (SEC-19)**:
+  - Built-in file system tools (`read_file`, `write_file`, `edit_file` with unified diff preview), sandboxed command execution (`run_command`), codebase search (`search_codebase`), and SSRF-guarded web fetch (`fetch_web_content`).
+  - Synchronous 3-layer security gating: workspace containment & crown jewels protection, interactive user permission approval, and sandboxed execution.
+- **Dynamic Model Catalog Service**:
+  - Live model discovery per provider with 24-hour TTL SQLite caching and offline fallback.
+  - Free vs Paid tier badging and context window size metadata.
+- **Modern Model Selector & Provider Settings UI**:
+  - Filterable, keyboard-accessible dropdown with Free/Paid badges, context metrics, and provider grouping.
+  - Dedicated "AI Providers" settings tab with API key encryption in `SafeStorage`, custom base URLs, test connection button, and one-click import from Cline / OpenCode.
+
 ## [0.1.0-alpha.7] - 2026-09-21
 
 ZEUS 0.1.0-alpha.7 introduces a dedicated collapsible thinking/reasoning process display and fixes tool invocation row layout and RTL alignment issues:
