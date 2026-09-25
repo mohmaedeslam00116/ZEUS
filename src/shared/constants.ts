@@ -1167,6 +1167,13 @@ export const NATIVE_RUNTIME_LIMITS = {
     ollama: 32_000,
     kilo: 128_000,
   } as Record<string, number>,
+  /** Extended navigation and code inspection tool limits (XP-01 bounded outputs). */
+  navigation: {
+    directoryTreeMaxEntries: 150,
+    directoryTreeMaxDepth: 5,
+    codeSymbolsMaxCount: 100,
+    codeSymbolsMaxFileSize: 1024 * 1024,
+  },
 } as const;
 
 /** Default settings for first-party native agent providers. */

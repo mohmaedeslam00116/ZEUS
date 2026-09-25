@@ -251,10 +251,12 @@ function resolveClaudeExecutable(): string | undefined {
 const READ_TOOLS = new Set([
   'Read', 'Glob', 'Grep', 'LS', 'WebSearch', 'WebFetch', 'NotebookRead', 'TodoWrite',
   'read_files', 'read_file', 'web_search', 'fetch_web_content', 'fetch', 'search_codebase', 'find_by_name', 'list_dir',
+  'list_directory_tree', 'view_code_symbols', 'memory_recall',
 ]);
 const WRITE_TOOLS = new Set([
   'Write', 'Edit', 'MultiEdit', 'NotebookEdit', 'Delete',
   'write_file', 'edit_file', 'replace_file_content', 'delete_file', 'new_file',
+  'memory_save', 'memory_forget',
 ]);
 
 /**
@@ -275,6 +277,10 @@ const AUTO_ALLOWED_INTERNAL_TOOLS = new Set([
   'list_memories',
   'search_memories',
   'list_memory_proposals',
+  'memory_recall',
+  // navigation & code structure
+  'list_directory_tree',
+  'view_code_symbols',
   // zeus_search — retrieval
   'search_project',
   'find_files',

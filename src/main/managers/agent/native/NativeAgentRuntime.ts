@@ -32,6 +32,7 @@ import {
   toGeminiTools,
   executeNativeTool,
   type NativeToolExecutionContext,
+  type NativeToolMemoryManager,
 } from './tools';
 import type { ConversationMessage, NormalizedStreamChunk } from './types';
 
@@ -74,8 +75,13 @@ export class NativeAgentRuntime implements AgentRuntimeAdapter {
     private readonly catalogManager: ModelCatalogManager,
     private readonly settings: SettingsManager,
     private readonly db: Database.Database,
+    private memoryManager?: NativeToolMemoryManager,
   ) {
     this.compactor = new ContextCompactor(this.db);
+  }
+
+  setMemoryManager(memory: NativeToolMemoryManager): void {
+    this.memoryManager = memory;
   }
 
   /**
@@ -266,15 +272,27 @@ export class NativeAgentRuntime implements AgentRuntimeAdapter {
           toolCalls: streamResult.toolCalls,
         });
 
-        // Synchronously execute each tool call through 3-Layer Security Gating
-        for (const tc of streamResult.toolCalls) {
-          if (abort.signal.aborted) break;
+    let workspaceId: string | null = null;
+    try {
+      const sessionRow = this.db
+        .prepare('SELECT workspace_id FROM sessions WHERE id = ?')
+        .get(sessionId) as { workspace_id: string } | undefined;
+      workspaceId = sessionRow?.workspace_id ?? null;
+    } catch {
+      // best-effort
+    }
 
-          const toolContext: NativeToolExecutionContext = {
-            workspaceRoot: cwd,
-            sessionId,
-            abortSignal: abort.signal,
-          };
+    // Synchronously execute each tool call through 3-Layer Security Gating
+    for (const tc of streamResult.toolCalls) {
+      if (abort.signal.aborted) break;
+
+      const toolContext: NativeToolExecutionContext = {
+        workspaceRoot: cwd,
+        sessionId,
+        abortSignal: abort.signal,
+        memoryManager: this.memoryManager,
+        workspaceId,
+      };
 
           const toolResult = await executeNativeTool({
             id: tc.id,

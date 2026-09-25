@@ -8,6 +8,9 @@ import { editFileTool } from './editFile';
 import { runCommandTool } from './runCommand';
 import { searchCodebaseTool } from './searchCodebase';
 import { fetchWebContentTool } from './fetchWebContent';
+import { memorySaveTool, memoryRecallTool, memoryForgetTool } from './memory';
+import { listDirectoryTreeTool } from './directoryTree';
+import { viewCodeSymbolsTool } from './codeSymbols';
 import { executeNativeTool } from './executor';
 import { toOpenAiTools, toAnthropicTools, toGeminiTools } from './registry';
 import * as transport from '../transport';
@@ -334,22 +337,388 @@ describe('Native Tool Suite & 3-Layer Security Gating', () => {
 
   });
 
+  describe('memory tools', () => {
+    interface MockMemoryRecord {
+      id: string;
+      title: string;
+      body: string;
+      tier: string;
+      workspaceId?: string | null;
+      snippet?: string;
+      archived?: boolean;
+    }
+    let mockMemories: Map<string, MockMemoryRecord>;
+    let mockMemoryManager: {
+      create: ReturnType<typeof vi.fn>;
+      search: ReturnType<typeof vi.fn>;
+      get: ReturnType<typeof vi.fn>;
+      delete: ReturnType<typeof vi.fn>;
+      setArchived: ReturnType<typeof vi.fn>;
+    };
+
+    beforeEach(() => {
+      mockMemories = new Map();
+      mockMemoryManager = {
+        create: vi.fn((input: { title: string; body: string; tier: string; workspaceId?: string | null }) => {
+          const id = 'mem-' + Math.random().toString(36).slice(2, 9);
+          const record: MockMemoryRecord = { id, ...input };
+          mockMemories.set(id, record);
+          return record;
+        }),
+        search: vi.fn((query: string, opts?: { tiers?: string[] }) => {
+          const hits: MockMemoryRecord[] = [];
+          for (const m of mockMemories.values()) {
+            if (m.title.includes(query) || m.body.includes(query)) {
+              if (!opts?.tiers || opts.tiers.includes(m.tier)) {
+                hits.push({ ...m, snippet: `Match: ${m.body}` });
+              }
+            }
+          }
+          return hits;
+        }),
+        get: vi.fn((id: string) => mockMemories.get(id) ?? null),
+        delete: vi.fn((id: string) => {
+          mockMemories.delete(id);
+        }),
+        setArchived: vi.fn((id: string, archived: boolean) => {
+          const record = mockMemories.get(id);
+          if (record) {
+            record.archived = archived;
+          }
+        }),
+      };
+    });
+
+    describe('memory_save', () => {
+      it('validates required fields', async () => {
+        const res = await memorySaveTool.execute(
+          { title: '', body: 'some body', tier: 'decision' },
+          { workspaceRoot: tmpDir, sessionId: 's1', memoryManager: mockMemoryManager },
+        );
+        expect(res.success).toBe(false);
+        expect(res.output).toContain('must be a non-empty string');
+
+        const res2 = await memorySaveTool.execute(
+          { title: 'Valid Title', body: '', tier: 'decision' },
+          { workspaceRoot: tmpDir, sessionId: 's1', memoryManager: mockMemoryManager },
+        );
+        expect(res2.success).toBe(false);
+        expect(res2.output).toContain('must be a non-empty string');
+
+        const res3 = await memorySaveTool.execute(
+          { title: 'Valid Title', body: 'Valid body', tier: 'unknown_tier' },
+          { workspaceRoot: tmpDir, sessionId: 's1', memoryManager: mockMemoryManager },
+        );
+        expect(res3.success).toBe(false);
+        expect(res3.output).toContain('invalid tier');
+      });
+
+      it('saves memory successfully with workspace scope', async () => {
+        const res = await memorySaveTool.execute(
+          {
+            title: 'Use Vitest for Unit Tests',
+            body: 'Always use Vitest with mocked services for lightning-fast test cycles.',
+            tier: 'convention',
+            scope: 'workspace',
+          },
+          {
+            workspaceRoot: tmpDir,
+            sessionId: 's1',
+            workspaceId: 'ws-123',
+            memoryManager: mockMemoryManager,
+          },
+        );
+
+        expect(res.success).toBe(true);
+        expect(res.output).toContain('Memory successfully saved');
+        expect(res.output).toContain('Use Vitest for Unit Tests');
+        expect(mockMemoryManager.create).toHaveBeenCalledWith(
+          expect.objectContaining({
+            title: 'Use Vitest for Unit Tests',
+            tier: 'convention',
+            workspaceId: 'ws-123',
+          }),
+        );
+      });
+
+      it('handles missing MemoryManager gracefully', async () => {
+        const res = await memorySaveTool.execute(
+          { title: 'Title', body: 'Body', tier: 'decision' },
+          { workspaceRoot: tmpDir, sessionId: 's1' },
+        );
+        expect(res.success).toBe(false);
+        expect(res.output).toContain('MemoryManager is not available');
+      });
+    });
+
+    describe('memory_recall', () => {
+      it('validates query string', async () => {
+        const res = await memoryRecallTool.execute(
+          { query: '' },
+          { workspaceRoot: tmpDir, sessionId: 's1', memoryManager: mockMemoryManager },
+        );
+        expect(res.success).toBe(false);
+        expect(res.output).toContain('must be a non-empty string');
+      });
+
+      it('searches and formats matching memories', async () => {
+        mockMemories.set('m1', {
+          id: 'm1',
+          title: 'Database Architecture',
+          body: 'We use SQLite with WAL mode and bound parameters.',
+          tier: 'architecture',
+        });
+
+        const res = await memoryRecallTool.execute(
+          { query: 'SQLite' },
+          { workspaceRoot: tmpDir, sessionId: 's1', memoryManager: mockMemoryManager },
+        );
+
+        expect(res.success).toBe(true);
+        expect(res.output).toContain('Found 1 matching memories');
+        expect(res.output).toContain('Database Architecture');
+        expect(res.output).toContain('m1');
+      });
+
+      it('handles query with no matches', async () => {
+        const res = await memoryRecallTool.execute(
+          { query: 'NonExistentTerm' },
+          { workspaceRoot: tmpDir, sessionId: 's1', memoryManager: mockMemoryManager },
+        );
+
+        expect(res.success).toBe(true);
+        expect(res.output).toContain('No memories found matching query');
+      });
+    });
+
+    describe('memory_forget', () => {
+      it('validates id input', async () => {
+        const res = await memoryForgetTool.execute(
+          { id: '' },
+          { workspaceRoot: tmpDir, sessionId: 's1', memoryManager: mockMemoryManager },
+        );
+        expect(res.success).toBe(false);
+        expect(res.output).toContain('must be a non-empty string');
+      });
+
+      it('archives memory by default (soft delete)', async () => {
+        mockMemories.set('arch-1', {
+          id: 'arch-1',
+          title: 'Soft delete rule',
+          body: 'Archived convention',
+          tier: 'convention',
+        });
+
+        const res = await memoryForgetTool.execute(
+          { id: 'arch-1', reason: 'Superseded by Spec #67' },
+          { workspaceRoot: tmpDir, sessionId: 's1', memoryManager: mockMemoryManager },
+        );
+
+        expect(res.success).toBe(true);
+        expect(res.output).toContain('successfully archived');
+        expect(res.output).toContain('Superseded by Spec #67');
+        expect(mockMemoryManager.setArchived).toHaveBeenCalledWith('arch-1', true);
+      });
+
+      it('permanently deletes memory when mode is delete', async () => {
+        mockMemories.set('del-1', {
+          id: 'del-1',
+          title: 'Hard delete rule',
+          body: 'Permanently removed',
+          tier: 'convention',
+        });
+
+        const res = await memoryForgetTool.execute(
+          { id: 'del-1', mode: 'delete' },
+          { workspaceRoot: tmpDir, sessionId: 's1', memoryManager: mockMemoryManager },
+        );
+
+        expect(res.success).toBe(true);
+        expect(res.output).toContain('permanently deleted');
+        expect(mockMemoryManager.delete).toHaveBeenCalledWith('del-1');
+      });
+
+      it('returns error when memory does not exist', async () => {
+        const res = await memoryForgetTool.execute(
+          { id: 'ghost-id' },
+          { workspaceRoot: tmpDir, sessionId: 's1', memoryManager: mockMemoryManager },
+        );
+        expect(res.success).toBe(false);
+        expect(res.output).toContain('Memory not found');
+      });
+    });
+  });
+
+  describe('list_directory_tree', () => {
+    it('generates hierarchical tree structure', async () => {
+      await fs.promises.mkdir(path.join(tmpDir, 'src', 'main'), { recursive: true });
+      await fs.promises.mkdir(path.join(tmpDir, 'src', 'renderer'), { recursive: true });
+      await fs.promises.writeFile(path.join(tmpDir, 'src', 'main', 'index.ts'), 'console.log();');
+      await fs.promises.writeFile(path.join(tmpDir, 'package.json'), '{}');
+
+      const res = await listDirectoryTreeTool.execute(
+        { path: '.', maxDepth: 3 },
+        { workspaceRoot: tmpDir, sessionId: 's1' },
+      );
+
+      expect(res.success).toBe(true);
+      expect(res.output).toContain('src/');
+      expect(res.output).toContain('main/');
+      expect(res.output).toContain('index.ts');
+      expect(res.output).toContain('package.json');
+    });
+
+    it('ignores node_modules and .git folders', async () => {
+      await fs.promises.mkdir(path.join(tmpDir, 'node_modules', 'pkg'), { recursive: true });
+      await fs.promises.mkdir(path.join(tmpDir, '.git', 'objects'), { recursive: true });
+      await fs.promises.writeFile(path.join(tmpDir, 'node_modules', 'pkg', 'index.js'), '');
+      await fs.promises.writeFile(path.join(tmpDir, 'app.ts'), '');
+
+      const res = await listDirectoryTreeTool.execute(
+        { path: '.' },
+        { workspaceRoot: tmpDir, sessionId: 's1' },
+      );
+
+      expect(res.success).toBe(true);
+      expect(res.output).toContain('app.ts');
+      expect(res.output).not.toContain('node_modules');
+      expect(res.output).not.toContain('.git');
+    });
+
+    it('enforces Layer 1 path containment', async () => {
+      const res = await listDirectoryTreeTool.execute(
+        { path: '../../etc' },
+        { workspaceRoot: tmpDir, sessionId: 's1' },
+      );
+      expect(res.success).toBe(false);
+      expect(res.output).toContain('escapes workspace boundaries');
+    });
+
+    it('truncates output when entries exceed XP-01 ceiling (150 items)', async () => {
+      const bulkDir = path.join(tmpDir, 'bulk');
+      await fs.promises.mkdir(bulkDir, { recursive: true });
+      for (let i = 0; i < 160; i++) {
+        await fs.promises.writeFile(path.join(bulkDir, `file_${i}.txt`), 'content');
+      }
+
+      const res = await listDirectoryTreeTool.execute(
+        { path: 'bulk' },
+        { workspaceRoot: tmpDir, sessionId: 's1' },
+      );
+
+      expect(res.success).toBe(true);
+      expect(res.output).toContain('output truncated at 150 entries (XP-01 ceiling)');
+    });
+  });
+
+  describe('view_code_symbols', () => {
+    it('extracts classes, interfaces, types, functions, and methods with line numbers', async () => {
+      const code = `
+export interface UserConfig {
+  name: string;
+}
+
+export type UserRole = 'admin' | 'guest';
+
+export class UserManager {
+  private user: UserConfig;
+
+  async loadUser(id: string): Promise<UserConfig> {
+    return this.user;
+  }
+}
+
+export function createManager(): UserManager {
+  return new UserManager();
+}
+`;
+      const filePath = path.join(tmpDir, 'symbols.ts');
+      await fs.promises.writeFile(filePath, code, 'utf8');
+
+      const res = await viewCodeSymbolsTool.execute(
+        { path: 'symbols.ts' },
+        { workspaceRoot: tmpDir, sessionId: 's1' },
+      );
+
+      expect(res.success).toBe(true);
+      expect(res.output).toContain('[interface] interface UserConfig (line 2)');
+      expect(res.output).toContain('[type] type UserRole (line 6)');
+      expect(res.output).toContain('[class] class UserManager (line 8)');
+      expect(res.output).toContain('[method] loadUser(id: string) (line 11)');
+      expect(res.output).toContain('[function] function createManager() (line 16)');
+    });
+
+    it('filters symbols by kind', async () => {
+      const code = `
+export class ServiceA {}
+export function helper(): void {}
+`;
+      const filePath = path.join(tmpDir, 'filtered.ts');
+      await fs.promises.writeFile(filePath, code, 'utf8');
+
+      const res = await viewCodeSymbolsTool.execute(
+        { path: 'filtered.ts', kind: 'function' },
+        { workspaceRoot: tmpDir, sessionId: 's1' },
+      );
+
+      expect(res.success).toBe(true);
+      expect(res.output).toContain('[function] function helper');
+      expect(res.output).not.toContain('[class] class ServiceA');
+    });
+
+    it('enforces Layer 1 workspace containment', async () => {
+      const res = await viewCodeSymbolsTool.execute(
+        { path: '../outside.ts' },
+        { workspaceRoot: tmpDir, sessionId: 's1' },
+      );
+      expect(res.success).toBe(false);
+      expect(res.output).toContain('escapes workspace boundaries');
+    });
+
+    it('returns error when file does not exist', async () => {
+      const res = await viewCodeSymbolsTool.execute(
+        { path: 'ghost.ts' },
+        { workspaceRoot: tmpDir, sessionId: 's1' },
+      );
+      expect(res.success).toBe(false);
+      expect(res.output).toContain('File not found');
+    });
+
+    it('truncates output when symbols exceed XP-01 ceiling (100 symbols)', async () => {
+      const fnLines: string[] = [];
+      for (let i = 0; i < 110; i++) {
+        fnLines.push(`export function func_${i}(): void {}`);
+      }
+      const bulkFile = path.join(tmpDir, 'many_functions.ts');
+      await fs.promises.writeFile(bulkFile, fnLines.join('\n'), 'utf8');
+
+      const res = await viewCodeSymbolsTool.execute(
+        { path: 'many_functions.ts' },
+        { workspaceRoot: tmpDir, sessionId: 's1' },
+      );
+
+      expect(res.success).toBe(true);
+      expect(res.output).toContain('truncated at 100 symbols (XP-01 ceiling)');
+    });
+  });
+
   describe('Provider Tool Schema Formatters', () => {
     it('formats tools for OpenAI, Anthropic, and Gemini', () => {
       const openAi = toOpenAiTools();
-      expect(openAi.length).toBe(6);
+      expect(openAi.length).toBe(11);
       expect(openAi[0].type).toBe('function');
-      expect(openAi[0].function.name).toBe('read_file');
+      expect(openAi.some((t) => t.function.name === 'memory_save')).toBe(true);
+      expect(openAi.some((t) => t.function.name === 'list_directory_tree')).toBe(true);
+      expect(openAi.some((t) => t.function.name === 'view_code_symbols')).toBe(true);
 
       const anthropic = toAnthropicTools();
-      expect(anthropic.length).toBe(6);
-      expect(anthropic[0].name).toBe('read_file');
-      expect(anthropic[0].input_schema).toBeDefined();
+      expect(anthropic.length).toBe(11);
+      expect(anthropic.some((t) => t.name === 'memory_save')).toBe(true);
 
       const gemini = toGeminiTools();
       expect(gemini.length).toBe(1);
-      expect(gemini[0].functionDeclarations.length).toBe(6);
-      expect(gemini[0].functionDeclarations[0].name).toBe('read_file');
+      expect(gemini[0].functionDeclarations.length).toBe(11);
+      expect(gemini[0].functionDeclarations.some((t) => t.name === 'memory_save')).toBe(true);
     });
   });
 });

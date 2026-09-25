@@ -7,6 +7,9 @@ import { editFileTool } from './editFile';
 import { runCommandTool } from './runCommand';
 import { searchCodebaseTool } from './searchCodebase';
 import { fetchWebContentTool } from './fetchWebContent';
+import { memorySaveTool, memoryRecallTool, memoryForgetTool } from './memory';
+import { listDirectoryTreeTool } from './directoryTree';
+import { viewCodeSymbolsTool } from './codeSymbols';
 import type { NativeTool } from './types';
 
 export const NATIVE_TOOLS: Record<string, NativeTool> = {
@@ -16,6 +19,11 @@ export const NATIVE_TOOLS: Record<string, NativeTool> = {
   run_command: runCommandTool,
   search_codebase: searchCodebaseTool,
   fetch_web_content: fetchWebContentTool,
+  memory_save: memorySaveTool,
+  memory_recall: memoryRecallTool,
+  memory_forget: memoryForgetTool,
+  list_directory_tree: listDirectoryTreeTool,
+  view_code_symbols: viewCodeSymbolsTool,
 };
 
 export function getAllNativeTools(): NativeTool[] {

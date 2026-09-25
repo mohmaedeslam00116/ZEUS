@@ -334,6 +334,7 @@ function bootstrap(): void {
     // The agent retrieves + injects relevant memories; the git engine proposes
     // new memories from commits. Both treat memory as an optional collaborator.
     agent.setMemoryManager(memory);
+    nativeRuntime.setMemoryManager(memory);
     git.setMemoryManager(memory);
     // The agent consumes attachments: manifest + staging-dir read access per
     // prompt, vision blocks for images, and read-status tracking on tool use.
