@@ -3634,7 +3634,7 @@ export interface RuntimeRun {
   runId: string;
   model: string;
   /** Mirrors `AgentProvider` (types.ts deliberately has no imports). */
-  provider: 'anthropic' | 'cursor' | 'openai' | 'pi' | 'cline' | 'opencode' | 'codex';
+  provider: 'anthropic' | 'cursor' | 'openai' | 'pi' | 'cline' | 'opencode' | 'codex' | 'native';
   /** Composer mode captured AT RUN START, never read from current settings. */
   mode: SessionPermissionMode;
   startedAt: number;
@@ -3706,7 +3706,7 @@ export interface RuntimeEnvironment {
  */
 export interface RuntimeSnapshot {
   sessionId: string;
-  provider: 'anthropic' | 'cursor' | 'openai' | 'pi' | 'cline' | 'opencode' | 'codex';
+  provider: 'anthropic' | 'cursor' | 'openai' | 'pi' | 'cline' | 'opencode' | 'codex' | 'native';
   capabilities: RuntimeCapabilities;
   /**
    * Main-supplied "why not" copy for each false capability, so the renderer can
@@ -3799,7 +3799,7 @@ export interface HookEvent {
   phase: HookPhase;
   sessionId: string;
   /** Which provider produced the run this event belongs to. */
-  provider: 'anthropic' | 'cursor' | 'openai' | 'pi' | 'cline' | 'opencode' | 'codex';
+  provider: 'anthropic' | 'cursor' | 'openai' | 'pi' | 'cline' | 'opencode' | 'codex' | 'native';
   /** Epoch ms. */
   at: number;
   /** Neutral tool identity for tool phases (Claude-shaped, e.g. `Bash`). */
@@ -3938,7 +3938,7 @@ export interface WorkGraphNodeBase {
   runId: string;
   kind: WorkGraphNodeKind;
   /** Which adapter produced it; `zeus` = app-originated (git, services, FS). */
-  provider: 'anthropic' | 'cursor' | 'openai' | 'pi' | 'cline' | 'opencode' | 'codex' | 'zeus';
+  provider: 'anthropic' | 'cursor' | 'openai' | 'pi' | 'cline' | 'opencode' | 'codex' | 'native' | 'zeus';
   status: WorkGraphNodeStatus;
   /** Redacted, clamped to GRAPH_LIMITS.titleMax. */
   title: string;

@@ -44,6 +44,7 @@ import { ProviderAuthManager } from './managers/agent/ProviderAuthManager';
 import { ModelCatalogManager } from './managers/agent/catalog/ModelCatalogManager';
 import { AcpRuntime } from './managers/agent/acp/AcpRuntime';
 import { CodexRuntime } from './managers/agent/codex/CodexRuntime';
+import { NativeAgentRuntime } from './managers/agent/native/NativeAgentRuntime';
 import { harnessById, harnessIdForRun } from './managers/agent/harnessRegistry';
 import { worktreeRootDir } from './managers/worktree/paths';
 import { HarnessRuntime } from './managers/harness/HarnessRuntime';
@@ -140,6 +141,7 @@ function bootstrap(): void {
   let cursorRuntime: CursorRuntime;
   let providerAuth: ProviderAuthManager;
   let modelCatalog: ModelCatalogManager;
+  let nativeRuntime: NativeAgentRuntime;
   let harnessRuntime: HarnessRuntime;
   let harnessSandbox: LocalWorktreeSandboxProvider;
   let mcp: McpManager;
@@ -206,6 +208,8 @@ function bootstrap(): void {
     cursorRuntime = new CursorRuntime(cursorAuth);
     providerAuth = new ProviderAuthManager(new SecretStore(), settings);
     modelCatalog = new ModelCatalogManager(getDb(), providerAuth, settings);
+    nativeRuntime = new NativeAgentRuntime(providerAuth, modelCatalog, settings, getDb());
+    agent.setNativeRuntime(nativeRuntime);
     fileSystem = new FileSystemManager(workspace);
     terminal = new TerminalManager(workspace, settings);
     git = new GitManager(workspace, settings);
@@ -719,6 +723,7 @@ function bootstrap(): void {
     safeDispose('agent', () => agent?.cleanup());
     safeDispose('cursorRuntime', () => cursorRuntime?.dispose());
     safeDispose('cursorAuth', () => cursorAuth?.dispose());
+    safeDispose('nativeRuntime', () => nativeRuntime?.dispose());
     // Parks harness sessions and releases reserved ports. Deletes nothing —
     // the "sandbox root" is the user's worktree (see LocalWorktreeSandbox).
     safeDispose('harnessRuntime', () => void harnessRuntime?.dispose());

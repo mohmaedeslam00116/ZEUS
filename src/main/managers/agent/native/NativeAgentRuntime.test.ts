@@ -1,0 +1,392 @@
+import { describe, it, expect, beforeEach, vi } from 'vitest';
+import Database from 'better-sqlite3';
+import { NativeAgentRuntime } from './NativeAgentRuntime';
+import * as transport from './transport';
+import type { ProviderAuthManager } from '../ProviderAuthManager';
+import type { ModelCatalogManager } from '../catalog/ModelCatalogManager';
+import type { SettingsManager } from '../../SettingsManager';
+import type { ProviderRunBridge } from '../providerBridge';
+import type { AppSettings, SessionPermissionMode } from '@shared/types';
+import { DEFAULT_SETTINGS } from '@shared/constants';
+
+async function* mockSseChunks(chunks: string[]): AsyncIterable<string> {
+  for (const chunk of chunks) {
+    yield chunk;
+  }
+}
+
+describe('NativeAgentRuntime', () => {
+  let db: Database.Database;
+  let mockSettings: AppSettings;
+  let mockSettingsManager: SettingsManager;
+  let mockAuthManager: ProviderAuthManager;
+  let mockCatalogManager: ModelCatalogManager;
+  let runtime: NativeAgentRuntime;
+
+  beforeEach(() => {
+    db = new Database(':memory:');
+    db.exec(`
+      CREATE TABLE agent_messages (
+        id TEXT PRIMARY KEY,
+        session_id TEXT NOT NULL,
+        role TEXT NOT NULL,
+        text TEXT NOT NULL,
+        thinking TEXT,
+        created_at INTEGER NOT NULL
+      );
+    `);
+
+    mockSettings = JSON.parse(JSON.stringify(DEFAULT_SETTINGS));
+    mockSettingsManager = {
+      getAll: () => mockSettings,
+      onChange: () => () => {
+        /* no-op for mock */
+      },
+    } as unknown as SettingsManager;
+
+    mockAuthManager = {
+      getEffectiveApiKey: vi.fn().mockImplementation((provider) => {
+        if (provider === 'gemini') return 'mock-gemini-key';
+        if (provider === 'deepseek') return 'mock-deepseek-key';
+        if (provider === 'anthropic') return 'mock-anthropic-key';
+        return undefined;
+      }),
+      getEffectiveBaseUrl: vi.fn().mockReturnValue(undefined),
+    } as unknown as ProviderAuthManager;
+
+    mockCatalogManager = {
+      listModels: vi.fn().mockResolvedValue([]),
+      getCachedModelsSync: vi.fn().mockReturnValue([]),
+    } as unknown as ModelCatalogManager;
+
+    runtime = new NativeAgentRuntime(
+      mockAuthManager,
+      mockCatalogManager,
+      mockSettingsManager,
+      db,
+    );
+  });
+
+  it('runs Gemini stream and routes deltas, thinking, and result to bridge', async () => {
+    mockSettings.agent.model = 'gemini:gemini-2.5-flash';
+
+    const sseResponse = [
+      'data: {"candidates":[{"content":{"parts":[{"text":"Analyzing query...","thought":true}]}}]}\n\n',
+      'data: {"candidates":[{"content":{"parts":[{"text":"Here is the output."}]}}]}\n\n',
+      'data: {"usageMetadata":{"promptTokenCount":10,"candidatesTokenCount":5,"totalTokenCount":15}}\n\n',
+    ];
+
+    vi.spyOn(transport, 'guardedPostSse').mockResolvedValue(mockSseChunks(sseResponse));
+
+    const queuedDeltas: string[] = [];
+    const queuedThinking: string[] = [];
+    let runResult: { ok: boolean; text: string } | null = null;
+    let reportedUsage: unknown = null;
+
+    const mockBridge: ProviderRunBridge = {
+      ensureStreaming: vi.fn(),
+      queueDelta: (text) => queuedDeltas.push(text),
+      onThinking: (text) => queuedThinking.push(text),
+      finishStreaming: vi.fn(),
+      onToolUse: vi.fn(),
+      onToolResult: vi.fn(),
+      onInit: vi.fn(),
+      onResult: (ok, text) => {
+        runResult = { ok, text };
+      },
+      onUsage: (u) => {
+        reportedUsage = u;
+      },
+      diag: vi.fn(),
+    };
+
+    const abort = new AbortController();
+
+    await runtime.run(
+      'session_123',
+      'What is 2 + 2?',
+      '/workspace',
+      abort,
+      'full' as SessionPermissionMode,
+      {
+        ensureStreaming: vi.fn(),
+        queueDelta: (t) => mockBridge.queueDelta(t),
+        finishStreaming: vi.fn(),
+      },
+      mockBridge,
+    );
+
+    expect(queuedThinking).toEqual(['Analyzing query...']);
+    expect(queuedDeltas).toEqual(['Here is the output.']);
+    expect(runResult).toEqual({ ok: true, text: 'Here is the output.' });
+    expect(reportedUsage).toEqual({
+      inputTokens: 10,
+      outputTokens: 5,
+      totalTokens: 15,
+    });
+  });
+
+  it('runs DeepSeek OpenAI-compatible stream and routes reasoning_content to onThinking', async () => {
+    mockSettings.agent.model = 'deepseek:deepseek-r1';
+
+    const sseResponse = [
+      'data: {"choices":[{"delta":{"reasoning_content":"Thinking through arithmetic."}}]}\n\n',
+      'data: {"choices":[{"delta":{"content":"4" handshake}}]}\n\n',
+      'data: [DONE]\n\n',
+    ];
+
+    // clean json
+    sseResponse[1] = 'data: {"choices":[{"delta":{"content":"4"}}]}\n\n';
+
+    vi.spyOn(transport, 'guardedPostSse').mockResolvedValue(mockSseChunks(sseResponse));
+
+    const queuedDeltas: string[] = [];
+    const queuedThinking: string[] = [];
+
+    const mockBridge: ProviderRunBridge = {
+      ensureStreaming: vi.fn(),
+      queueDelta: (text) => queuedDeltas.push(text),
+      onThinking: (text) => queuedThinking.push(text),
+      finishStreaming: vi.fn(),
+      onToolUse: vi.fn(),
+      onToolResult: vi.fn(),
+      onInit: vi.fn(),
+      onResult: vi.fn(),
+      diag: vi.fn(),
+    };
+
+    await runtime.run(
+      'session_456',
+      '2 + 2?',
+      '/workspace',
+      new AbortController(),
+      'full' as SessionPermissionMode,
+      {
+        ensureStreaming: vi.fn(),
+        queueDelta: (t) => mockBridge.queueDelta(t),
+        finishStreaming: vi.fn(),
+      },
+      mockBridge,
+    );
+
+    expect(queuedThinking).toEqual(['Thinking through arithmetic.']);
+    expect(queuedDeltas).toEqual(['4']);
+  });
+
+  it('handles tool call emission and invokes tool gate', async () => {
+    mockSettings.agent.model = 'gemini:gemini-2.5-flash';
+
+    const sseResponse = [
+      'data: {"candidates":[{"content":{"parts":[{"functionCall":{"name":"run_command","args":{"cmd":"echo hi"}}}]}}]}\n\n',
+    ];
+
+    vi.spyOn(transport, 'guardedPostSse').mockResolvedValue(mockSseChunks(sseResponse));
+
+    const toolCalls: Array<{ id: string; name: string; input: Record<string, unknown> }> = [];
+    const mockBridge: ProviderRunBridge = {
+      ensureStreaming: vi.fn(),
+      queueDelta: vi.fn(),
+      onThinking: vi.fn(),
+      finishStreaming: vi.fn(),
+      onToolUse: (id, name, input) => {
+        toolCalls.push({ id, name, input });
+      },
+      onToolResult: vi.fn(),
+      onInit: vi.fn(),
+      onResult: vi.fn(),
+      diag: vi.fn(),
+    };
+
+    const mockGate = vi.fn().mockResolvedValue({ behavior: 'allow' });
+
+    await runtime.run(
+      'session_789',
+      'run command',
+      '/workspace',
+      new AbortController(),
+      'full' as SessionPermissionMode,
+      {
+        ensureStreaming: vi.fn(),
+        queueDelta: vi.fn(),
+        finishStreaming: vi.fn(),
+      },
+      mockBridge,
+      mockGate,
+    );
+
+    expect(toolCalls.length).toBe(1);
+    expect(toolCalls[0].name).toBe('run_command');
+    expect(toolCalls[0].input).toEqual({ cmd: 'echo hi' });
+    expect(mockGate).toHaveBeenCalledWith('run_command', { cmd: 'echo hi' }, expect.any(Object));
+  });
+
+  it('throws descriptive error if required API key is missing', async () => {
+    mockSettings.agent.model = 'deepseek:deepseek-chat';
+    // Return null key for deepseek
+    vi.spyOn(mockAuthManager, 'getEffectiveApiKey').mockReturnValue(null);
+
+    const mockBridge: ProviderRunBridge = {
+      ensureStreaming: vi.fn(),
+      queueDelta: vi.fn(),
+      finishStreaming: vi.fn(),
+      onToolUse: vi.fn(),
+      onToolResult: vi.fn(),
+      onInit: vi.fn(),
+      onResult: vi.fn(),
+      diag: vi.fn(),
+    };
+
+    await expect(
+      runtime.run(
+        'session_err',
+        'prompt',
+        '/workspace',
+        new AbortController(),
+        'full' as SessionPermissionMode,
+        {
+          ensureStreaming: vi.fn(),
+          queueDelta: vi.fn(),
+          finishStreaming: vi.fn(),
+        },
+        mockBridge,
+      ),
+    ).rejects.toThrow(/API key missing for provider "deepseek"/);
+  });
+
+  it('runs Anthropic stream and routes thinking and text deltas', async () => {
+    mockSettings.agent.model = 'anthropic:claude-3-7-sonnet';
+
+    const sseResponse = [
+      'event: content_block_start\ndata: {"type":"content_block_start","index":0,"content_block":{"type":"thinking","thinking":""}}\n\n',
+      'event: content_block_delta\ndata: {"type":"content_block_delta","index":0,"delta":{"type":"thinking_delta","thinking":"Analyzing logic..."}}\n\n',
+      'event: content_block_stop\ndata: {"type":"content_block_stop","index":0}\n\n',
+      'event: content_block_start\ndata: {"type":"content_block_start","index":1,"content_block":{"type":"text","text":""}}\n\n',
+      'event: content_block_delta\ndata: {"type":"content_block_delta","index":1,"delta":{"type":"text_delta","text":"Result: OK"}}\n\n',
+      'event: message_delta\ndata: {"type":"message_delta","usage":{"output_tokens":42}}\n\n',
+    ];
+
+    vi.spyOn(transport, 'guardedPostSse').mockResolvedValue(mockSseChunks(sseResponse));
+
+    const queuedDeltas: string[] = [];
+    const queuedThinking: string[] = [];
+    let runResult: { ok: boolean; text: string } | null = null;
+
+    const mockBridge: ProviderRunBridge = {
+      ensureStreaming: vi.fn(),
+      queueDelta: (text) => queuedDeltas.push(text),
+      onThinking: (text) => queuedThinking.push(text),
+      finishStreaming: vi.fn(),
+      onToolUse: vi.fn(),
+      onToolResult: vi.fn(),
+      onInit: vi.fn(),
+      onResult: (ok, text) => {
+        runResult = { ok, text };
+      },
+      onUsage: vi.fn(),
+      diag: vi.fn(),
+    };
+
+    await runtime.run(
+      'session_anthropic',
+      'Analyze logic',
+      '/workspace',
+      new AbortController(),
+      'full' as SessionPermissionMode,
+      {
+        ensureStreaming: vi.fn(),
+        queueDelta: (t) => mockBridge.queueDelta(t),
+        finishStreaming: vi.fn(),
+      },
+      mockBridge,
+    );
+
+    expect(queuedThinking).toEqual(['Analyzing logic...']);
+    expect(queuedDeltas).toEqual(['Result: OK']);
+    expect(runResult).toEqual({ ok: true, text: 'Result: OK' });
+  });
+
+  it('runs Ollama without requiring an API key and allows private loopback', async () => {
+    mockSettings.agent.model = 'ollama:llama3.2:latest';
+    vi.spyOn(mockAuthManager, 'getEffectiveApiKey').mockReturnValue(null);
+
+    const postSpy = vi.spyOn(transport, 'guardedPostSse').mockResolvedValue(
+      mockSseChunks(['data: {"choices":[{"delta":{"content":"Local response"}}]}\n\n', 'data: [DONE]\n\n']),
+    );
+
+    const queuedDeltas: string[] = [];
+    const mockBridge: ProviderRunBridge = {
+      ensureStreaming: vi.fn(),
+      queueDelta: (text) => queuedDeltas.push(text),
+      finishStreaming: vi.fn(),
+      onToolUse: vi.fn(),
+      onToolResult: vi.fn(),
+      onInit: vi.fn(),
+      onResult: vi.fn(),
+      diag: vi.fn(),
+    };
+
+    await runtime.run(
+      'session_ollama',
+      'hi',
+      '/workspace',
+      new AbortController(),
+      'full' as SessionPermissionMode,
+      {
+        ensureStreaming: vi.fn(),
+        queueDelta: (t) => mockBridge.queueDelta(t),
+        finishStreaming: vi.fn(),
+      },
+      mockBridge,
+    );
+
+    expect(queuedDeltas).toEqual(['Local response']);
+    expect(postSpy).toHaveBeenCalledWith(
+      expect.stringContaining('11434'),
+      expect.any(Object),
+      expect.objectContaining({ allowPrivate: true }),
+    );
+  });
+
+  it('exits cleanly on user abort without throwing unhandled error', async () => {
+    mockSettings.agent.model = 'gemini:gemini-2.5-flash';
+
+    const abortController = new AbortController();
+
+    async function* abortingStream(): AsyncIterable<string> {
+      yield 'data: {"candidates":[{"content":{"parts":[{"text":"first "}]}}]}\n\n';
+      abortController.abort();
+      throw new Error('Request aborted by caller');
+    }
+
+    vi.spyOn(transport, 'guardedPostSse').mockResolvedValue(abortingStream());
+
+    const finishStreamingSpy = vi.fn();
+    const mockBridge: ProviderRunBridge = {
+      ensureStreaming: vi.fn(),
+      queueDelta: vi.fn(),
+      finishStreaming: finishStreamingSpy,
+      onToolUse: vi.fn(),
+      onToolResult: vi.fn(),
+      onInit: vi.fn(),
+      onResult: vi.fn(),
+      diag: vi.fn(),
+    };
+
+    // Should not throw when abort was triggered
+    await runtime.run(
+      'session_abort',
+      'stop midway',
+      '/workspace',
+      abortController,
+      'full' as SessionPermissionMode,
+      {
+        ensureStreaming: vi.fn(),
+        queueDelta: vi.fn(),
+        finishStreaming: finishStreamingSpy,
+      },
+      mockBridge,
+    );
+
+    expect(finishStreamingSpy).toHaveBeenCalled();
+  });
+});

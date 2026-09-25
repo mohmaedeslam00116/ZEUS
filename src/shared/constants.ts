@@ -60,7 +60,8 @@ export type AgentProvider =
   | 'pi'
   | 'cline'
   | 'opencode'
-  | 'codex';
+  | 'codex'
+  | 'native';
 
 /**
  * Selectable agent models (id + short label + provider). The Anthropic ids are
@@ -120,6 +121,7 @@ export const HARNESS_LABELS: Record<string, string> = {
   pi: 'Pi',
   cline: 'Cline',
   opencode: 'OpenCode',
+  native: 'Native Agent',
 };
 
 /**
@@ -138,6 +140,7 @@ export const HARNESS_PROVIDER: Record<string, AgentProvider> = {
   pi: 'pi',
   cline: 'cline',
   opencode: 'opencode',
+  native: 'native',
 };
 
 /**
@@ -155,6 +158,7 @@ export const PROVIDER_HARNESS: Record<AgentProvider, string> = {
   cline: 'cline',
   opencode: 'opencode',
   codex: 'codex',
+  native: 'native',
 };
 
 /** Headless CLI agent providers (Spec #50 Track B). */
@@ -256,6 +260,22 @@ export function resolveModelRouting(
     model.startsWith('openai-codex:')
   ) {
     return { provider: 'codex' };
+  }
+  if (
+    model === 'native' ||
+    model.startsWith('native:') ||
+    model === 'gemini' ||
+    model.startsWith('gemini:') ||
+    model === 'deepseek' ||
+    model.startsWith('deepseek:') ||
+    model === 'openrouter' ||
+    model.startsWith('openrouter:') ||
+    model === 'ollama' ||
+    model.startsWith('ollama:') ||
+    model === 'kilo' ||
+    model.startsWith('kilo:')
+  ) {
+    return { provider: 'native' };
   }
   return {
     provider: null,
@@ -1112,6 +1132,38 @@ export const MODEL_CATALOG_LIMITS = {
   maxModelsPerProvider: 200,
   defaultTtlMs: 24 * 60 * 60 * 1000, // 24 hours
   fetchTimeoutMs: 10_000, // 10 seconds
+} as const;
+
+/** Limits, timeouts, and baseline defaults for the first-party Native Agent Runtime (#64). */
+export const NATIVE_RUNTIME_LIMITS = {
+  /** Default request timeout in milliseconds for native HTTP/SSE streams. */
+  defaultTimeoutMs: 60_000,
+  /** Default token budget for sliding-window context compaction if unspecified. */
+  defaultMaxTokens: 8_192,
+  /** Sliding window compaction threshold ratio relative to total context budget. */
+  compactionBudgetRatio: 0.8,
+  /** Fallback context limit in tokens when model metadata is not found. */
+  fallbackContextLimit: 128_000,
+  /** Default provider base URLs for direct SSE connection. */
+  defaultProviderBaseUrls: {
+    gemini: 'https://generativelanguage.googleapis.com',
+    anthropic: 'https://api.anthropic.com',
+    openai: 'https://api.openai.com/v1',
+    deepseek: 'https://api.deepseek.com',
+    openrouter: 'https://openrouter.ai/api/v1',
+    ollama: 'http://localhost:11434/v1',
+    kilo: 'https://api.kilo.ai/v1',
+  } as Record<string, string>,
+  /** Default context window limits per native provider. */
+  defaultContextLimits: {
+    gemini: 1_048_576,
+    anthropic: 200_000,
+    openai: 128_000,
+    deepseek: 64_000,
+    openrouter: 128_000,
+    ollama: 32_000,
+    kilo: 128_000,
+  } as Record<string, number>,
 } as const;
 
 /** Default settings for first-party native agent providers. */

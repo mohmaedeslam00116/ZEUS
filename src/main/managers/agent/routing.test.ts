@@ -22,6 +22,7 @@ import {
   HARNESS_PROVIDER,
   resolveModelRouting,
   providerForModel,
+  type AgentProvider,
 } from '@shared/constants';
 import type { SessionPermissionMode } from '@shared/types';
 import {
@@ -109,6 +110,17 @@ describe('resolveModelRouting (#56)', () => {
     expect(resolveModelRouting('openai-codex:latest')).toEqual({ provider: 'codex' });
     expect(providerForModel('codex:gpt-4.5')).toBe('codex');
     expect(providerForModel('openai-codex')).toBe('codex');
+  });
+
+  it('routes native provider prefix models to native provider (#64)', () => {
+    expect(resolveModelRouting('gemini:gemini-2.5-pro')).toEqual({ provider: 'native' });
+    expect(resolveModelRouting('deepseek:deepseek-reasoner')).toEqual({ provider: 'native' });
+    expect(resolveModelRouting('openrouter:meta-llama/llama-3-70b')).toEqual({ provider: 'native' });
+    expect(resolveModelRouting('ollama:deepseek-r1:14b')).toEqual({ provider: 'native' });
+    expect(resolveModelRouting('kilo:kilo-code')).toEqual({ provider: 'native' });
+    expect(resolveModelRouting('native:gpt-4o')).toEqual({ provider: 'native' });
+    expect(providerForModel('gemini:gemini-2.5-flash')).toBe('native');
+    expect(providerForModel('deepseek:chat')).toBe('native');
   });
 
   it('preserves existing model routes for Anthropic, Cursor, and Pi', () => {
@@ -450,5 +462,44 @@ describe('AgentManager Headless Provider Routing & Dispatch (#56)', () => {
     );
 
     probeSpy.mockRestore();
+  });
+
+  it('wires nativeRuntime setter and dispatches via runNativeOnce (#64)', async () => {
+    const mockNativeAdapter: AgentRuntimeAdapter = {
+      provider: 'native' as AgentProvider,
+      run: vi.fn().mockResolvedValue(undefined),
+    };
+    agentManager.setNativeRuntime(mockNativeAdapter);
+    await (
+      runner as unknown as {
+        runNativeOnce: (
+          sessionId: string,
+          prompt: string,
+          cwd: string,
+          abort: AbortController,
+          permMode: SessionPermissionMode,
+          stream: AgentRuntimeStreamCallbacks,
+        ) => Promise<void>;
+      }
+    ).runNativeOnce(
+      'sess-native',
+      'Native test prompt',
+      'C:\\fake\\workspace',
+      new AbortController(),
+      'acceptEdits',
+      mockStream,
+    );
+
+    expect(mockNativeAdapter.run).toHaveBeenCalledWith(
+      'sess-native',
+      'Native test prompt',
+      'C:\\fake\\workspace',
+      expect.any(AbortController),
+      'acceptEdits',
+      mockStream,
+      expect.any(Object),
+      expect.any(Function),
+      undefined,
+    );
   });
 });

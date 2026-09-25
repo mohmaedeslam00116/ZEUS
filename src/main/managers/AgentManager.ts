@@ -1056,6 +1056,7 @@ export class AgentManager {
   private clineRuntime: AgentRuntimeAdapter | null = null;
   private openCodeRuntime: AgentRuntimeAdapter | null = null;
   private codexRuntime: AgentRuntimeAdapter | null = null;
+  private nativeRuntime: AgentRuntimeAdapter | null = null;
 
   /** Inject the Cline ACP runtime adapter. */
   setClineRuntime(runtime: AgentRuntimeAdapter): void {
@@ -1070,6 +1071,11 @@ export class AgentManager {
   /** Inject the Codex runtime adapter. */
   setCodexRuntime(runtime: AgentRuntimeAdapter): void {
     this.codexRuntime = runtime;
+  }
+
+  /** Inject the first-party Native agent runtime adapter. */
+  setNativeRuntime(runtime: AgentRuntimeAdapter): void {
+    this.nativeRuntime = runtime;
   }
 
   /**
@@ -3291,6 +3297,18 @@ export class AgentManager {
           this.settleOrphanedToolCalls(sessionId);
         }
         return;
+      case 'native':
+        try {
+          await this.runNativeOnce(sessionId, prompt, cwd, abort, permMode, {
+            ensureStreaming,
+            queueDelta,
+            queueThinking,
+            finishStreaming,
+          });
+        } finally {
+          this.settleOrphanedToolCalls(sessionId);
+        }
+        return;
       default:
         // Unreachable: the null routing case is thrown above and every
         // AgentProvider member has a case here — the compiler narrows
@@ -3822,6 +3840,102 @@ export class AgentManager {
 
     const finalPrompt = injectedContext ? `${injectedContext}\n\n${prompt}` : prompt;
     const resumeSessionId = this.loadProviderSession(sessionId, provider);
+    await runtime.run(
+      sessionId,
+      finalPrompt,
+      cwd,
+      abort,
+      permMode,
+      stream,
+      bridge,
+      gate,
+      resumeSessionId,
+    );
+  }
+
+  /* ---------------------------------------------------------------- */
+  /* First-party native agent runtime engine run path                 */
+  /* ---------------------------------------------------------------- */
+
+  private async runNativeOnce(
+    sessionId: string,
+    prompt: string,
+    cwd: string,
+    abort: AbortController,
+    permMode: SessionPermissionMode,
+    stream: {
+      ensureStreaming: () => ChatMessage;
+      queueDelta: (text: string) => void;
+      queueThinking?: (text: string) => void;
+      finishStreaming: (finalText?: string) => void;
+    },
+  ): Promise<void> {
+    const runtime = this.nativeRuntime;
+    if (!runtime) {
+      throw new Error('The native agent runtime engine is not available.');
+    }
+
+    const agent = this.settings.getAll().agent;
+    const memoryContext = this.memoryContextFor(sessionId, prompt);
+    const searchContext = this.searchContextFor(sessionId, prompt);
+    const resumeContext = this.resumeContextFor(sessionId);
+    const localeContext = this.localeContextFor(sessionId, prompt);
+    const injectedContext =
+      [memoryContext, searchContext, resumeContext, localeContext].filter(Boolean).join('\n\n') || undefined;
+
+    this.emitRunStart(sessionId, agent.model, permMode, {
+      memory: memoryContext?.length ?? 0,
+      search: searchContext?.length ?? 0,
+      resume: resumeContext?.length ?? 0,
+      locale: localeContext?.length ?? 0,
+      attachments: 0,
+      prompt: prompt.length,
+    });
+
+    const bridge: ProviderRunBridge = {
+      ensureStreaming: () => {
+        stream.ensureStreaming();
+      },
+      queueDelta: stream.queueDelta,
+      onThinking: stream.queueThinking,
+      finishStreaming: stream.finishStreaming,
+      onToolUse: (id, name, input, parentCallId) =>
+        this.onToolUse(sessionId, id, name, input, parentCallId),
+      onToolResult: (id, status, output) => this.onToolResult(sessionId, id, status, output),
+      onInit: (providerSessionId) => {
+        this.rememberProviderSession(sessionId, 'native', providerSessionId);
+      },
+      onResult: (ok, text) =>
+        this.recordRunResult(sessionId, {
+          ok,
+          subtype: ok ? 'success' : 'error_during_execution',
+          errors: ok || !text ? [] : [text],
+          text,
+        }),
+      onUsage: (usage) =>
+        this.emitTelemetry({
+          kind: 'run-end',
+          sessionId,
+          durationMs: usage.durationMs,
+          totals:
+            usage.inputTokens !== undefined || usage.outputTokens !== undefined
+              ? {
+                  inputTokens: usage.inputTokens ?? 0,
+                  cacheReadTokens: 0,
+                  cacheCreationTokens: 0,
+                  outputTokens: usage.outputTokens ?? 0,
+                }
+              : undefined,
+        }),
+      diag: (category, severity, label, detail) =>
+        this.diag(category as DiagnosticCategory, severity, label, detail, sessionId),
+    };
+
+    const gate: ToolGateFunction = (toolName, input, sig) =>
+      this.decideToolUse(sessionId, cwd, permMode, toolName, input, sig ?? abort.signal);
+
+    const finalPrompt = injectedContext ? `${injectedContext}\n\n${prompt}` : prompt;
+    const resumeSessionId = this.loadProviderSession(sessionId, 'native');
     await runtime.run(
       sessionId,
       finalPrompt,
@@ -7195,6 +7309,8 @@ export class AgentManager {
       void this.openCodeRuntime?.closeSession?.(sessionId);
     } else if (provider === 'codex') {
       void this.codexRuntime?.closeSession?.(sessionId);
+    } else if (provider === 'native') {
+      void this.nativeRuntime?.closeSession?.(sessionId);
     }
   }
 

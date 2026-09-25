@@ -122,6 +122,18 @@ export const PROVIDER_CAPABILITIES: Record<AgentProvider, RuntimeCapabilities> =
     thinkingTokens: false,
     retries: false,
   },
+  native: {
+    contextWindow: true,
+    tokenUsage: true,
+    costEstimate: false,
+    requestQuota: false,
+    quotaWindows: false,
+    latency: true,
+    compaction: true,
+    toolProgress: true,
+    thinkingTokens: true,
+    retries: false,
+  },
 };
 
 /**
@@ -191,6 +203,12 @@ export const CAPABILITY_NOTE: Record<
     compaction: 'Compaction events are not reported by this provider.',
     thinkingTokens: 'Reasoning-token counts are not itemised by this provider.',
     retries: 'Retry attempts are not reported by this provider.',
+  },
+  native: {
+    requestQuota: 'Native runtime executes against provider APIs without host quota reporting.',
+    quotaWindows: 'Rolling usage windows are not reported by this provider.',
+    costEstimate: 'Cost is not reported by direct provider streams.',
+    retries: 'Retry attempts are handled directly within the native transport layer.',
   },
 };
 
