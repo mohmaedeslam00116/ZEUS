@@ -16,6 +16,7 @@ export type NormalizedStreamChunk =
 export interface ConversationMessage {
   role: 'system' | 'user' | 'assistant' | 'tool';
   content: string;
+  name?: string;
   thinking?: string;
   toolCalls?: Array<{
     id: string;
@@ -24,6 +25,7 @@ export interface ConversationMessage {
   }>;
   toolCallId?: string;
 }
+
 
 /** Options passed to native streaming transport requests. */
 export interface NativeStreamTransportOptions {

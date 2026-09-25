@@ -1,7 +1,11 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+import fs from 'node:fs';
+import path from 'node:path';
+import os from 'node:os';
 import Database from 'better-sqlite3';
 import { NativeAgentRuntime } from './NativeAgentRuntime';
 import * as transport from './transport';
+
 import type { ProviderAuthManager } from '../ProviderAuthManager';
 import type { ModelCatalogManager } from '../catalog/ModelCatalogManager';
 import type { SettingsManager } from '../../SettingsManager';
@@ -389,4 +393,90 @@ describe('NativeAgentRuntime', () => {
 
     expect(finishStreamingSpy).toHaveBeenCalled();
   });
+
+  it('executes multi-turn tool execution loop with permission gating and model feedback', async () => {
+    mockSettings.agent.model = 'openai:gpt-4o';
+    vi.spyOn(mockAuthManager, 'getEffectiveApiKey').mockReturnValue('mock-openai-key');
+
+    const testWs = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'zeus-react-test-'));
+
+    try {
+      // Turn 1: Model calls write_file
+      const sseTurn1 = [
+        'data: {"choices":[{"delta":{"tool_calls":[{"index":0,"id":"call_101","function":{"name":"write_file","arguments":"{\\"path\\":\\"created.txt\\",\\"content\\":\\"Hello from native agent\\"}"}}]}}]}\n\n',
+      ];
+      // Turn 2: Model finishes with textual summary
+      const sseTurn2 = [
+        'data: {"choices":[{"delta":{"content":"I have created the file for you."}}]}\n\n',
+      ];
+
+      const postSpy = vi
+        .spyOn(transport, 'guardedPostSse')
+        .mockResolvedValueOnce(mockSseChunks(sseTurn1))
+        .mockResolvedValueOnce(mockSseChunks(sseTurn2));
+
+      const queuedDeltas: string[] = [];
+      const toolUseSpy = vi.fn();
+      const toolResultSpy = vi.fn();
+
+      const mockBridge: ProviderRunBridge = {
+        ensureStreaming: vi.fn(),
+        queueDelta: (d) => queuedDeltas.push(d),
+        onThinking: vi.fn(),
+        finishStreaming: vi.fn(),
+        onToolUse: toolUseSpy,
+        onToolResult: toolResultSpy,
+        onInit: vi.fn(),
+        onResult: vi.fn(),
+        diag: vi.fn(),
+      };
+
+      const mockGate = vi.fn().mockResolvedValue({ behavior: 'allow' });
+
+      await runtime.run(
+        'session_react',
+        'create a file',
+        testWs,
+        new AbortController(),
+        'full' as SessionPermissionMode,
+        {
+          ensureStreaming: vi.fn(),
+          queueDelta: (d) => queuedDeltas.push(d),
+          finishStreaming: vi.fn(),
+        },
+        mockBridge,
+        mockGate,
+      );
+
+      // Verify Turn 1 tool gating & execution
+      expect(mockGate).toHaveBeenCalledWith(
+        'write_file',
+        { path: 'created.txt', content: 'Hello from native agent' },
+        expect.any(Object),
+      );
+      expect(toolUseSpy).toHaveBeenCalledWith(
+        'call_101',
+        'write_file',
+        { path: 'created.txt', content: 'Hello from native agent' },
+      );
+      expect(toolResultSpy).toHaveBeenCalledWith(
+        'call_101',
+        'done',
+        expect.stringContaining('Successfully wrote'),
+      );
+
+
+      // Verify file was written to disk
+      const fileOnDisk = await fs.promises.readFile(path.join(testWs, 'created.txt'), 'utf8');
+      expect(fileOnDisk).toBe('Hello from native agent');
+
+      // Verify Turn 2 completion
+      expect(postSpy).toHaveBeenCalledTimes(2);
+      expect(queuedDeltas).toContain('I have created the file for you.');
+      expect(mockBridge.onResult).toHaveBeenCalledWith(true, 'I have created the file for you.');
+    } finally {
+      await fs.promises.rm(testWs, { recursive: true, force: true });
+    }
+  });
 });
+

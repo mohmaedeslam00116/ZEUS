@@ -167,5 +167,92 @@ describe('ContextCompactor', () => {
         { role: 'user', content: 'Question' },
       ]);
     });
+
+    it('serializes tool calls and tool results across providers', () => {
+      const compactor = new ContextCompactor(db);
+      const messages: ConversationMessage[] = [
+        { role: 'user', content: 'Read file please' },
+        {
+          role: 'assistant',
+          content: 'Reading file...',
+          toolCalls: [{ id: 'call_1', name: 'read_file', input: { path: 'a.txt' } }],
+        },
+        {
+          role: 'tool',
+          name: 'read_file',
+          toolCallId: 'call_1',
+          content: '1 | Hello',
+        },
+      ];
+
+      // OpenAI
+      const openAi = compactor.toOpenAiFormat(messages);
+      expect(openAi[1].tool_calls).toBeDefined();
+      expect(openAi[1].tool_calls?.[0].id).toBe('call_1');
+      expect(openAi[1].tool_calls?.[0].function.name).toBe('read_file');
+      expect(openAi[2].role).toBe('tool');
+      expect(openAi[2].tool_call_id).toBe('call_1');
+
+      // Anthropic
+      const anthropic = compactor.toAnthropicFormat(messages);
+      expect(Array.isArray(anthropic.messages[1].content)).toBe(true);
+      const anthropicTurn1 = anthropic.messages[1].content as Array<Record<string, unknown>>;
+      expect(anthropicTurn1[1].type).toBe('tool_use');
+      expect(Array.isArray(anthropic.messages[2].content)).toBe(true);
+      const anthropicTurn2 = anthropic.messages[2].content as Array<Record<string, unknown>>;
+      expect(anthropicTurn2[0].type).toBe('tool_result');
+
+      // Gemini
+      const gemini = compactor.toGeminiFormat(messages);
+      expect(gemini.contents[1].role).toBe('model');
+      const geminiPart1 = gemini.contents[1].parts[1] as { functionCall: { name: string } };
+      expect(geminiPart1.functionCall.name).toBe('read_file');
+      expect(gemini.contents[2].role).toBe('user');
+      const geminiPart2 = gemini.contents[2].parts[0] as { functionResponse: { name: string } };
+      expect(geminiPart2.functionResponse.name).toBe('read_file');
+    });
+
+    it('coalesces multiple consecutive tool results into a single user message for Anthropic and Gemini', () => {
+      const compactor = new ContextCompactor(db);
+      const messages: ConversationMessage[] = [
+        { role: 'user', content: 'Run two tools' },
+        {
+          role: 'assistant',
+          content: 'Running...',
+          toolCalls: [
+            { id: 'call_1', name: 'read_file', input: { path: 'a.txt' } },
+            { id: 'call_2', name: 'read_file', input: { path: 'b.txt' } },
+          ],
+        },
+        {
+          role: 'tool',
+          name: 'read_file',
+          toolCallId: 'call_1',
+          content: 'Content A',
+        },
+        {
+          role: 'tool',
+          name: 'read_file',
+          toolCallId: 'call_2',
+          content: 'Content B',
+        },
+      ];
+
+      // Anthropic: should have 3 messages total (user, assistant, user containing 2 tool_results)
+      const anthropic = compactor.toAnthropicFormat(messages);
+      expect(anthropic.messages.length).toBe(3);
+      expect(anthropic.messages[2].role).toBe('user');
+      const anthropicBlocks = anthropic.messages[2].content as Array<{ type: string; tool_use_id: string }>;
+      expect(anthropicBlocks.length).toBe(2);
+      expect(anthropicBlocks[0].tool_use_id).toBe('call_1');
+      expect(anthropicBlocks[1].tool_use_id).toBe('call_2');
+
+      // Gemini: should have 3 contents total (user, model, user containing 2 parts)
+      const gemini = compactor.toGeminiFormat(messages);
+      expect(gemini.contents.length).toBe(3);
+      expect(gemini.contents[2].role).toBe('user');
+      expect(gemini.contents[2].parts.length).toBe(2);
+    });
   });
 });
+

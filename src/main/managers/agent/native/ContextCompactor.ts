@@ -132,17 +132,49 @@ export class ContextCompactor {
    */
   toGeminiFormat(messages: ConversationMessage[]): {
     systemInstruction?: { parts: Array<{ text: string }> };
-    contents: Array<{ role: 'user' | 'model'; parts: Array<{ text: string }> }>;
+    contents: Array<{ role: 'user' | 'model'; parts: Array<Record<string, unknown>> }>;
   } {
     let systemText = '';
-    const contents: Array<{ role: 'user' | 'model'; parts: Array<{ text: string }> }> = [];
+    const contents: Array<{ role: 'user' | 'model'; parts: Array<Record<string, unknown>> }> = [];
 
     for (const m of messages) {
       if (m.role === 'system') {
         systemText += (systemText ? '\n\n' : '') + m.content;
+      } else if (m.role === 'tool') {
+        const functionResponsePart = {
+          functionResponse: {
+            name: m.name || 'tool',
+            response: { output: m.content },
+          },
+        };
+        const prev = contents[contents.length - 1];
+        if (prev && prev.role === 'user') {
+          prev.parts.push(functionResponsePart);
+        } else {
+          contents.push({
+            role: 'user',
+            parts: [functionResponsePart],
+          });
+        }
+      } else if (m.role === 'assistant') {
+        const parts: Array<Record<string, unknown>> = [];
+        if (m.content) parts.push({ text: m.content });
+        if (m.toolCalls && m.toolCalls.length > 0) {
+          for (const tc of m.toolCalls) {
+            parts.push({
+              functionCall: {
+                name: tc.name,
+                args: tc.input,
+              },
+            });
+          }
+        }
+        if (parts.length > 0) {
+          contents.push({ role: 'model', parts });
+        }
       } else {
         contents.push({
-          role: m.role === 'assistant' ? 'model' : 'user',
+          role: 'user',
           parts: [{ text: m.content }],
         });
       }
@@ -159,17 +191,54 @@ export class ContextCompactor {
    */
   toAnthropicFormat(messages: ConversationMessage[]): {
     system?: string;
-    messages: Array<{ role: 'user' | 'assistant'; content: string }>;
+    messages: Array<{ role: 'user' | 'assistant'; content: unknown }>;
   } {
     let system = '';
-    const anthropicMessages: Array<{ role: 'user' | 'assistant'; content: string }> = [];
+    const anthropicMessages: Array<{ role: 'user' | 'assistant'; content: unknown }> = [];
 
     for (const m of messages) {
       if (m.role === 'system') {
         system += (system ? '\n\n' : '') + m.content;
+      } else if (m.role === 'tool') {
+        const toolResultBlock = {
+          type: 'tool_result',
+          tool_use_id: m.toolCallId || '',
+          content: m.content,
+        };
+        const prev = anthropicMessages[anthropicMessages.length - 1];
+        if (prev && prev.role === 'user' && Array.isArray(prev.content)) {
+          (prev.content as unknown[]).push(toolResultBlock);
+        } else {
+          anthropicMessages.push({
+            role: 'user',
+            content: [toolResultBlock],
+          });
+        }
+      } else if (m.role === 'assistant') {
+        if (m.toolCalls && m.toolCalls.length > 0) {
+          const contentList: unknown[] = [];
+          if (m.content) contentList.push({ type: 'text', text: m.content });
+          for (const tc of m.toolCalls) {
+            contentList.push({
+              type: 'tool_use',
+              id: tc.id,
+              name: tc.name,
+              input: tc.input,
+            });
+          }
+          anthropicMessages.push({
+            role: 'assistant',
+            content: contentList,
+          });
+        } else {
+          anthropicMessages.push({
+            role: 'assistant',
+            content: m.content,
+          });
+        }
       } else {
         anthropicMessages.push({
-          role: m.role === 'assistant' ? 'assistant' : 'user',
+          role: 'user',
           content: m.content,
         });
       }
@@ -185,12 +254,51 @@ export class ContextCompactor {
    * Formats normalized messages for OpenAI-compatible /chat/completions.
    */
   toOpenAiFormat(messages: ConversationMessage[]): Array<{
-    role: 'system' | 'user' | 'assistant';
-    content: string;
+    role: 'system' | 'user' | 'assistant' | 'tool';
+    content: string | null;
+    tool_call_id?: string;
+    tool_calls?: Array<{
+      id: string;
+      type: 'function';
+      function: {
+        name: string;
+        arguments: string;
+      };
+    }>;
   }> {
-    return messages.map((m) => ({
-      role: m.role === 'assistant' ? 'assistant' : m.role === 'system' ? 'system' : 'user',
-      content: m.content,
-    }));
+    return messages.map((m) => {
+      if (m.role === 'tool') {
+        return {
+          role: 'tool',
+          content: m.content,
+          tool_call_id: m.toolCallId || '',
+        };
+      }
+      if (m.role === 'assistant') {
+        if (m.toolCalls && m.toolCalls.length > 0) {
+          return {
+            role: 'assistant',
+            content: m.content || null,
+            tool_calls: m.toolCalls.map((tc) => ({
+              id: tc.id,
+              type: 'function',
+              function: {
+                name: tc.name,
+                arguments: typeof tc.input === 'string' ? tc.input : JSON.stringify(tc.input),
+              },
+            })),
+          };
+        }
+        return {
+          role: 'assistant',
+          content: m.content,
+        };
+      }
+      return {
+        role: m.role === 'system' ? 'system' : 'user',
+        content: m.content,
+      };
+    });
   }
 }
+

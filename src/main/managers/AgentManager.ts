@@ -294,7 +294,16 @@ function bareMcpToolName(toolName: string): string {
   const parts = toolName.split('__');
   return parts.length >= 3 ? parts.slice(2).join('__') : toolName;
 }
-const COMMAND_TOOLS = new Set(['Bash', 'BashOutput', 'KillBash', 'KillShell', 'run_commands', 'execute_command']);
+const COMMAND_TOOLS = new Set([
+  'Bash',
+  'BashOutput',
+  'KillBash',
+  'KillShell',
+  'run_commands',
+  'execute_command',
+  'run_command',
+]);
+
 
 /** The SDK tool the agent calls to present its plan and exit planning mode. */
 const EXIT_PLAN_TOOL = 'ExitPlanMode';
@@ -8022,12 +8031,13 @@ function touchesCrownJewel(toolName: string, input: Record<string, unknown>): bo
     if (hit(abs) || hit(real)) return true;
   }
 
-  if (toolName === 'Bash') {
+  if (toolName === 'Bash' || COMMAND_TOOLS.has(toolName)) {
     const cmd = String(input.command ?? '');
     if (!cmd) return false;
     if (jewels.some((jewel) => cmd.includes(jewel))) return true;
   }
   return false;
+
 }
 
 /**
@@ -8086,9 +8096,10 @@ function touchesSensitiveFile(toolName: string, input: Record<string, unknown>):
     if (isInside(sshDir, file) && !isSshNonSecret(base)) return true;
   }
 
-  if (toolName === 'Bash') {
+  if (toolName === 'Bash' || COMMAND_TOOLS.has(toolName)) {
     const cmd = String(input.command ?? '');
     if (!cmd) return false;
+
     // Whitespace-delimited token whose basename is sensitive (covers `cat .env`,
     // `cp foo ~/.ssh/id_rsa`, redirections like `> .env.production`).
     for (const tok of cmd.split(/[\s=]+/)) {

@@ -26,7 +26,15 @@ import {
   parseAnthropicStream,
   parseOpenAiCompatStream,
 } from './streamParsers';
+import {
+  toOpenAiTools,
+  toAnthropicTools,
+  toGeminiTools,
+  executeNativeTool,
+  type NativeToolExecutionContext,
+} from './tools';
 import type { ConversationMessage, NormalizedStreamChunk } from './types';
+
 
 export const DEFAULT_PROVIDER_BASE_URLS = NATIVE_RUNTIME_LIMITS.defaultProviderBaseUrls;
 export const DEFAULT_CONTEXT_LIMITS = NATIVE_RUNTIME_LIMITS.defaultContextLimits;
@@ -69,9 +77,10 @@ export class NativeAgentRuntime implements AgentRuntimeAdapter {
   async run(
     sessionId: string,
     prompt: string,
-    _cwd: string,
+    cwd: string,
     abort: AbortController,
     _permMode: SessionPermissionMode,
+
     stream: AgentRuntimeStreamCallbacks,
     bridge?: ProviderRunBridge,
     gate?: ToolGateFunction,
@@ -131,93 +140,151 @@ export class NativeAgentRuntime implements AgentRuntimeAdapter {
     const systemPrompt =
       'You are Zeus, an intelligent pair-programming coding agent. Help the user solve their programming task efficiently and cleanly.';
 
-    const compacted = this.compactor.compactMessages(allMessages, {
-      systemPrompt,
-      localeGuidance,
-      contextLimit,
-    });
-
     effectiveBridge.ensureStreaming();
 
+    const MAX_TURNS = 25;
+    let turn = 0;
+    const conversationMessages: ConversationMessage[] = [...allMessages];
     let fullText = '';
 
     try {
-      if (provider === 'gemini') {
-        const url = `${baseUrl}/v1beta/models/${encodeURIComponent(rawModelName)}:streamGenerateContent?alt=sse`;
-        const headers: Record<string, string> = {};
-        if (apiKey) headers['x-goog-api-key'] = apiKey;
+      while (turn < MAX_TURNS && !abort.signal.aborted) {
+        turn++;
 
-        const geminiBody = this.compactor.toGeminiFormat(compacted);
-        const sseStream = await guardedPostSse(url, geminiBody, {
-          headers,
-          allowPrivate: false,
-          signal: abort.signal,
+        const compacted = this.compactor.compactMessages(conversationMessages, {
+          systemPrompt,
+          localeGuidance,
+          contextLimit,
         });
 
-        fullText = await this.consumeNormalizedStream(
-          parseGeminiStream(sseStream),
-          effectiveBridge,
-          gate,
-          abort,
-        );
-      } else if (provider === 'anthropic') {
-        const url = `${baseUrl}/v1/messages`;
-        const headers: Record<string, string> = {
-          'anthropic-version': '2023-06-01',
-        };
-        if (apiKey) headers['x-api-key'] = apiKey;
-
-        const isThinkingModel = rawModelName.includes('3-7') || rawModelName.includes('thinking');
-        const formatted = this.compactor.toAnthropicFormat(compacted);
-        const anthropicBody: Record<string, unknown> = {
-          model: rawModelName,
-          stream: true,
-          max_tokens: isThinkingModel ? 16384 : 8192,
-          system: formatted.system,
-          messages: formatted.messages,
-          ...(isThinkingModel ? { thinking: { type: 'enabled', budget_tokens: 4096 } } : {}),
+        let streamResult: {
+          text: string;
+          toolCalls: Array<{ id: string; name: string; input: Record<string, unknown> }>;
         };
 
-        const sseStream = await guardedPostSse(url, anthropicBody, {
-          headers,
-          allowPrivate: false,
-          signal: abort.signal,
+        if (provider === 'gemini') {
+          const url = `${baseUrl}/v1beta/models/${encodeURIComponent(rawModelName)}:streamGenerateContent?alt=sse`;
+          const headers: Record<string, string> = {};
+          if (apiKey) headers['x-goog-api-key'] = apiKey;
+
+          const geminiFormatted = this.compactor.toGeminiFormat(compacted);
+          const geminiBody = {
+            ...geminiFormatted,
+            tools: toGeminiTools(),
+          };
+          const sseStream = await guardedPostSse(url, geminiBody, {
+            headers,
+            allowPrivate: false,
+            signal: abort.signal,
+          });
+
+          streamResult = await this.consumeNormalizedStream(
+            parseGeminiStream(sseStream),
+            effectiveBridge,
+            abort,
+          );
+        } else if (provider === 'anthropic') {
+          const url = `${baseUrl}/v1/messages`;
+          const headers: Record<string, string> = {
+            'anthropic-version': '2023-06-01',
+          };
+          if (apiKey) headers['x-api-key'] = apiKey;
+
+          const isThinkingModel = rawModelName.includes('3-7') || rawModelName.includes('thinking');
+          const formatted = this.compactor.toAnthropicFormat(compacted);
+          const anthropicBody: Record<string, unknown> = {
+            model: rawModelName,
+            stream: true,
+            max_tokens: isThinkingModel ? 16384 : 8192,
+            system: formatted.system,
+            messages: formatted.messages,
+            tools: toAnthropicTools(),
+            ...(isThinkingModel ? { thinking: { type: 'enabled', budget_tokens: 4096 } } : {}),
+          };
+
+          const sseStream = await guardedPostSse(url, anthropicBody, {
+            headers,
+            allowPrivate: false,
+            signal: abort.signal,
+          });
+
+          streamResult = await this.consumeNormalizedStream(
+            parseAnthropicStream(sseStream),
+            effectiveBridge,
+            abort,
+          );
+        } else {
+          // OpenAI-Compatible (OpenAI, DeepSeek, OpenRouter, Ollama, Kilo Gateway)
+          const url = `${baseUrl}/chat/completions`;
+          const headers: Record<string, string> = {};
+          if (apiKey) headers['Authorization'] = `Bearer ${apiKey}`;
+
+          const openAiMessages = this.compactor.toOpenAiFormat(compacted);
+          const openAiBody = {
+            model: rawModelName,
+            stream: true,
+            stream_options: { include_usage: true },
+            messages: openAiMessages,
+            tools: toOpenAiTools(),
+          };
+
+          const allowPrivate = provider === 'ollama';
+
+          const sseStream = await guardedPostSse(url, openAiBody, {
+            headers,
+            allowPrivate,
+            signal: abort.signal,
+          });
+
+          streamResult = await this.consumeNormalizedStream(
+            parseOpenAiCompatStream(sseStream),
+            effectiveBridge,
+            abort,
+          );
+        }
+
+        if (streamResult.text) {
+          fullText = streamResult.text;
+        }
+
+        // If no tool calls, model provided its final response
+        if (streamResult.toolCalls.length === 0) {
+          break;
+        }
+
+        // Append assistant's turn with tool calls
+        conversationMessages.push({
+          role: 'assistant',
+          content: streamResult.text,
+          toolCalls: streamResult.toolCalls,
         });
 
-        fullText = await this.consumeNormalizedStream(
-          parseAnthropicStream(sseStream),
-          effectiveBridge,
-          gate,
-          abort,
-        );
-      } else {
-        // OpenAI-Compatible (OpenAI, DeepSeek, OpenRouter, Ollama, Kilo Gateway)
-        const url = `${baseUrl}/chat/completions`;
-        const headers: Record<string, string> = {};
-        if (apiKey) headers['Authorization'] = `Bearer ${apiKey}`;
+        // Synchronously execute each tool call through 3-Layer Security Gating
+        for (const tc of streamResult.toolCalls) {
+          if (abort.signal.aborted) break;
 
-        const openAiMessages = this.compactor.toOpenAiFormat(compacted);
-        const openAiBody = {
-          model: rawModelName,
-          stream: true,
-          stream_options: { include_usage: true },
-          messages: openAiMessages,
-        };
+          const toolContext: NativeToolExecutionContext = {
+            workspaceRoot: cwd,
+            sessionId,
+            abortSignal: abort.signal,
+          };
 
-        const allowPrivate = provider === 'ollama';
+          const toolResult = await executeNativeTool({
+            id: tc.id,
+            name: tc.name,
+            input: tc.input,
+            context: toolContext,
+            gate,
+            bridge: effectiveBridge,
+          });
 
-        const sseStream = await guardedPostSse(url, openAiBody, {
-          headers,
-          allowPrivate,
-          signal: abort.signal,
-        });
-
-        fullText = await this.consumeNormalizedStream(
-          parseOpenAiCompatStream(sseStream),
-          effectiveBridge,
-          gate,
-          abort,
-        );
+          conversationMessages.push({
+            role: 'tool',
+            name: tc.name,
+            toolCallId: tc.id,
+            content: toolResult.output,
+          });
+        }
       }
 
       effectiveBridge.finishStreaming(fullText);
@@ -237,10 +304,14 @@ export class NativeAgentRuntime implements AgentRuntimeAdapter {
   private async consumeNormalizedStream(
     stream: AsyncIterable<NormalizedStreamChunk>,
     effectiveBridge: ProviderRunBridge,
-    gate: ToolGateFunction | undefined,
     abort: AbortController,
-  ): Promise<string> {
+  ): Promise<{
+    text: string;
+    toolCalls: Array<{ id: string; name: string; input: Record<string, unknown> }>;
+  }> {
     let textAccumulator = '';
+    const toolCalls: Array<{ id: string; name: string; input: Record<string, unknown> }> = [];
+
     for await (const chunk of stream) {
       if (abort.signal.aborted) break;
       if (chunk.type === 'text') {
@@ -255,14 +326,16 @@ export class NativeAgentRuntime implements AgentRuntimeAdapter {
           totalTokens: chunk.totalTokens,
         });
       } else if (chunk.type === 'tool_call_complete') {
-        effectiveBridge.onToolUse(chunk.id, chunk.name, chunk.input);
-        if (gate) {
-          await gate(chunk.name, chunk.input, abort.signal);
-        }
+        toolCalls.push({
+          id: chunk.id,
+          name: chunk.name,
+          input: chunk.input,
+        });
       }
     }
-    return textAccumulator;
+    return { text: textAccumulator, toolCalls };
   }
+
 
   async closeSession(_sessionId: string): Promise<void> {
     void _sessionId;
