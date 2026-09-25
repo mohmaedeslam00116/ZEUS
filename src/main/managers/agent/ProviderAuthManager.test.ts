@@ -216,4 +216,52 @@ describe('ProviderAuthManager', () => {
       }
     });
   });
+
+  describe('testConnection', () => {
+    it('returns error if provider is invalid', async () => {
+      const res = await authManager.testConnection('invalid-id' as never);
+      expect(res.ok).toBe(false);
+      expect(res.error).toContain('Invalid provider identifier');
+    });
+
+    it('returns error if required API key is missing', async () => {
+      vi.spyOn(authManager, 'getEffectiveApiKey').mockReturnValue(null);
+      const res = await authManager.testConnection('anthropic');
+      expect(res.ok).toBe(false);
+      expect(res.error).toContain('API key is required');
+    });
+
+    it('returns ok: true and model count when fetchModelsForProvider succeeds', async () => {
+      vi.spyOn(authManager, 'getEffectiveApiKey').mockReturnValue('valid-key');
+      const fetchers = await import('./catalog/fetchers');
+      vi.spyOn(fetchers, 'fetchModelsForProvider').mockResolvedValue([
+        {
+          id: 'gemini:gemini-2.5-flash',
+          name: 'Gemini 2.5 Flash',
+          provider: 'gemini',
+          isFree: true,
+          contextLength: 1048576,
+          supportsThinking: true,
+          supportsTools: true,
+        },
+      ]);
+
+      const res = await authManager.testConnection('gemini');
+      expect(res.ok).toBe(true);
+      expect(res.modelCount).toBe(1);
+    });
+
+    it('returns ok: false and sanitized error message on failure', async () => {
+      vi.spyOn(authManager, 'getEffectiveApiKey').mockReturnValue('secret-key');
+      const fetchers = await import('./catalog/fetchers');
+      vi.spyOn(fetchers, 'fetchModelsForProvider').mockRejectedValue(
+        new Error('HTTP 401: Unauthorized for url https://api.anthropic.com/v1/models?key=secret-key'),
+      );
+
+      const res = await authManager.testConnection('anthropic');
+      expect(res.ok).toBe(false);
+      expect(res.error).toContain('401');
+      expect(res.error).not.toContain('secret-key');
+    });
+  });
 });

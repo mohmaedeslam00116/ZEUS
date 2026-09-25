@@ -16,6 +16,7 @@ import { cn } from '@/renderer/lib/cn';
 import { ProviderIcon } from '@/renderer/components/brand/ProviderIcon';
 import { useSettingsStore } from '@/renderer/stores/useSettingsStore';
 import { useAgentModels } from '@/renderer/features/agent/models';
+import { ModelPicker } from '@/renderer/features/agent/ModelPicker';
 
 export interface Option<T extends string> {
   value: T;
@@ -167,7 +168,6 @@ export function ComposerControls({ disabled = false }: { disabled?: boolean }) {
   // offers only that provider's models.
   const provider = resolveModelRouting(agent.model).provider;
   const selectedProvider: AgentChoiceValue = provider ?? 'unknown';
-  const providerModels = provider ? models.filter((m) => m.provider === provider) : [];
   const agentOptions: Option<AgentChoiceValue>[] = [
     ...(provider
       ? []
@@ -178,9 +178,6 @@ export function ComposerControls({ disabled = false }: { disabled?: boolean }) {
       glyph: <ProviderIcon provider={c.provider} size={13} className="text-muted" />,
     })),
   ];
-  const modelOptions = provider
-    ? providerModels.map((m) => ({ value: m.value, label: m.label }))
-    : [{ value: agent.model, label: 'Unknown model' }, ...models.map((m) => ({ value: m.value, label: m.label }))];
 
   return (
     <div className="flex min-w-0 items-center gap-0.5">
@@ -203,13 +200,10 @@ export function ComposerControls({ disabled = false }: { disabled?: boolean }) {
         disabled={disabled}
       />
       <span className="h-3.5 w-px bg-line" />
-      <MiniSelect
-        title="Model"
+      <ModelPicker
         value={agent.model}
-        options={modelOptions}
         onChange={(model) => void update({ agent: { model } })}
         disabled={disabled}
-        searchable
       />
       <span className="h-3.5 w-px bg-line" />
       <MiniSelect

@@ -39,17 +39,19 @@ describe('providerHandlers', () => {
       removeApiKey: vi.fn().mockResolvedValue(undefined),
       discoverLocalAuth: vi.fn().mockResolvedValue([]),
       importDiscoveredAuth: vi.fn().mockResolvedValue(true),
+      testConnection: vi.fn().mockResolvedValue({ ok: true, modelCount: 5 }),
     } as unknown as ProviderAuthManager;
 
     registerProviderHandlers(mockProviderAuth);
   });
 
-  it('registers all 5 IPC channels', () => {
+  it('registers all 6 IPC channels', () => {
     expect(handlers.has(IpcChannels.providersGetStates)).toBe(true);
     expect(handlers.has(IpcChannels.providersSetApiKey)).toBe(true);
     expect(handlers.has(IpcChannels.providersRemoveApiKey)).toBe(true);
     expect(handlers.has(IpcChannels.providersDiscoverLocalAuth)).toBe(true);
     expect(handlers.has(IpcChannels.providersImportDiscoveredAuth)).toBe(true);
+    expect(handlers.has(IpcChannels.providersTestConnection)).toBe(true);
   });
 
   describe(IpcChannels.providersGetStates, () => {
@@ -153,6 +155,23 @@ describe('providerHandlers', () => {
         handler({} as never, 'non-existent'),
       ).rejects.toThrow('Invalid provider identifier: non-existent');
       expect(mockProviderAuth.importDiscoveredAuth).not.toHaveBeenCalled();
+    });
+  });
+
+  describe(IpcChannels.providersTestConnection, () => {
+    it('validates provider and calls testConnection', async () => {
+      const handler = getHandler(IpcChannels.providersTestConnection);
+      const res = await handler({} as never, 'gemini');
+      expect(mockProviderAuth.testConnection).toHaveBeenCalledWith('gemini');
+      expect(res).toEqual({ ok: true, modelCount: 5 });
+    });
+
+    it('rejects invalid provider identifiers', async () => {
+      const handler = getHandler(IpcChannels.providersTestConnection);
+      await expect(
+        handler({} as never, 'fake-provider'),
+      ).rejects.toThrow('Invalid provider identifier: fake-provider');
+      expect(mockProviderAuth.testConnection).not.toHaveBeenCalled();
     });
   });
 });

@@ -102,6 +102,7 @@ export const IpcChannels = {
   providersRemoveApiKey: 'providers:removeApiKey',
   providersDiscoverLocalAuth: 'providers:discoverLocalAuth',
   providersImportDiscoveredAuth: 'providers:importDiscoveredAuth',
+  providersTestConnection: 'providers:testConnection',
 
   // Dynamic Model Catalog Service (Spec #61 / #63)
   modelsList: 'models:list',

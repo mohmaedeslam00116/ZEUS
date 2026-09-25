@@ -14,13 +14,15 @@ import type {
   NativeProviderId,
   ProviderKeyMetadata,
   ProviderPublicState,
+  ProviderTestConnectionResult,
 } from '@shared/types';
 import { NATIVE_PROVIDER_IDS } from '@shared/types';
-import { PROVIDER_LIMITS } from '@shared/constants';
+import { PROVIDER_LIMITS, ACTIVITY_LIMITS } from '@shared/constants';
 import { SecretStore } from '../../secrets/SecretStore';
 import type { SettingsManager } from '../SettingsManager';
 import { discoverAllAuth, type DiscoveredCredentialsMap } from './authDiscovery';
-import { logger } from '../../logger';
+import { fetchModelsForProvider } from './catalog/fetchers';
+import { logger, redactSecrets } from '../../logger';
 
 /** Secret name prefix in SecretStore. */
 const SECRET_PREFIX = 'provider-key-';
@@ -243,5 +245,35 @@ export class ProviderAuthManager {
     }
 
     return true;
+  }
+
+  /**
+   * Test live connection to a provider's models endpoint with active credentials.
+   * Never leaks API keys or secrets in error messages (SEC-16).
+   */
+  async testConnection(provider: NativeProviderId): Promise<ProviderTestConnectionResult> {
+    if (!NATIVE_PROVIDER_IDS.includes(provider)) {
+      return { ok: false, error: `Invalid provider identifier: ${provider}` };
+    }
+
+    const apiKey = this.getEffectiveApiKey(provider) ?? undefined;
+    const baseUrl = this.getEffectiveBaseUrl(provider) ?? undefined;
+
+    // Keys are strictly required for remote paid/cloud services
+    if (['gemini', 'anthropic', 'openai', 'deepseek', 'openrouter', 'kilo'].includes(provider) && !apiKey) {
+      return { ok: false, error: `API key is required for ${provider}` };
+    }
+
+    try {
+      const models = await fetchModelsForProvider(provider, { apiKey, baseUrl });
+      return { ok: true, modelCount: models.length };
+    } catch (err) {
+      const rawMsg = err instanceof Error ? err.message : 'Connection failed';
+      // Sanitize URL params and redact all credentials/tokens (SEC-16)
+      const stripped = rawMsg.replace(/key=[^&]+/gi, 'key=***');
+      const safeMsg = redactSecrets(stripped).slice(0, ACTIVITY_LIMITS.detailMax);
+      logger.warn(`ProviderAuthManager: testConnection failed for ${provider}: ${safeMsg}`);
+      return { ok: false, error: safeMsg };
+    }
   }
 }

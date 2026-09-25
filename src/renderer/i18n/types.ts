@@ -165,6 +165,33 @@ export interface TranslationSchema {
     active: string;
     notInstalled: string;
     checking: string;
+    free: string;
+    paid: string;
+    allModels: string;
+    freeOnly: string;
+    testConnection: string;
+    testing: string;
+    connectionSuccess: string;
+    connectionFailed: string;
+    importFromTools: string;
+    importing: string;
+    importedSuccess: string;
+    noCredentialsFound: string;
+    apiKey: string;
+    baseUrl: string;
+    saveKey: string;
+    removeKey: string;
+    keySaved: string;
+    keyRemoved: string;
+    searchModels: string;
+    noModelsFound: string;
+    modelsCount: string;
+    contextTokens: string;
+    configuredEncrypted: string;
+    discoveredFrom: string;
+    notConfigured: string;
+    localNoKeyRequired: string;
+    refreshModels: string;
   };
 }
 

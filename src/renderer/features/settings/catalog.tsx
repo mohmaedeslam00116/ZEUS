@@ -22,6 +22,7 @@ import {
   TerminalSquare,
   ArrowUpCircle,
   Workflow,
+  KeyRound,
   type LucideIcon,
 } from 'lucide-react';
 import { GeneralPanel } from './panels/GeneralPanel';
@@ -29,6 +30,7 @@ import { AppearancePanel } from './panels/AppearancePanel';
 import { WorkspacePanel } from './panels/WorkspacePanel';
 import { BehaviorPanel } from './panels/BehaviorPanel';
 import { AgentPanel } from './panels/AgentPanel';
+import { ProviderSettingsView } from './panels/ProviderSettingsView';
 import { RuntimePanel } from './panels/RuntimePanel';
 import { McpPanel } from './panels/McpPanel';
 import { PlanTasksPanel } from './panels/PlanTasksPanel';
@@ -145,6 +147,35 @@ export const SETTINGS_CATALOG: SettingsCategory[] = [
       { id: 'troubleshootTips', label: 'Common fixes', keywords: ['troubleshoot', 'fix', 'help', 'install cli', 'not found', 'sign in required', 'restart'] },
     ],
     Panel: AgentPanel,
+  },
+  {
+    id: 'providers',
+    label: 'AI Providers',
+    icon: KeyRound,
+    keywords: [
+      'providers',
+      'api key',
+      'credentials',
+      'gemini',
+      'anthropic',
+      'openai',
+      'deepseek',
+      'openrouter',
+      'ollama',
+      'kilo',
+      'import',
+      'test connection',
+    ],
+    fields: [
+      { id: 'gemini', label: 'Google Gemini', keywords: ['gemini', 'google', 'api key'] },
+      { id: 'anthropic', label: 'Anthropic Claude', keywords: ['claude', 'anthropic', 'sonnet'] },
+      { id: 'openai', label: 'OpenAI', keywords: ['openai', 'chatgpt', 'gpt-4o'] },
+      { id: 'deepseek', label: 'DeepSeek', keywords: ['deepseek', 'r1', 'reasoning'] },
+      { id: 'openrouter', label: 'OpenRouter', keywords: ['openrouter', 'gateway', 'models'] },
+      { id: 'ollama', label: 'Ollama', keywords: ['ollama', 'local', 'localhost'] },
+      { id: 'kilo', label: 'Kilo Gateway', keywords: ['kilo', 'gateway'] },
+    ],
+    Panel: ProviderSettingsView,
   },
   {
     id: 'runtime',

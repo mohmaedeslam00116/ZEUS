@@ -46,15 +46,22 @@ export function parseNativeModelId(modelId: string): {
   provider: NativeProviderId;
   rawModelName: string;
 } {
-  const colonIdx = modelId.indexOf(':');
+  let cleanId = modelId;
+  if (cleanId === 'native' || cleanId === 'native:default') {
+    return { provider: 'gemini', rawModelName: 'gemini-2.5-flash' };
+  }
+  if (cleanId.startsWith('native:')) {
+    cleanId = cleanId.slice('native:'.length);
+  }
+  const colonIdx = cleanId.indexOf(':');
   if (colonIdx !== -1) {
-    const prefix = modelId.slice(0, colonIdx);
-    const rest = modelId.slice(colonIdx + 1);
+    const prefix = cleanId.slice(0, colonIdx);
+    const rest = cleanId.slice(colonIdx + 1);
     if (NATIVE_PROVIDER_IDS.includes(prefix as NativeProviderId)) {
       return { provider: prefix as NativeProviderId, rawModelName: rest };
     }
   }
-  return { provider: 'gemini', rawModelName: modelId };
+  return { provider: 'gemini', rawModelName: cleanId };
 }
 
 export class NativeAgentRuntime implements AgentRuntimeAdapter {

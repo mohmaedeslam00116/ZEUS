@@ -963,6 +963,13 @@ export interface DiscoveredProviderAuth {
   model?: string;
 }
 
+/** Result of a live provider connection test. */
+export interface ProviderTestConnectionResult {
+  ok: boolean;
+  modelCount?: number;
+  error?: string;
+}
+
 /** Normalized model descriptor for the native multi-provider catalog (Ticket #63). */
 export interface ModelInfo {
   /** Unique composite identifier, e.g. "openrouter:deepseek/deepseek-r1:free" or "gemini:gemini-2.5-flash". */

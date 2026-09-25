@@ -4,8 +4,9 @@
  * gradient) per the product's visual rules. Keyed by the `AgentProvider` union
  * from constants.
  */
-import { Boxes } from 'lucide-react';
+import { Boxes, Sparkles, Cpu, Globe, Terminal, Zap, Bot } from 'lucide-react';
 import type { AgentProvider } from '@shared/constants';
+import type { NativeProviderId } from '@shared/types';
 
 /**
  * The official Claude / Anthropic "spark" mark (CC0, anthropic.com via
@@ -54,15 +55,25 @@ export function ProviderIcon({
   size = 14,
   className,
 }: {
-  provider: AgentProvider;
+  provider: AgentProvider | NativeProviderId | 'native';
   size?: number;
   className?: string;
 }) {
   switch (provider) {
     case 'cursor':
       return <CursorMark size={size} className={className} />;
-    // No official marks are vendored for these, and inventing one would be
-    // worse than a neutral glyph — the label beside it already names them.
+    case 'gemini':
+      return <Sparkles size={size} className={className} />;
+    case 'deepseek':
+      return <Cpu size={size} className={className} />;
+    case 'openrouter':
+      return <Globe size={size} className={className} />;
+    case 'ollama':
+      return <Terminal size={size} className={className} />;
+    case 'kilo':
+      return <Zap size={size} className={className} />;
+    case 'native':
+      return <Bot size={size} className={className} />;
     case 'openai':
     case 'pi':
     case 'cline':

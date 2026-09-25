@@ -57,4 +57,8 @@ export function registerProviderHandlers(providerAuth: ProviderAuthManager): voi
   handle<[string], boolean>(IpcChannels.providersImportDiscoveredAuth, async (_event, provider) =>
     providerAuth.importDiscoveredAuth(assertProviderId(provider)),
   );
+
+  handle<[string], unknown>(IpcChannels.providersTestConnection, async (_event, provider) =>
+    providerAuth.testConnection(assertProviderId(provider)),
+  );
 }

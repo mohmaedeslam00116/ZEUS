@@ -65,6 +65,7 @@ import type {
   ModelInfo,
   NativeProviderId,
   ProviderPublicState,
+  ProviderTestConnectionResult,
   RepoConfigState,
   RepoDelta,
   ResumeState,
@@ -909,6 +910,9 @@ const providersApi = {
   /** Import a discovered credential into encrypted secret store. */
   importDiscoveredAuth: (provider: NativeProviderId): Promise<boolean> =>
     ipcRenderer.invoke(IpcChannels.providersImportDiscoveredAuth, provider),
+  /** Test live connection to a provider endpoint. */
+  testConnection: (provider: NativeProviderId): Promise<ProviderTestConnectionResult> =>
+    ipcRenderer.invoke(IpcChannels.providersTestConnection, provider),
 };
 
 const modelsApi = {

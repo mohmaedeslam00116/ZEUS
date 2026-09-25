@@ -42,6 +42,7 @@ import { redactSecrets } from '../graph/redact';
 import { closeDb } from '../../db/database';
 import type { AcpClientOptions } from './acp/types';
 import type { CodexClientOptions } from './codex/types';
+import { parseNativeModelId } from './native/NativeAgentRuntime';
 
 interface AgentManagerInternalRunner {
   runHeadlessOnce(
@@ -446,6 +447,100 @@ describe('Multi-Provider Integration Suite (#60)', () => {
       const clineResult = await probeBinary('cline', probeOptions);
       expect(clineResult.available).toBe(true);
       expect(clineResult.binaryName).toBe('cline');
+    });
+  });
+
+  describe('6. Native Multi-Provider Hub Routing & Execution (#66)', () => {
+    it('resolves model routing across all supported native models', () => {
+      const nativeModels = [
+        'native',
+        'native:default',
+        'native:gemini:gemini-2.5-flash',
+        'gemini:gemini-2.5-flash',
+        'deepseek:deepseek-chat',
+        'openrouter:meta-llama/llama-3.3-70b-instruct:free',
+        'ollama:llama3',
+        'openai:gpt-4o',
+        'anthropic:claude-3-7-sonnet',
+        'kilo:kilo-fast',
+      ];
+
+      for (const m of nativeModels) {
+        const route = resolveModelRouting(m);
+        expect(route.provider).toBe('native');
+        expect(PROVIDER_HARNESS[route.provider as AgentProvider]).toBe('native');
+      }
+    });
+
+    it('parses composite native model identifiers with and without prefix', () => {
+      expect(parseNativeModelId('native:default')).toEqual({
+        provider: 'gemini',
+        rawModelName: 'gemini-2.5-flash',
+      });
+      expect(parseNativeModelId('native:gemini:gemini-2.5-pro')).toEqual({
+        provider: 'gemini',
+        rawModelName: 'gemini-2.5-pro',
+      });
+      expect(parseNativeModelId('deepseek:deepseek-r1')).toEqual({
+        provider: 'deepseek',
+        rawModelName: 'deepseek-r1',
+      });
+      expect(parseNativeModelId('openrouter:anthropic/claude-3.7-sonnet')).toEqual({
+        provider: 'openrouter',
+        rawModelName: 'anthropic/claude-3.7-sonnet',
+      });
+      expect(parseNativeModelId('ollama:mistral')).toEqual({
+        provider: 'ollama',
+        rawModelName: 'mistral',
+      });
+    });
+
+    it('dispatches to native runtime adapter and triggers tool execution lifecycle', async () => {
+      const runSpy = vi.fn().mockImplementation(
+        async (
+          _sessionId,
+          _prompt,
+          _cwd,
+          _abort,
+          _permMode,
+          _stream,
+          bridge,
+        ) => {
+          bridge?.onInit?.('gemini-2.5-flash');
+          bridge?.queueDelta?.('Reading workspace file...');
+          bridge?.onToolUse?.('call_1', 'read_file', { path: 'index.ts' });
+          bridge?.onToolResult?.('call_1', 'done', 'console.log("hello");');
+          bridge?.queueDelta?.('Finished reading file.');
+          bridge?.onResult?.('Finished reading file.');
+        },
+      );
+
+      const mockNativeRuntime: AgentRuntimeAdapter = {
+        provider: 'native',
+        run: runSpy,
+      };
+
+      agentManager.setNativeRuntime(mockNativeRuntime);
+
+      mockSettings.getAll.mockReturnValue({
+        agent: {
+          model: 'gemini:gemini-2.5-flash',
+          permissionMode: 'auto',
+          autoApproveReads: true,
+          harness: { legacyClaudeSdk: false },
+          plan: { redactSecrets: true },
+          connection: { sessionPersistence: false },
+        },
+        appearance: { locale: 'en', layoutDirection: 'ltr' },
+        behavior: { notifications: false },
+      });
+
+      const abort = new AbortController();
+      // @ts-expect-error accessing private method for integration test
+      await agentManager.runNativeOnce('session-test-native', 'Read file', 'C:\\fake\\workspace', abort, 'auto', mockStream);
+
+      expect(runSpy).toHaveBeenCalledTimes(1);
+      expect(mockStream.queueDelta).toHaveBeenCalledWith('Reading workspace file...');
     });
   });
 });

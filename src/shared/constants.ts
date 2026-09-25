@@ -88,6 +88,7 @@ export const AGENT_MODELS = [
   { value: 'cline:default', label: 'Cline (default model)', provider: 'cline' },
   { value: 'opencode:default', label: 'OpenCode (default model)', provider: 'opencode' },
   { value: 'codex:default', label: 'Codex (default model)', provider: 'codex' },
+  { value: 'native:default', label: 'Native Agent (Default)', provider: 'native' },
 ] as const;
 
 /**
@@ -273,7 +274,9 @@ export function resolveModelRouting(
     model === 'ollama' ||
     model.startsWith('ollama:') ||
     model === 'kilo' ||
-    model.startsWith('kilo:')
+    model.startsWith('kilo:') ||
+    model.startsWith('openai:') ||
+    model.startsWith('anthropic:')
   ) {
     return { provider: 'native' };
   }
