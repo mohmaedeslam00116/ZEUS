@@ -13,6 +13,7 @@ import type { ProviderRunBridge } from '../providerBridge';
 import type { ToolGateFunction } from '../types';
 import type { AppSettings, SessionPermissionMode } from '@shared/types';
 import { DEFAULT_SETTINGS } from '@shared/constants';
+import { NATIVE_TOOLS } from './tools';
 
 async function* mockSseChunks(chunks: string[]): AsyncIterable<string> {
   for (const chunk of chunks) {
@@ -869,6 +870,96 @@ describe('NativeAgentRuntime', () => {
     );
     expect(toolResults.some((tr) => tr.id === 'call_cp_1' && tr.status === 'done')).toBe(true);
     expect(queuedDeltas).toContain('Checkpoint taken successfully.');
+  });
+
+  it('detects verification command failure, emits auto-heal diagnostic, and appends notice for next turn', async () => {
+    mockSettings.agent.model = 'openai:gpt-4o';
+    vi.spyOn(mockAuthManager, 'getEffectiveApiKey').mockReturnValue('mock-openai-key');
+
+    // Spy on run_command execute hermetically without real process spawning
+    const runCommandSpy = vi.spyOn(NATIVE_TOOLS.run_command, 'execute').mockResolvedValueOnce({
+      success: false,
+      output: [
+        'Command: npm test',
+        'Exit code: 1',
+        '',
+        'Stderr:',
+        'FAIL src/math.test.ts',
+        '  ✕ adds numbers',
+        'AssertionError: expected 1 to be 2',
+        '    at src/math.test.ts:10:5',
+      ].join('\n'),
+    });
+
+    // Turn 1: Model runs verification command
+    const sseTurn1 = [
+      'data: {"choices":[{"delta":{"tool_calls":[{"id":"call_cmd_1","type":"function","function":{"name":"run_command","arguments":"{\\"command\\":\\"npm test\\"}"}}]}}]}\n\n',
+      'data: [DONE]\n\n',
+    ];
+
+    // Turn 2: Model receives notice and completes after fixing
+    const sseTurn2 = [
+      'data: {"choices":[{"delta":{"content":"I fixed the math test assertion."}}]}\n\n',
+      'data: [DONE]\n\n',
+    ];
+
+    const postSpy = vi
+      .spyOn(transport, 'guardedPostSse')
+      .mockResolvedValueOnce(mockSseChunks(sseTurn1))
+      .mockResolvedValueOnce(mockSseChunks(sseTurn2));
+
+    const queuedDeltas: string[] = [];
+    const diagEvents: Array<{ category: string; severity: string; label: string; detail?: string }> = [];
+
+    const mockBridge: ProviderRunBridge = {
+      ensureStreaming: vi.fn(),
+      queueDelta: (d) => queuedDeltas.push(d),
+      finishStreaming: vi.fn(),
+      onToolUse: vi.fn(),
+      onToolResult: vi.fn(),
+      onInit: vi.fn(),
+      onResult: vi.fn(),
+      diag: (category, severity, label, detail) => {
+        diagEvents.push({ category, severity, label, detail });
+      },
+    };
+
+    await runtime.run(
+      's-auto-heal-1',
+      'Run verification',
+      '/test/workspace',
+      new AbortController(),
+      'default',
+      {
+        ensureStreaming: vi.fn(),
+        queueDelta: (d) => queuedDeltas.push(d),
+        finishStreaming: vi.fn(),
+      },
+      mockBridge,
+    );
+
+    expect(runCommandSpy).toHaveBeenCalled();
+    expect(postSpy).toHaveBeenCalledTimes(2);
+
+    // Verify auto-heal diagnostic was emitted with warning severity
+    const autoHealDiag = diagEvents.find((d) => d.category === 'auto-heal');
+    expect(autoHealDiag).toBeDefined();
+    expect(autoHealDiag?.severity).toBe('warning');
+    expect(autoHealDiag?.label).toContain('Auto-healing test failure (Attempt 1/3)');
+    expect(autoHealDiag?.detail).toContain('AssertionError: expected 1 to be 2');
+
+    // Verify Turn 2 request body received the injected [Auto-Healing System Notice]
+    const secondCallBody = postSpy.mock.calls[1][1] as {
+      messages: Array<{ role: string; content?: string }>;
+    };
+    const toolMessage = secondCallBody.messages.find(
+      (m) => m.role === 'tool' && m.content?.includes('[Auto-Healing System Notice]'),
+    );
+    expect(toolMessage).toBeDefined();
+    expect(toolMessage?.content).toContain('Automated test failure detected');
+    expect(toolMessage?.content).toContain('AssertionError: expected 1 to be 2');
+
+    runCommandSpy.mockRestore();
   });
 });
 

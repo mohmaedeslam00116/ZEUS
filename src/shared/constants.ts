@@ -1189,6 +1189,13 @@ export const NATIVE_RUNTIME_LIMITS = {
     maxMessageLength: 500,
     maxFilesCount: 100,
   },
+  /** Automated test/lint/build auto-healing limits (extracted from Aider, Ticket #76). */
+  autoHealing: {
+    maxRetries: 3,
+    maxErrorStackLength: 4_000,
+    maxSummaryLength: 160,
+    maxFallbackLines: 15,
+  },
 } as const;
 
 /** Built-in default mode personas and tool scoping configurations (Ticket #74). */

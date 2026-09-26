@@ -36,6 +36,7 @@ import {
   type NativeToolGitManager,
 } from './tools';
 import { loadWorkspaceModes, resolveActiveMode } from './modes/modeDiscovery';
+import { AutoHealingManager } from './autoHealing';
 import type { ConversationMessage, NormalizedStreamChunk } from './types';
 
 
@@ -188,6 +189,7 @@ export class NativeAgentRuntime implements AgentRuntimeAdapter {
     let turn = 0;
     const conversationMessages: ConversationMessage[] = [...allMessages];
     let fullText = '';
+    const autoHealer = new AutoHealingManager(NATIVE_RUNTIME_LIMITS.autoHealing.maxRetries);
 
     try {
       while (turn < MAX_TURNS && !abort.signal.aborted) {
@@ -345,11 +347,30 @@ export class NativeAgentRuntime implements AgentRuntimeAdapter {
           bridge: effectiveBridge,
         });
 
+        let finalToolOutput = toolResult.output;
+        if (tc.name === 'run_command') {
+          const rawCmd = typeof tc.input.command === 'string' ? tc.input.command : '';
+          const { augmentedOutput, decision } = autoHealer.handleCommandOutput(
+            rawCmd,
+            toolResult.output,
+            toolResult.success,
+          );
+          finalToolOutput = augmentedOutput;
+          if (decision.diagnostic) {
+            effectiveBridge.diag(
+              'auto-heal',
+              decision.shouldHeal ? 'warning' : 'error',
+              `Auto-healing ${decision.diagnostic.kind} failure (Attempt ${decision.attempt}/${decision.maxRetries})`,
+              decision.diagnostic.summary,
+            );
+          }
+        }
+
         conversationMessages.push({
           role: 'tool',
           name: tc.name,
           toolCallId: tc.id,
-          content: toolResult.output,
+          content: finalToolOutput,
         });
 
         if (tc.name === 'attempt_completion' && toolResult.success) {
