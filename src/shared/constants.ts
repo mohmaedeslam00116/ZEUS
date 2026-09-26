@@ -6,6 +6,7 @@ import type {
   AppSettings,
   MultiProviderSettings,
   WorkspaceConfig,
+  ZeusModeConfig,
 } from './types';
 
 /**
@@ -1183,6 +1184,38 @@ export const NATIVE_RUNTIME_LIMITS = {
     maxCommandLength: 500,
   },
 } as const;
+
+/** Built-in default mode personas and tool scoping configurations (Ticket #74). */
+export const DEFAULT_ZEUS_MODES: readonly ZeusModeConfig[] = [
+  {
+    slug: 'code',
+    name: 'Code',
+    roleDefinition:
+      'You are Zeus in Code mode, an expert software engineer. Implement solutions, write clean, maintainable code, follow existing conventions, and explain your changes clearly.',
+    groups: ['read', 'edit', 'command', 'interactive', 'memory'],
+  },
+  {
+    slug: 'architect',
+    name: 'Architect',
+    roleDefinition:
+      'You are Zeus in Architect mode, a senior software architect. Analyze system architecture, explore codebases, design robust interfaces, and specify system boundaries. Do not modify source files or execute destructive commands.',
+    groups: ['read', 'interactive', 'memory'],
+  },
+  {
+    slug: 'ask',
+    name: 'Ask',
+    roleDefinition:
+      'You are Zeus in Ask mode, an insightful coding companion. Answer technical questions, explain code and system design, and investigate issues without modifying any files.',
+    groups: ['read', 'interactive', 'memory'],
+  },
+  {
+    slug: 'test',
+    name: 'Test',
+    roleDefinition:
+      'You are Zeus in Test mode, a thorough test and QA engineer. Focus on writing tests, running verification suites, diagnosing regressions, and verifying code quality.',
+    groups: ['read', 'edit', 'command', 'interactive', 'memory'],
+  },
+] as const;
 
 /** Default settings for first-party native agent providers. */
 export const DEFAULT_PROVIDERS_SETTINGS: MultiProviderSettings = {

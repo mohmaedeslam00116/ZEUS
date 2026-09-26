@@ -1373,6 +1373,27 @@ export type AgentMode = 'plan' | 'implement';
 export type SessionPermissionMode = 'plan' | 'ask' | 'default' | 'acceptEdits';
 
 /**
+ * Canonical tool capability groups used for mode persona scoping and least-privilege tool gating.
+ */
+export type ToolGroup = 'read' | 'edit' | 'command' | 'interactive' | 'memory' | 'browser';
+
+/**
+ * Persona and tool scoping mode configuration (inspired by Roo-Code / Cline .roomodes and .zeusmodes).
+ */
+export interface ZeusModeConfig {
+  /** Unique mode slug (e.g. 'code', 'architect', 'ask', 'test'). */
+  slug: string;
+  /** Human-readable mode display name. */
+  name: string;
+  /** Role definition and behavioral directives injected into the system prompt. */
+  roleDefinition: string;
+  /** Permitted tool capability groups. Tools outside these groups are omitted from the schema. */
+  groups: readonly ToolGroup[];
+  /** Optional custom instructions specific to this mode. */
+  customInstructions?: string;
+}
+
+/**
  * A development workspace — the primary unit of software engineering in Zeus.
  * Owned by the main-process SessionManager and persisted to SQLite. Every
  * session belongs to exactly one workspace (`workspaceId`) and bundles its

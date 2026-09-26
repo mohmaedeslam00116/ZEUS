@@ -1,5 +1,5 @@
 /**
- * Registry and format translators for native tools.
+ * Registry and format translators for native tools with mode-based scoping.
  */
 import { readFileTool } from './readFile';
 import { writeFileTool } from './writeFile';
@@ -12,6 +12,27 @@ import { listDirectoryTreeTool } from './directoryTree';
 import { viewCodeSymbolsTool } from './codeSymbols';
 import { askFollowupQuestionTool, attemptCompletionTool } from './interactive';
 import type { NativeTool } from './types';
+import type { ToolGroup, ZeusModeConfig } from '@shared/types';
+import { resolveActiveMode } from '../modes/modeDiscovery';
+
+/**
+ * Canonical tool group mapping for all first-party native tools.
+ */
+export const NATIVE_TOOL_GROUPS: Record<string, ToolGroup> = {
+  read_file: 'read',
+  search_codebase: 'read',
+  list_directory_tree: 'read',
+  view_code_symbols: 'read',
+  fetch_web_content: 'read',
+  write_file: 'edit',
+  edit_file: 'edit',
+  run_command: 'command',
+  memory_save: 'memory',
+  memory_recall: 'memory',
+  memory_forget: 'memory',
+  ask_followup_question: 'interactive',
+  attempt_completion: 'interactive',
+};
 
 export const NATIVE_TOOLS: Record<string, NativeTool> = {
   read_file: readFileTool,
@@ -29,12 +50,44 @@ export const NATIVE_TOOLS: Record<string, NativeTool> = {
   attempt_completion: attemptCompletionTool,
 };
 
+// Tag tools with their capability group
+for (const [name, tool] of Object.entries(NATIVE_TOOLS)) {
+  if (!tool.group && NATIVE_TOOL_GROUPS[name]) {
+    tool.group = NATIVE_TOOL_GROUPS[name];
+  }
+}
+
 export function getAllNativeTools(): NativeTool[] {
   return Object.values(NATIVE_TOOLS);
 }
 
-/** Formats native tools for OpenAI / OpenAI-compatible function calling. */
-export function toOpenAiTools(tools: NativeTool[] = getAllNativeTools()): Array<{
+/**
+ * Filter native tools matching the active mode's permitted tool groups.
+ * If mode is omitted, returns all native tools.
+ */
+export function getNativeToolsForMode(
+  mode?: ZeusModeConfig | string,
+  availableModes?: readonly ZeusModeConfig[],
+): NativeTool[] {
+  if (!mode) return getAllNativeTools();
+
+  const activeMode: ZeusModeConfig =
+    typeof mode === 'string'
+      ? resolveActiveMode(mode, availableModes)
+      : mode;
+
+  const allowedGroups = new Set(activeMode.groups);
+  return getAllNativeTools().filter((t) => {
+    const group = t.group ?? NATIVE_TOOL_GROUPS[t.name] ?? 'read';
+    return allowedGroups.has(group);
+  });
+}
+
+/** Formats native tools for OpenAI / OpenAI-compatible function calling with mode scoping. */
+export function toOpenAiTools(
+  toolsOrMode?: NativeTool[] | ZeusModeConfig | string,
+  availableModes?: readonly ZeusModeConfig[],
+): Array<{
   type: 'function';
   function: {
     name: string;
@@ -42,6 +95,10 @@ export function toOpenAiTools(tools: NativeTool[] = getAllNativeTools()): Array<
     parameters: Record<string, unknown>;
   };
 }> {
+  const tools = Array.isArray(toolsOrMode)
+    ? toolsOrMode
+    : getNativeToolsForMode(toolsOrMode, availableModes);
+
   return tools.map((t) => ({
     type: 'function',
     function: {
@@ -52,12 +109,19 @@ export function toOpenAiTools(tools: NativeTool[] = getAllNativeTools()): Array<
   }));
 }
 
-/** Formats native tools for Anthropic Messages API tool use. */
-export function toAnthropicTools(tools: NativeTool[] = getAllNativeTools()): Array<{
+/** Formats native tools for Anthropic Messages API tool use with mode scoping. */
+export function toAnthropicTools(
+  toolsOrMode?: NativeTool[] | ZeusModeConfig | string,
+  availableModes?: readonly ZeusModeConfig[],
+): Array<{
   name: string;
   description: string;
   input_schema: Record<string, unknown>;
 }> {
+  const tools = Array.isArray(toolsOrMode)
+    ? toolsOrMode
+    : getNativeToolsForMode(toolsOrMode, availableModes);
+
   return tools.map((t) => ({
     name: t.name,
     description: t.description,
@@ -65,14 +129,21 @@ export function toAnthropicTools(tools: NativeTool[] = getAllNativeTools()): Arr
   }));
 }
 
-/** Formats native tools for Google Gemini function declarations. */
-export function toGeminiTools(tools: NativeTool[] = getAllNativeTools()): Array<{
+/** Formats native tools for Google Gemini function declarations with mode scoping. */
+export function toGeminiTools(
+  toolsOrMode?: NativeTool[] | ZeusModeConfig | string,
+  availableModes?: readonly ZeusModeConfig[],
+): Array<{
   functionDeclarations: Array<{
     name: string;
     description: string;
     parameters: Record<string, unknown>;
   }>;
 }> {
+  const tools = Array.isArray(toolsOrMode)
+    ? toolsOrMode
+    : getNativeToolsForMode(toolsOrMode, availableModes);
+
   return [
     {
       functionDeclarations: tools.map((t) => ({

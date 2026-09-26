@@ -2,11 +2,12 @@
  * Types and interfaces for the ZEUS First-Party Native Tool Suite (Spec #61 / Issue #65).
  */
 
-import type { MemorySource, MemoryTier } from '@shared/types';
+import type { MemorySource, MemoryTier, ToolGroup, ZeusModeConfig } from '@shared/types';
 
 export interface NativeToolDefinition {
   name: string;
   description: string;
+  group?: ToolGroup;
   parameters: {
     type: 'object';
     properties: Record<string, unknown>;
@@ -56,6 +57,7 @@ export interface NativeToolExecutionContext {
     signal?: AbortSignal,
   ) => Promise<string>;
   onTaskCompletion?: (result: string, command?: string) => void;
+  activeMode?: ZeusModeConfig;
 }
 
 export interface NativeToolResult {

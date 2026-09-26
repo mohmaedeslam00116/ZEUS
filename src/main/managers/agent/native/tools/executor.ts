@@ -2,7 +2,7 @@
  * Layer 1-3 Security Gating Tool Executor (SEC-19, ADR-0003).
  * Synchronously screens workspace boundaries, awaits permission approval, and executes isolated tools.
  */
-import { NATIVE_TOOLS } from './registry';
+import { NATIVE_TOOLS, NATIVE_TOOL_GROUPS } from './registry';
 import { assertInsideWorkspace } from './pathGuard';
 import type { NativeToolExecutionContext, NativeToolResult } from './types';
 import type { ToolGateFunction } from '../../types';
@@ -19,7 +19,7 @@ export interface ExecuteNativeToolOptions {
 
 /**
  * Executes a native tool call through the 3-Layer Security Architecture:
- * 1. Layer 1: Boundary check & path traversal denial (pathGuard)
+ * 1. Layer 1: Boundary check, path traversal denial & mode persona scoping
  * 2. Layer 2: Synchronous decideToolUse gate (gate)
  * 3. Layer 3: Controlled sandbox execution (tool.execute)
  */
@@ -40,6 +40,20 @@ export async function executeNativeTool(
       output: errorMsg,
       error: errorMsg,
     };
+  }
+
+  // --- Layer 1: Mode Persona Tool Scoping Check ---
+  if (context.activeMode) {
+    const toolGroup = tool.group ?? NATIVE_TOOL_GROUPS[name] ?? 'read';
+    if (!context.activeMode.groups.includes(toolGroup)) {
+      const modeDeny = `Access denied: Tool "${name}" (group: "${toolGroup}") is disabled in "${context.activeMode.name}" mode (allowed groups: ${context.activeMode.groups.join(', ')}).`;
+      bridge?.onToolResult(id, 'error', modeDeny);
+      return {
+        success: false,
+        output: modeDeny,
+        error: modeDeny,
+      };
+    }
   }
 
   // --- Layer 1: Boundary & Path Traversal Pre-screen ---

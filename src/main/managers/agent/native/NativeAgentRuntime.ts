@@ -34,6 +34,7 @@ import {
   type NativeToolExecutionContext,
   type NativeToolMemoryManager,
 } from './tools';
+import { loadWorkspaceModes, resolveActiveMode } from './modes/modeDiscovery';
 import type { ConversationMessage, NormalizedStreamChunk } from './types';
 
 
@@ -105,7 +106,7 @@ export class NativeAgentRuntime implements AgentRuntimeAdapter {
     prompt: string,
     cwd: string,
     abort: AbortController,
-    _permMode: SessionPermissionMode,
+    permMode: SessionPermissionMode,
 
     stream: AgentRuntimeStreamCallbacks,
     bridge?: ProviderRunBridge,
@@ -163,8 +164,17 @@ export class NativeAgentRuntime implements AgentRuntimeAdapter {
       prompt,
     );
 
-    const systemPrompt =
+    const workspaceModes = loadWorkspaceModes(cwd);
+    const activeMode = resolveActiveMode(permMode, workspaceModes);
+
+    let systemPrompt =
       'You are Zeus, an intelligent pair-programming coding agent. Help the user solve their programming task efficiently and cleanly.';
+    if (activeMode.roleDefinition) {
+      systemPrompt += `\n\nActive Mode (${activeMode.name}):\n${activeMode.roleDefinition}`;
+    }
+    if (activeMode.customInstructions) {
+      systemPrompt += `\n\nMode Custom Instructions:\n${activeMode.customInstructions}`;
+    }
 
     effectiveBridge.ensureStreaming();
 
@@ -196,7 +206,7 @@ export class NativeAgentRuntime implements AgentRuntimeAdapter {
           const geminiFormatted = this.compactor.toGeminiFormat(compacted);
           const geminiBody = {
             ...geminiFormatted,
-            tools: toGeminiTools(),
+            tools: toGeminiTools(activeMode, workspaceModes),
           };
           const sseStream = await guardedPostSse(url, geminiBody, {
             headers,
@@ -224,7 +234,7 @@ export class NativeAgentRuntime implements AgentRuntimeAdapter {
             max_tokens: isThinkingModel ? 16384 : 8192,
             system: formatted.system,
             messages: formatted.messages,
-            tools: toAnthropicTools(),
+            tools: toAnthropicTools(activeMode, workspaceModes),
             ...(isThinkingModel ? { thinking: { type: 'enabled', budget_tokens: 4096 } } : {}),
           };
 
@@ -251,7 +261,7 @@ export class NativeAgentRuntime implements AgentRuntimeAdapter {
             stream: true,
             stream_options: { include_usage: true },
             messages: openAiMessages,
-            tools: toOpenAiTools(),
+            tools: toOpenAiTools(activeMode, workspaceModes),
           };
 
           const allowPrivate = provider === 'ollama';
@@ -309,6 +319,7 @@ export class NativeAgentRuntime implements AgentRuntimeAdapter {
           abortSignal: abort.signal,
           memoryManager: this.memoryManager,
           workspaceId,
+          activeMode,
           askUserQuestion: askHandler
             ? (q, opts, sig) => askHandler(sessionId, q, opts, sig)
             : undefined,

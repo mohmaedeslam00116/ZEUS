@@ -641,5 +641,142 @@ describe('NativeAgentRuntime', () => {
     expect(mockBridge.onToolUse).not.toHaveBeenCalledWith('call_c2', 'run_command', expect.anything());
     expect(mockBridge.onResult).toHaveBeenCalledWith(true, expect.stringContaining('Task Completion Summary:\nDone.'));
   });
+
+  it('scopes tools and injects Architect persona when running in plan mode', async () => {
+    mockSettings.agent.model = 'openai:gpt-4o';
+    vi.spyOn(mockAuthManager, 'getEffectiveApiKey').mockReturnValue('mock-openai-key');
+
+    const sseChunks = [
+      'data: {"choices":[{"delta":{"content":"Analysis complete."}}]}\n\n',
+      'data: [DONE]\n\n',
+    ];
+
+    const postSpy = vi
+      .spyOn(transport, 'guardedPostSse')
+      .mockResolvedValueOnce(mockSseChunks(sseChunks));
+
+    const queuedDeltas: string[] = [];
+    const mockBridge: ProviderRunBridge = {
+      ensureStreaming: vi.fn(),
+      queueDelta: (d) => queuedDeltas.push(d),
+      finishStreaming: vi.fn(),
+      onToolUse: vi.fn(),
+      onToolResult: vi.fn(),
+      onInit: vi.fn(),
+      onResult: vi.fn(),
+      diag: vi.fn(),
+    };
+
+    await runtime.run(
+      's-persona-1',
+      'Analyze the system architecture',
+      os.tmpdir(),
+      new AbortController(),
+      'plan',
+      {
+        ensureStreaming: vi.fn(),
+        queueDelta: (d) => queuedDeltas.push(d),
+        finishStreaming: vi.fn(),
+      },
+      mockBridge,
+    );
+
+    expect(postSpy).toHaveBeenCalledTimes(1);
+    const sentBody = postSpy.mock.calls[0][1] as {
+      messages: Array<{ role: string; content: string }>;
+      tools: Array<{ type: string; function: { name: string } }>;
+    };
+
+    // System prompt contains persona definition
+    expect(sentBody.messages[0].role).toBe('system');
+    expect(sentBody.messages[0].content).toContain('Active Mode (Architect):');
+    expect(sentBody.messages[0].content).toContain('You are Zeus in Architect mode');
+
+    // Scoped tools omit mutating tools
+    const toolNames = sentBody.tools.map((t) => t.function.name);
+    expect(toolNames).toContain('read_file');
+    expect(toolNames).toContain('list_directory_tree');
+    expect(toolNames).toContain('view_code_symbols');
+    expect(toolNames).toContain('memory_recall');
+    expect(toolNames).not.toContain('write_file');
+    expect(toolNames).not.toContain('edit_file');
+    expect(toolNames).not.toContain('run_command');
+  });
+
+  it('loads and applies custom workspace modes from .zeusmodes.json', async () => {
+    mockSettings.agent.model = 'openai:gpt-4o';
+    vi.spyOn(mockAuthManager, 'getEffectiveApiKey').mockReturnValue('mock-openai-key');
+
+    const tempWorkspace = fs.mkdtempSync(path.join(os.tmpdir(), 'zeus-custom-modes-ws-'));
+    try {
+      const customModes = [
+        {
+          slug: 'code',
+          name: 'Restricted Code',
+          roleDefinition: 'You are in Restricted Code mode. Only edits are allowed.',
+          groups: ['read', 'edit'],
+          customInstructions: 'Strictly check types before every edit.',
+        },
+      ];
+      fs.writeFileSync(
+        path.join(tempWorkspace, '.zeusmodes.json'),
+        JSON.stringify(customModes),
+        'utf-8',
+      );
+
+      const sseChunks = [
+        'data: {"choices":[{"delta":{"content":"Code ready."}}]}\n\n',
+        'data: [DONE]\n\n',
+      ];
+
+      const postSpy = vi
+        .spyOn(transport, 'guardedPostSse')
+        .mockResolvedValueOnce(mockSseChunks(sseChunks));
+
+      const queuedDeltas: string[] = [];
+      const mockBridge: ProviderRunBridge = {
+        ensureStreaming: vi.fn(),
+        queueDelta: (d) => queuedDeltas.push(d),
+        finishStreaming: vi.fn(),
+        onToolUse: vi.fn(),
+        onToolResult: vi.fn(),
+        onInit: vi.fn(),
+        onResult: vi.fn(),
+        diag: vi.fn(),
+      };
+
+      await runtime.run(
+        's-custom-ws-1',
+        'Implement feature',
+        tempWorkspace,
+        new AbortController(),
+        'default',
+        {
+          ensureStreaming: vi.fn(),
+          queueDelta: (d) => queuedDeltas.push(d),
+          finishStreaming: vi.fn(),
+        },
+        mockBridge,
+      );
+
+      expect(postSpy).toHaveBeenCalledTimes(1);
+      const sentBody = postSpy.mock.calls[0][1] as {
+        messages: Array<{ role: string; content: string }>;
+        tools: Array<{ type: string; function: { name: string } }>;
+      };
+
+      expect(sentBody.messages[0].content).toContain('Active Mode (Restricted Code):');
+      expect(sentBody.messages[0].content).toContain(
+        'Mode Custom Instructions:\nStrictly check types before every edit.',
+      );
+
+      const toolNames = sentBody.tools.map((t) => t.function.name);
+      expect(toolNames).toContain('read_file');
+      expect(toolNames).toContain('write_file');
+      expect(toolNames).not.toContain('run_command'); // 'command' group was not in custom mode groups!
+    } finally {
+      fs.rmSync(tempWorkspace, { recursive: true, force: true });
+    }
+  });
 });
 

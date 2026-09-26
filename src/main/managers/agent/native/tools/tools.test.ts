@@ -13,9 +13,10 @@ import { listDirectoryTreeTool } from './directoryTree';
 import { viewCodeSymbolsTool } from './codeSymbols';
 import { askFollowupQuestionTool, attemptCompletionTool } from './interactive';
 import { executeNativeTool } from './executor';
-import { toOpenAiTools, toAnthropicTools, toGeminiTools } from './registry';
+import { toOpenAiTools, toAnthropicTools, toGeminiTools, getNativeToolsForMode } from './registry';
 import * as transport from '../transport';
 import type { ProviderRunBridge } from '../../providerBridge';
+import type { ZeusModeConfig } from '@shared/types';
 
 
 vi.mock('../../../sandbox/policy', () => ({
@@ -281,6 +282,42 @@ describe('Native Tool Suite & 3-Layer Security Gating', () => {
       expect(gate).not.toHaveBeenCalled(); // Layer 1 denies before Layer 2 prompt!
       expect(bridge.onToolUse).toHaveBeenCalledWith('c1', 'read_file', { path: '../outside.txt' });
       expect(bridge.onToolResult).toHaveBeenCalledWith('c1', 'error', expect.stringContaining('Access denied'));
+    });
+
+    it('Layer 1: denies tool execution when tool is disabled in active mode persona', async () => {
+      const gate = vi.fn();
+      const bridge = {
+        ensureStreaming: vi.fn(),
+        queueDelta: vi.fn(),
+        finishStreaming: vi.fn(),
+        onToolUse: vi.fn(),
+        onToolResult: vi.fn(),
+      };
+
+      const architectMode: ZeusModeConfig = {
+        slug: 'architect',
+        name: 'Architect',
+        roleDefinition: 'Architect role',
+        groups: ['read', 'interactive', 'memory'],
+      };
+
+      const res = await executeNativeTool({
+        id: 'c-mode-1',
+        name: 'write_file',
+        input: { path: 'file.txt', content: 'content' },
+        context: {
+          workspaceRoot: tmpDir,
+          sessionId: 's1',
+          activeMode: architectMode,
+        },
+        gate,
+        bridge: bridge as unknown as ProviderRunBridge,
+      });
+
+      expect(res.success).toBe(false);
+      expect(res.output).toContain('Access denied: Tool "write_file" (group: "edit") is disabled in "Architect" mode');
+      expect(gate).not.toHaveBeenCalled(); // Denied before Layer 2 prompt!
+      expect(bridge.onToolResult).toHaveBeenCalledWith('c-mode-1', 'error', expect.stringContaining('Access denied'));
     });
 
     it('Layer 2: blocks execution when decideToolUse denies approval', async () => {
@@ -939,6 +976,41 @@ export function helper(): void {}
       expect(gemini[0].functionDeclarations.some((t) => t.name === 'memory_save')).toBe(true);
       expect(gemini[0].functionDeclarations.some((t) => t.name === 'ask_followup_question')).toBe(true);
       expect(gemini[0].functionDeclarations.some((t) => t.name === 'attempt_completion')).toBe(true);
+    });
+
+    it('scopes tools per mode persona in OpenAI, Anthropic, and Gemini formatters', () => {
+      // In architect mode: read, interactive, memory only (no write_file, edit_file, run_command)
+      const openAiArchitect = toOpenAiTools('architect');
+      expect(openAiArchitect.some((t) => t.function.name === 'read_file')).toBe(true);
+      expect(openAiArchitect.some((t) => t.function.name === 'list_directory_tree')).toBe(true);
+      expect(openAiArchitect.some((t) => t.function.name === 'memory_save')).toBe(true);
+      expect(openAiArchitect.some((t) => t.function.name === 'ask_followup_question')).toBe(true);
+      expect(openAiArchitect.some((t) => t.function.name === 'attempt_completion')).toBe(true);
+      expect(openAiArchitect.some((t) => t.function.name === 'write_file')).toBe(false);
+      expect(openAiArchitect.some((t) => t.function.name === 'edit_file')).toBe(false);
+      expect(openAiArchitect.some((t) => t.function.name === 'run_command')).toBe(false);
+
+      // In ask mode: read, interactive, memory only
+      const anthropicAsk = toAnthropicTools('ask');
+      expect(anthropicAsk.some((t) => t.name === 'search_codebase')).toBe(true);
+      expect(anthropicAsk.some((t) => t.name === 'view_code_symbols')).toBe(true);
+      expect(anthropicAsk.some((t) => t.name === 'write_file')).toBe(false);
+      expect(anthropicAsk.some((t) => t.name === 'run_command')).toBe(false);
+
+      // In code mode: all 13 tools present
+      const geminiCode = toGeminiTools('code');
+      expect(geminiCode[0].functionDeclarations.length).toBe(13);
+
+      // Custom mode with only 'read' group
+      const customReadOnlyMode: ZeusModeConfig = {
+        slug: 'read-only',
+        name: 'Read Only',
+        roleDefinition: 'Read only access',
+        groups: ['read'],
+      };
+      const readOnlyTools = getNativeToolsForMode(customReadOnlyMode);
+      expect(readOnlyTools.length).toBe(5); // read_file, search_codebase, list_directory_tree, view_code_symbols, fetch_web_content
+      expect(readOnlyTools.every((t) => t.group === 'read')).toBe(true);
     });
   });
 });
