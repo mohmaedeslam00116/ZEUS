@@ -15,5 +15,6 @@ export * from './directoryTree';
 export * from './codeSymbols';
 export * from './interactive';
 export * from './git';
+export * from './browserAction';
 export * from './registry';
 export * from './executor';

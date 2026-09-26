@@ -12,6 +12,7 @@ import { listDirectoryTreeTool } from './directoryTree';
 import { viewCodeSymbolsTool } from './codeSymbols';
 import { askFollowupQuestionTool, attemptCompletionTool } from './interactive';
 import { gitCheckpointTool, gitCommitTool } from './git';
+import { browserActionTool } from './browserAction';
 import type { NativeTool } from './types';
 import type { ToolGroup, ZeusModeConfig } from '@shared/types';
 import { resolveActiveMode } from '../modes/modeDiscovery';
@@ -35,6 +36,7 @@ export const NATIVE_TOOL_GROUPS: Record<string, ToolGroup> = {
   memory_forget: 'memory',
   ask_followup_question: 'interactive',
   attempt_completion: 'interactive',
+  browser_action: 'browser',
 };
 
 export const NATIVE_TOOLS: Record<string, NativeTool> = {
@@ -53,6 +55,7 @@ export const NATIVE_TOOLS: Record<string, NativeTool> = {
   view_code_symbols: viewCodeSymbolsTool,
   ask_followup_question: askFollowupQuestionTool,
   attempt_completion: attemptCompletionTool,
+  browser_action: browserActionTool,
 };
 
 // Tag tools with their capability group

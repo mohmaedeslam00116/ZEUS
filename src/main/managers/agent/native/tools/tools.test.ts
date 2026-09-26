@@ -13,12 +13,54 @@ import { listDirectoryTreeTool } from './directoryTree';
 import { viewCodeSymbolsTool } from './codeSymbols';
 import { askFollowupQuestionTool, attemptCompletionTool } from './interactive';
 import { gitCheckpointTool, gitCommitTool } from './git';
+import { browserActionTool } from './browserAction';
 import { executeNativeTool } from './executor';
 import { toOpenAiTools, toAnthropicTools, toGeminiTools, getNativeToolsForMode } from './registry';
 import * as transport from '../transport';
 import type { ProviderRunBridge } from '../../providerBridge';
 import type { ZeusModeConfig } from '@shared/types';
 
+const { mockBrowserSession, mockBrowserManager } = vi.hoisted(() => {
+  const mockBrowserSession = {
+    launch: vi.fn().mockResolvedValue(undefined),
+    navigate: vi.fn().mockResolvedValue(undefined),
+    captureScreenshot: vi.fn().mockResolvedValue({
+      dataUrl: 'data:image/jpeg;base64,fakebytes1234567890',
+      url: 'https://example.com',
+      title: 'Example Page',
+      viewport: { width: 1280, height: 800 },
+    }),
+    click: vi.fn().mockResolvedValue(undefined),
+    type: vi.fn().mockResolvedValue(undefined),
+    scroll: vi.fn().mockResolvedValue(undefined),
+    getConsoleLogs: vi.fn().mockReturnValue([
+      { timestamp: 1700000000000, level: 'info', text: 'App initialized' },
+      {
+        timestamp: 1700000001000,
+        level: 'error',
+        text: 'Script failed',
+        sourceUrl: 'app.js',
+        lineNumber: 42,
+      },
+    ]),
+    getUrl: vi.fn().mockReturnValue('https://example.com'),
+    getTitle: vi.fn().mockReturnValue('Example Page'),
+    close: vi.fn().mockResolvedValue(undefined),
+  };
+
+  const mockBrowserManager = {
+    getOrCreateSession: vi.fn().mockReturnValue(mockBrowserSession),
+    closeSession: vi.fn().mockResolvedValue(undefined),
+    dispose: vi.fn().mockResolvedValue(undefined),
+  };
+
+  return { mockBrowserSession, mockBrowserManager };
+});
+
+vi.mock('../../../browser/BrowserActionManager', () => ({
+  getBrowserActionManager: () => mockBrowserManager,
+  BrowserActionManager: vi.fn(() => mockBrowserManager),
+}));
 
 vi.mock('../../../sandbox/policy', () => ({
   crownJewelPaths: () => [
@@ -1219,10 +1261,160 @@ export function helper(): void {}
     });
   });
 
+  describe('browser_action', () => {
+    it('rejects missing or empty action parameter', async () => {
+      const res = await browserActionTool.execute(
+        {},
+        { workspaceRoot: tmpDir, sessionId: 's1' },
+      );
+      expect(res.success).toBe(false);
+      expect(res.output).toContain('Missing required parameter: "action"');
+    });
+
+    it('rejects unknown action parameter', async () => {
+      const res = await browserActionTool.execute(
+        { action: 'fly_to_moon' },
+        { workspaceRoot: tmpDir, sessionId: 's1' },
+      );
+      expect(res.success).toBe(false);
+      expect(res.output).toContain('Unknown browser action: "fly_to_moon"');
+    });
+
+    it('executes "launch" action and returns current URL and page title', async () => {
+      const res = await browserActionTool.execute(
+        { action: 'launch', url: 'https://example.com', target_mode: 'remote_web' },
+        { workspaceRoot: tmpDir, sessionId: 's1' },
+      );
+      expect(res.success).toBe(true);
+      expect(res.output).toContain('Browser launched successfully.');
+      expect(res.output).toContain('URL: https://example.com');
+      expect(res.output).toContain('Title: Example Page');
+      expect(mockBrowserSession.launch).toHaveBeenCalledWith(
+        expect.objectContaining({
+          url: 'https://example.com',
+          targetMode: 'remote_web',
+        }),
+      );
+    });
+
+    it('executes "screenshot" action and returns base64 data URL preview', async () => {
+      const res = await browserActionTool.execute(
+        { action: 'screenshot', quality: 90 },
+        { workspaceRoot: tmpDir, sessionId: 's1' },
+      );
+      expect(res.success).toBe(true);
+      expect(res.output).toContain('Screenshot captured successfully');
+      expect(res.output).toContain('Dimensions: 1280x800');
+      expect(res.output).toContain('Data URL: data:image/jpeg;base64,');
+      expect(mockBrowserSession.captureScreenshot).toHaveBeenCalledWith(90);
+    });
+
+    it('executes "click" action with coordinate', async () => {
+      const res = await browserActionTool.execute(
+        { action: 'click', coordinate: { x: 100, y: 200 } },
+        { workspaceRoot: tmpDir, sessionId: 's1' },
+      );
+      expect(res.success).toBe(true);
+      expect(res.output).toContain('Clicked (100, 200) successfully.');
+      expect(mockBrowserSession.click).toHaveBeenCalledWith({ x: 100, y: 200 }, undefined);
+    });
+
+    it('executes "click" action with CSS selector', async () => {
+      const res = await browserActionTool.execute(
+        { action: 'click', selector: 'button.primary' },
+        { workspaceRoot: tmpDir, sessionId: 's1' },
+      );
+      expect(res.success).toBe(true);
+      expect(res.output).toContain('Clicked selector "button.primary" successfully.');
+      expect(mockBrowserSession.click).toHaveBeenCalledWith(undefined, 'button.primary');
+    });
+
+    it('executes "type" action with text, selector, and submit flag', async () => {
+      const res = await browserActionTool.execute(
+        { action: 'type', text: 'zeus agent', selector: '#search-box', submit: true, clear: true },
+        { workspaceRoot: tmpDir, sessionId: 's1' },
+      );
+      expect(res.success).toBe(true);
+      expect(res.output).toContain('Typed "zeus agent" into selector "#search-box" successfully.');
+      expect(mockBrowserSession.type).toHaveBeenCalledWith('zeus agent', '#search-box', true, true);
+    });
+
+    it('executes "scroll" action with deltaX and deltaY', async () => {
+      const res = await browserActionTool.execute(
+        { action: 'scroll', delta_x: 0, delta_y: 500 },
+        { workspaceRoot: tmpDir, sessionId: 's1' },
+      );
+      expect(res.success).toBe(true);
+      expect(res.output).toContain('Scrolled by (0, 500) pixels.');
+      expect(mockBrowserSession.scroll).toHaveBeenCalledWith(0, 500);
+    });
+
+    it('executes "get_console_logs" action and formats captured entries', async () => {
+      const res = await browserActionTool.execute(
+        { action: 'get_console_logs', log_level: 'all' },
+        { workspaceRoot: tmpDir, sessionId: 's1' },
+      );
+      expect(res.success).toBe(true);
+      expect(res.output).toContain('Captured 2 console log entries:');
+      expect(res.output).toContain('[INFO] App initialized');
+      expect(res.output).toContain('[ERROR] Script failed (app.js:42)');
+    });
+
+    it('executes "get_console_logs" action when no logs are captured', async () => {
+      mockBrowserSession.getConsoleLogs.mockReturnValueOnce([]);
+      const res = await browserActionTool.execute(
+        { action: 'get_console_logs' },
+        { workspaceRoot: tmpDir, sessionId: 's1' },
+      );
+      expect(res.success).toBe(true);
+      expect(res.output).toContain('No console logs captured.');
+    });
+
+    it('executes "close" action and cleans up session and partition', async () => {
+      const res = await browserActionTool.execute(
+        { action: 'close' },
+        { workspaceRoot: tmpDir, sessionId: 's1' },
+      );
+      expect(res.success).toBe(true);
+      expect(res.output).toContain('Browser session closed and isolated partition memory cleared.');
+      expect(mockBrowserManager.closeSession).toHaveBeenCalledWith('s1');
+    });
+
+    it('handles session errors gracefully', async () => {
+      mockBrowserSession.launch.mockRejectedValueOnce(new Error('Chromium crash mock'));
+      const res = await browserActionTool.execute(
+        { action: 'launch', url: 'https://crash.test' },
+        { workspaceRoot: tmpDir, sessionId: 's1' },
+      );
+      expect(res.success).toBe(false);
+      expect(res.output).toContain('Browser action "launch" failed: Chromium crash mock');
+      expect(res.error).toBe('Chromium crash mock');
+    });
+
+    it('enforces mode persona scoping (blocked in architect/ask, allowed in code/test)', async () => {
+      const architectMode: ZeusModeConfig = {
+        slug: 'architect',
+        name: 'Architect',
+        roleDefinition: 'Architect role',
+        groups: ['read', 'interactive', 'memory'],
+      };
+
+      const res = await executeNativeTool({
+        id: 'tc-browser-architect',
+        name: 'browser_action',
+        input: { action: 'launch', url: 'https://example.com' },
+        context: { workspaceRoot: tmpDir, sessionId: 's1', activeMode: architectMode },
+      });
+
+      expect(res.success).toBe(false);
+      expect(res.error).toContain('disabled in "Architect" mode');
+    });
+  });
+
   describe('Provider Tool Schema Formatters', () => {
     it('formats tools for OpenAI, Anthropic, and Gemini', () => {
       const openAi = toOpenAiTools();
-      expect(openAi.length).toBe(15);
+      expect(openAi.length).toBe(16);
       expect(openAi[0].type).toBe('function');
       expect(openAi.some((t) => t.function.name === 'memory_save')).toBe(true);
       expect(openAi.some((t) => t.function.name === 'list_directory_tree')).toBe(true);
@@ -1231,27 +1423,30 @@ export function helper(): void {}
       expect(openAi.some((t) => t.function.name === 'attempt_completion')).toBe(true);
       expect(openAi.some((t) => t.function.name === 'git_checkpoint')).toBe(true);
       expect(openAi.some((t) => t.function.name === 'git_commit')).toBe(true);
+      expect(openAi.some((t) => t.function.name === 'browser_action')).toBe(true);
 
       const anthropic = toAnthropicTools();
-      expect(anthropic.length).toBe(15);
+      expect(anthropic.length).toBe(16);
       expect(anthropic.some((t) => t.name === 'memory_save')).toBe(true);
       expect(anthropic.some((t) => t.name === 'ask_followup_question')).toBe(true);
       expect(anthropic.some((t) => t.name === 'attempt_completion')).toBe(true);
       expect(anthropic.some((t) => t.name === 'git_checkpoint')).toBe(true);
       expect(anthropic.some((t) => t.name === 'git_commit')).toBe(true);
+      expect(anthropic.some((t) => t.name === 'browser_action')).toBe(true);
 
       const gemini = toGeminiTools();
       expect(gemini.length).toBe(1);
-      expect(gemini[0].functionDeclarations.length).toBe(15);
+      expect(gemini[0].functionDeclarations.length).toBe(16);
       expect(gemini[0].functionDeclarations.some((t) => t.name === 'memory_save')).toBe(true);
       expect(gemini[0].functionDeclarations.some((t) => t.name === 'ask_followup_question')).toBe(true);
       expect(gemini[0].functionDeclarations.some((t) => t.name === 'attempt_completion')).toBe(true);
       expect(gemini[0].functionDeclarations.some((t) => t.name === 'git_checkpoint')).toBe(true);
       expect(gemini[0].functionDeclarations.some((t) => t.name === 'git_commit')).toBe(true);
+      expect(gemini[0].functionDeclarations.some((t) => t.name === 'browser_action')).toBe(true);
     });
 
     it('scopes tools per mode persona in OpenAI, Anthropic, and Gemini formatters', () => {
-      // In architect mode: read, interactive, memory only (no write_file, edit_file, run_command, git_checkpoint, git_commit)
+      // In architect mode: read, interactive, memory only (no write_file, edit_file, run_command, git_checkpoint, git_commit, browser_action)
       const openAiArchitect = toOpenAiTools('architect');
       expect(openAiArchitect.some((t) => t.function.name === 'read_file')).toBe(true);
       expect(openAiArchitect.some((t) => t.function.name === 'list_directory_tree')).toBe(true);
@@ -1263,6 +1458,7 @@ export function helper(): void {}
       expect(openAiArchitect.some((t) => t.function.name === 'run_command')).toBe(false);
       expect(openAiArchitect.some((t) => t.function.name === 'git_checkpoint')).toBe(false);
       expect(openAiArchitect.some((t) => t.function.name === 'git_commit')).toBe(false);
+      expect(openAiArchitect.some((t) => t.function.name === 'browser_action')).toBe(false);
 
       // In ask mode: read, interactive, memory only
       const anthropicAsk = toAnthropicTools('ask');
@@ -1272,12 +1468,14 @@ export function helper(): void {}
       expect(anthropicAsk.some((t) => t.name === 'run_command')).toBe(false);
       expect(anthropicAsk.some((t) => t.name === 'git_checkpoint')).toBe(false);
       expect(anthropicAsk.some((t) => t.name === 'git_commit')).toBe(false);
+      expect(anthropicAsk.some((t) => t.name === 'browser_action')).toBe(false);
 
-      // In code mode: all 15 tools present
+      // In code mode: all 16 tools present
       const geminiCode = toGeminiTools('code');
-      expect(geminiCode[0].functionDeclarations.length).toBe(15);
+      expect(geminiCode[0].functionDeclarations.length).toBe(16);
       expect(geminiCode[0].functionDeclarations.some((t) => t.name === 'git_checkpoint')).toBe(true);
       expect(geminiCode[0].functionDeclarations.some((t) => t.name === 'git_commit')).toBe(true);
+      expect(geminiCode[0].functionDeclarations.some((t) => t.name === 'browser_action')).toBe(true);
 
       // Custom mode with only 'read' group
       const customReadOnlyMode: ZeusModeConfig = {

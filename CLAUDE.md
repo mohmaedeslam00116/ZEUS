@@ -25,7 +25,7 @@ permissions, context, memory, tasks, and generated files into one workspace.
 
 Guiding principles (from `project.md` §4): Fast, Local, Private, Modular, Secure,
 Responsive, Observable, Predictable, Recoverable. There is **no backend**. Zeus
-itself makes exactly **three** kinds of outbound request, and no others may be
+itself makes exactly **four** kinds of outbound request, and no others may be
 added without amending this paragraph:
 
 1. The connected coding agent talking to its AI provider.
@@ -108,6 +108,13 @@ added without amending this paragraph:
 
    If a future harness needs a different network reach, it does **not** inherit
    this item — amend this paragraph again.
+4. **Explicit Web Content and Browser Inspection** (`fetch_web_content`,
+   `browser_action`) — strictly gated by SEC-18 SSRF packet-level and DNS
+   rebinding inspection, preventing access to private networks, loopback (unless
+   in approved `local_dev` mode), and cloud metadata endpoints (`169.254.169.254`).
+   Headless browser sessions run offscreen in isolated ephemeral in-memory
+   partitions (`session.fromPartition`) with zero disk trace, disabled node integration,
+   and window open lockdown (SEC-01, SEC-02, SEC-03, SEC-14).
 
 ---
 

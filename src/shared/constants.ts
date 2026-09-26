@@ -1196,6 +1196,23 @@ export const NATIVE_RUNTIME_LIMITS = {
     maxSummaryLength: 160,
     maxFallbackLines: 15,
   },
+  /** Sandboxed browser automation tool limits (XP-01 bounded outputs, Ticket #77). */
+  browser: {
+    minViewportWidth: 320,
+    minViewportHeight: 240,
+    maxViewportWidth: 1920,
+    maxViewportHeight: 1080,
+    defaultViewportWidth: 1280,
+    defaultViewportHeight: 800,
+    minQuality: 10,
+    maxQuality: 100,
+    defaultQuality: 80,
+    maxConsoleLogs: 500,
+    maxScreenshotSizeBytes: 2 * 1024 * 1024,
+    navigationTimeoutMs: 30_000,
+    maxOutputLogChars: 4_000,
+    maxLogLineLength: 500,
+  },
 } as const;
 
 /** Built-in default mode personas and tool scoping configurations (Ticket #74). */
@@ -1205,7 +1222,7 @@ export const DEFAULT_ZEUS_MODES: readonly ZeusModeConfig[] = [
     name: 'Code',
     roleDefinition:
       'You are Zeus in Code mode, an expert software engineer. Implement solutions, write clean, maintainable code, follow existing conventions, and explain your changes clearly.',
-    groups: ['read', 'edit', 'command', 'interactive', 'memory'],
+    groups: ['read', 'edit', 'command', 'interactive', 'memory', 'browser'],
   },
   {
     slug: 'architect',
@@ -1226,7 +1243,7 @@ export const DEFAULT_ZEUS_MODES: readonly ZeusModeConfig[] = [
     name: 'Test',
     roleDefinition:
       'You are Zeus in Test mode, a thorough test and QA engineer. Focus on writing tests, running verification suites, diagnosing regressions, and verifying code quality.',
-    groups: ['read', 'edit', 'command', 'interactive', 'memory'],
+    groups: ['read', 'edit', 'command', 'interactive', 'memory', 'browser'],
   },
 ] as const;
 
