@@ -77,4 +77,5 @@ export interface AgentRuntimeAdapter {
   setAskUserQuestionHandler?(
     handler: (sessionId: string, question: string, options?: string[], signal?: AbortSignal) => Promise<string>,
   ): void;
+  setGitManager?(git: unknown): void;
 }

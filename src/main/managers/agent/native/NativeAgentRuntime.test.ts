@@ -701,6 +701,8 @@ describe('NativeAgentRuntime', () => {
     expect(toolNames).not.toContain('write_file');
     expect(toolNames).not.toContain('edit_file');
     expect(toolNames).not.toContain('run_command');
+    expect(toolNames).not.toContain('git_checkpoint');
+    expect(toolNames).not.toContain('git_commit');
   });
 
   it('loads and applies custom workspace modes from .zeusmodes.json', async () => {
@@ -741,8 +743,8 @@ describe('NativeAgentRuntime', () => {
         onToolUse: vi.fn(),
         onToolResult: vi.fn(),
         onInit: vi.fn(),
-        onResult: vi.fn(),
         diag: vi.fn(),
+        onResult: vi.fn(),
       };
 
       await runtime.run(
@@ -774,9 +776,99 @@ describe('NativeAgentRuntime', () => {
       expect(toolNames).toContain('read_file');
       expect(toolNames).toContain('write_file');
       expect(toolNames).not.toContain('run_command'); // 'command' group was not in custom mode groups!
+      expect(toolNames).not.toContain('git_checkpoint');
+      expect(toolNames).not.toContain('git_commit');
     } finally {
       fs.rmSync(tempWorkspace, { recursive: true, force: true });
     }
+  });
+
+  it('wires and executes git_checkpoint and git_commit tools in NativeAgentRuntime multi-turn run', async () => {
+    mockSettings.agent.model = 'openai:gpt-4o';
+    vi.spyOn(mockAuthManager, 'getEffectiveApiKey').mockReturnValue('mock-openai-key');
+
+    db.exec('CREATE TABLE IF NOT EXISTS sessions (id TEXT PRIMARY KEY, workspace_id TEXT, title TEXT);');
+    db.prepare("INSERT INTO sessions (id, workspace_id, title) VALUES ('s-git-turn', 'ws-git-1', 'Git Test')").run();
+
+    const mockGit = {
+      createCheckpoint: vi.fn().mockResolvedValue({
+        id: 'cp-turn-1',
+        sessionId: 's-git-turn',
+        workspaceId: 'ws-git-1',
+        ref: 'refs/zeus/checkpoints/s-git-turn/111',
+        commit: '12345678abcdef',
+        label: 'before modifying files',
+        auto: false,
+        files: ['index.ts'],
+        createdAt: 111,
+      }),
+      stage: vi.fn().mockResolvedValue(undefined),
+      stageAll: vi.fn().mockResolvedValue(undefined),
+      status: vi.fn().mockResolvedValue({
+        files: [{ path: 'index.ts', staged: true }],
+      }),
+      commit: vi.fn().mockResolvedValue({
+        hash: 'abcdef12345678',
+        subject: 'feat: add initial feature',
+      }),
+    };
+
+    runtime.setGitManager(mockGit);
+
+    // Turn 1: Model calls git_checkpoint
+    const sseTurn1 = [
+      'data: {"choices":[{"delta":{"tool_calls":[{"id":"call_cp_1","type":"function","function":{"name":"git_checkpoint","arguments":"{\\"label\\":\\"before modifying files\\"}"}}]}}]}\n\n',
+      'data: [DONE]\n\n',
+    ];
+
+    // Turn 2: Model completes task with text
+    const sseTurn2 = [
+      'data: {"choices":[{"delta":{"content":"Checkpoint taken successfully."}}]}\n\n',
+      'data: [DONE]\n\n',
+    ];
+
+    const postSpy = vi
+      .spyOn(transport, 'guardedPostSse')
+      .mockResolvedValueOnce(mockSseChunks(sseTurn1))
+      .mockResolvedValueOnce(mockSseChunks(sseTurn2));
+
+    const queuedDeltas: string[] = [];
+    const toolResults: Array<{ id: string; status: string; output?: string }> = [];
+
+    const mockBridge: ProviderRunBridge = {
+      ensureStreaming: vi.fn(),
+      queueDelta: (d) => queuedDeltas.push(d),
+      finishStreaming: vi.fn(),
+      onToolUse: vi.fn(),
+      onToolResult: (id, status, output) => toolResults.push({ id, status, output }),
+      onInit: vi.fn(),
+      onResult: vi.fn(),
+      diag: vi.fn(),
+    };
+
+    await runtime.run(
+      's-git-turn',
+      'Take a checkpoint',
+      '/test/workspace',
+      new AbortController(),
+      'default',
+      {
+        ensureStreaming: vi.fn(),
+        queueDelta: (d) => queuedDeltas.push(d),
+        finishStreaming: vi.fn(),
+      },
+      mockBridge,
+    );
+
+    expect(postSpy).toHaveBeenCalledTimes(2);
+    expect(mockGit.createCheckpoint).toHaveBeenCalledWith(
+      'ws-git-1',
+      's-git-turn',
+      'before modifying files',
+      { auto: false },
+    );
+    expect(toolResults.some((tr) => tr.id === 'call_cp_1' && tr.status === 'done')).toBe(true);
+    expect(queuedDeltas).toContain('Checkpoint taken successfully.');
   });
 });
 

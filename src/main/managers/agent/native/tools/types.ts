@@ -2,7 +2,15 @@
  * Types and interfaces for the ZEUS First-Party Native Tool Suite (Spec #61 / Issue #65).
  */
 
-import type { MemorySource, MemoryTier, ToolGroup, ZeusModeConfig } from '@shared/types';
+import type {
+  GitCheckpoint,
+  GitCommit,
+  GitStatus,
+  MemorySource,
+  MemoryTier,
+  ToolGroup,
+  ZeusModeConfig,
+} from '@shared/types';
 
 export interface NativeToolDefinition {
   name: string;
@@ -43,6 +51,19 @@ export interface NativeToolMemoryManager {
   setArchived?(id: string, archived: boolean): void;
 }
 
+export interface NativeToolGitManager {
+  createCheckpoint(
+    workspaceId: string,
+    sessionId: string,
+    label: string,
+    opts?: { auto?: boolean; messageId?: string },
+  ): Promise<GitCheckpoint | null>;
+  stage(workspaceId: string, filePath: string): Promise<void>;
+  stageAll(workspaceId: string): Promise<void>;
+  commit(workspaceId: string, message: string): Promise<GitCommit | null>;
+  status(workspaceId: string): Promise<GitStatus>;
+}
+
 export interface NativeToolExecutionContext {
   workspaceRoot: string;
   sessionId: string;
@@ -50,6 +71,7 @@ export interface NativeToolExecutionContext {
   terminalManager?: unknown;
   onOutputChunk?: (text: string) => void;
   memoryManager?: NativeToolMemoryManager;
+  gitManager?: NativeToolGitManager;
   workspaceId?: string | null;
   askUserQuestion?: (
     question: string,

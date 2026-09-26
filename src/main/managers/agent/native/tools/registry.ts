@@ -11,6 +11,7 @@ import { memorySaveTool, memoryRecallTool, memoryForgetTool } from './memory';
 import { listDirectoryTreeTool } from './directoryTree';
 import { viewCodeSymbolsTool } from './codeSymbols';
 import { askFollowupQuestionTool, attemptCompletionTool } from './interactive';
+import { gitCheckpointTool, gitCommitTool } from './git';
 import type { NativeTool } from './types';
 import type { ToolGroup, ZeusModeConfig } from '@shared/types';
 import { resolveActiveMode } from '../modes/modeDiscovery';
@@ -27,6 +28,8 @@ export const NATIVE_TOOL_GROUPS: Record<string, ToolGroup> = {
   write_file: 'edit',
   edit_file: 'edit',
   run_command: 'command',
+  git_checkpoint: 'command',
+  git_commit: 'command',
   memory_save: 'memory',
   memory_recall: 'memory',
   memory_forget: 'memory',
@@ -39,6 +42,8 @@ export const NATIVE_TOOLS: Record<string, NativeTool> = {
   write_file: writeFileTool,
   edit_file: editFileTool,
   run_command: runCommandTool,
+  git_checkpoint: gitCheckpointTool,
+  git_commit: gitCommitTool,
   search_codebase: searchCodebaseTool,
   fetch_web_content: fetchWebContentTool,
   memory_save: memorySaveTool,

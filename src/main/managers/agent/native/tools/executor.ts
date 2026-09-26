@@ -72,6 +72,7 @@ export async function executeNativeTool(
     }
   }
 
+
   // If fetch_web_content, pre-screen URL credentials and protocol
   if (name === 'fetch_web_content' && typeof input.url === 'string') {
     try {

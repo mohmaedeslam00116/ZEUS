@@ -14,5 +14,6 @@ export * from './memory';
 export * from './directoryTree';
 export * from './codeSymbols';
 export * from './interactive';
+export * from './git';
 export * from './registry';
 export * from './executor';

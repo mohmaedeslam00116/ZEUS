@@ -33,6 +33,7 @@ import {
   executeNativeTool,
   type NativeToolExecutionContext,
   type NativeToolMemoryManager,
+  type NativeToolGitManager,
 } from './tools';
 import { loadWorkspaceModes, resolveActiveMode } from './modes/modeDiscovery';
 import type { ConversationMessage, NormalizedStreamChunk } from './types';
@@ -77,12 +78,17 @@ export class NativeAgentRuntime implements AgentRuntimeAdapter {
     private readonly settings: SettingsManager,
     private readonly db: Database.Database,
     private memoryManager?: NativeToolMemoryManager,
+    private gitManager?: NativeToolGitManager,
   ) {
     this.compactor = new ContextCompactor(this.db);
   }
 
   setMemoryManager(memory: NativeToolMemoryManager): void {
     this.memoryManager = memory;
+  }
+
+  setGitManager(git: unknown): void {
+    this.gitManager = git as NativeToolGitManager;
   }
 
   private askUserQuestionHandler?: (
@@ -318,6 +324,7 @@ export class NativeAgentRuntime implements AgentRuntimeAdapter {
           sessionId,
           abortSignal: abort.signal,
           memoryManager: this.memoryManager,
+          gitManager: this.gitManager,
           workspaceId,
           activeMode,
           askUserQuestion: askHandler

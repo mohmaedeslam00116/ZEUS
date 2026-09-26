@@ -12,6 +12,7 @@ import { memorySaveTool, memoryRecallTool, memoryForgetTool } from './memory';
 import { listDirectoryTreeTool } from './directoryTree';
 import { viewCodeSymbolsTool } from './codeSymbols';
 import { askFollowupQuestionTool, attemptCompletionTool } from './interactive';
+import { gitCheckpointTool, gitCommitTool } from './git';
 import { executeNativeTool } from './executor';
 import { toOpenAiTools, toAnthropicTools, toGeminiTools, getNativeToolsForMode } from './registry';
 import * as transport from '../transport';
@@ -953,33 +954,304 @@ export function helper(): void {}
     });
   });
 
+  describe('git_checkpoint', () => {
+    it('validates label presence and length limit', async () => {
+      const emptyRes = await gitCheckpointTool.execute(
+        {},
+        { workspaceRoot: tmpDir, sessionId: 's1' },
+      );
+      expect(emptyRes.success).toBe(false);
+      expect(emptyRes.error).toContain('non-empty string');
+
+      const longLabel = 'a'.repeat(141);
+      const longRes = await gitCheckpointTool.execute(
+        { label: longLabel },
+        { workspaceRoot: tmpDir, sessionId: 's1' },
+      );
+      expect(longRes.success).toBe(false);
+      expect(longRes.error).toContain('exceeds maximum length of 140');
+    });
+
+    it('creates checkpoint via gitManager when provided', async () => {
+      const mockGit = {
+        createCheckpoint: vi.fn().mockResolvedValue({
+          id: 'cp-123',
+          ref: 'refs/zeus/checkpoints/s1/1234567890',
+          commit: 'abcdef1234567890abcdef',
+          label: 'before auth refactor',
+          files: ['src/auth.ts', 'package.json'],
+          createdAt: 1234567890,
+        }),
+        stage: vi.fn(),
+        stageAll: vi.fn(),
+        commit: vi.fn(),
+        status: vi.fn(),
+      };
+
+      const res = await gitCheckpointTool.execute(
+        { label: 'before auth refactor' },
+        { workspaceRoot: tmpDir, sessionId: 's1', workspaceId: 'ws-1', gitManager: mockGit },
+      );
+
+      expect(res.success).toBe(true);
+      expect(mockGit.createCheckpoint).toHaveBeenCalledWith(
+        'ws-1',
+        's1',
+        'before auth refactor',
+        { auto: false },
+      );
+      expect(res.output).toContain('Successfully created git checkpoint:');
+      expect(res.output).toContain('refs/zeus/checkpoints/s1/1234567890');
+      expect(res.output).toContain('abcdef12');
+      expect(res.output).toContain('Files preserved: 2');
+    });
+
+    it('returns error when gitManager returns null (e.g. non-repo workspace)', async () => {
+      const mockGit = {
+        createCheckpoint: vi.fn().mockResolvedValue(null),
+        stage: vi.fn(),
+        stageAll: vi.fn(),
+        commit: vi.fn(),
+        status: vi.fn(),
+      };
+
+      const res = await gitCheckpointTool.execute(
+        { label: 'test checkpoint' },
+        { workspaceRoot: tmpDir, sessionId: 's1', workspaceId: 'ws-1', gitManager: mockGit },
+      );
+
+      expect(res.success).toBe(false);
+      expect(res.error).toContain('Failed to create checkpoint');
+    });
+
+    it('returns error when standalone workspace is not a git repository', async () => {
+      const res = await gitCheckpointTool.execute(
+        { label: 'initial snapshot' },
+        { workspaceRoot: tmpDir, sessionId: 's-fallback' },
+      );
+
+      expect(res.success).toBe(false);
+      expect(res.error).toContain('Workspace is not a valid Git repository');
+    });
+
+    it('enforces mode persona scoping (blocked in architect/ask, allowed in code/test)', async () => {
+      const architectMode: ZeusModeConfig = {
+        slug: 'architect',
+        name: 'Architect',
+        roleDefinition: 'Architect role',
+        groups: ['read', 'interactive', 'memory'],
+      };
+
+      const res = await executeNativeTool({
+        id: 'tc-cp-arch',
+        name: 'git_checkpoint',
+        input: { label: 'architect checkpoint' },
+        context: { workspaceRoot: tmpDir, sessionId: 's1', activeMode: architectMode },
+      });
+
+      expect(res.success).toBe(false);
+      expect(res.error).toContain('disabled in "Architect" mode');
+    });
+  });
+
+  describe('git_commit', () => {
+    it('validates message presence and length limit', async () => {
+      const emptyRes = await gitCommitTool.execute(
+        {},
+        { workspaceRoot: tmpDir, sessionId: 's1' },
+      );
+      expect(emptyRes.success).toBe(false);
+      expect(emptyRes.error).toContain('Commit message must be a non-empty string');
+
+      const longMessage = `feat: ${'a'.repeat(500)}`;
+      const longRes = await gitCommitTool.execute(
+        { message: longMessage },
+        { workspaceRoot: tmpDir, sessionId: 's1' },
+      );
+      expect(longRes.success).toBe(false);
+      expect(longRes.error).toContain('exceeds maximum length of 500');
+    });
+
+    it('validates Conventional Commits format and rejects invalid types', async () => {
+      const invalidRes1 = await gitCommitTool.execute(
+        { message: 'just random stuff' },
+        { workspaceRoot: tmpDir, sessionId: 's1' },
+      );
+      expect(invalidRes1.success).toBe(false);
+      expect(invalidRes1.error).toContain('Conventional Commits format');
+
+      const invalidRes2 = await gitCommitTool.execute(
+        { message: 'foo(bar): some message' },
+        { workspaceRoot: tmpDir, sessionId: 's1' },
+      );
+      expect(invalidRes2.success).toBe(false);
+      expect(invalidRes2.error).toContain('Invalid Conventional Commit type "foo"');
+
+      const invalidRes3 = await gitCommitTool.execute(
+        { message: 'feat: ' },
+        { workspaceRoot: tmpDir, sessionId: 's1' },
+      );
+      expect(invalidRes3.success).toBe(false);
+      expect(invalidRes3.error).toContain('Conventional Commits format');
+    });
+
+    it('enforces Layer 1 path containment on files argument', async () => {
+      const traversalRes = await gitCommitTool.execute(
+        { message: 'feat: add stuff', files: ['../outside.txt'] },
+        { workspaceRoot: tmpDir, sessionId: 's1' },
+      );
+      expect(traversalRes.success).toBe(false);
+      expect(traversalRes.error).toContain('Access denied');
+
+      const crownJewelTarget = path.resolve(os.tmpdir(), 'userData/secrets');
+      const jewelRes = await gitCommitTool.execute(
+        { message: 'feat: leak secret', files: [crownJewelTarget] },
+        { workspaceRoot: tmpDir, sessionId: 's1' },
+      );
+      expect(jewelRes.success).toBe(false);
+      expect(jewelRes.error).toContain('Access denied');
+
+      const tooManyFiles = Array.from({ length: 101 }, (_, i) => `file_${i}.txt`);
+      const limitRes = await gitCommitTool.execute(
+        { message: 'feat: bulk files', files: tooManyFiles },
+        { workspaceRoot: tmpDir, sessionId: 's1' },
+      );
+      expect(limitRes.success).toBe(false);
+      expect(limitRes.error).toContain('Cannot stage more than 100 files');
+    });
+
+    it('returns error when there are no staged changes to commit', async () => {
+      const mockGit = {
+        createCheckpoint: vi.fn(),
+        stage: vi.fn(),
+        stageAll: vi.fn(),
+        commit: vi.fn(),
+        status: vi.fn().mockResolvedValue({
+          files: [{ path: 'file.txt', staged: false }],
+        }),
+      };
+
+      const res = await gitCommitTool.execute(
+        { message: 'feat(core): implement core logic' },
+        { workspaceRoot: tmpDir, sessionId: 's1', workspaceId: 'ws-1', gitManager: mockGit },
+      );
+
+      expect(res.success).toBe(false);
+      expect(res.error).toContain('No staged changes to commit');
+    });
+
+    it('stages specified files and commits successfully via gitManager', async () => {
+      const mockGit = {
+        createCheckpoint: vi.fn(),
+        stage: vi.fn().mockResolvedValue(undefined),
+        stageAll: vi.fn().mockResolvedValue(undefined),
+        status: vi.fn().mockResolvedValue({
+          files: [{ path: 'src/index.ts', staged: true }],
+        }),
+        commit: vi.fn().mockResolvedValue({
+          hash: '1234567890abcdef1234567890abcdef12345678',
+          subject: 'feat(auth): add jwt validation',
+        }),
+      };
+
+      const res = await gitCommitTool.execute(
+        {
+          message: 'feat(auth): add jwt validation',
+          files: ['src/index.ts'],
+        },
+        { workspaceRoot: tmpDir, sessionId: 's1', workspaceId: 'ws-1', gitManager: mockGit },
+      );
+
+      expect(res.success).toBe(true);
+      expect(mockGit.stage).toHaveBeenCalledWith('ws-1', 'src/index.ts');
+      expect(mockGit.commit).toHaveBeenCalledWith('ws-1', 'feat(auth): add jwt validation');
+      expect(res.output).toContain('Successfully created git commit:');
+      expect(res.output).toContain('12345678');
+      expect(res.output).toContain('feat(auth): add jwt validation');
+      expect(res.output).toContain('Staged files: 1');
+    });
+
+    it('stages all changes when files argument is omitted', async () => {
+      const mockGit = {
+        createCheckpoint: vi.fn(),
+        stage: vi.fn(),
+        stageAll: vi.fn().mockResolvedValue(undefined),
+        status: vi.fn().mockResolvedValue({
+          files: [
+            { path: 'a.ts', staged: true },
+            { path: 'b.ts', staged: true },
+          ],
+        }),
+        commit: vi.fn().mockResolvedValue({
+          hash: 'abcdef1234567890abcdef1234567890abcdef12',
+          subject: 'fix: resolve race condition',
+        }),
+      };
+
+      const res = await gitCommitTool.execute(
+        { message: 'fix: resolve race condition' },
+        { workspaceRoot: tmpDir, sessionId: 's1', workspaceId: 'ws-1', gitManager: mockGit },
+      );
+
+      expect(res.success).toBe(true);
+      expect(mockGit.stageAll).toHaveBeenCalledWith('ws-1');
+      expect(mockGit.commit).toHaveBeenCalledWith('ws-1', 'fix: resolve race condition');
+      expect(res.output).toContain('Staged files: all modified/untracked');
+    });
+
+    it('enforces mode persona scoping (blocked in architect/ask, allowed in code/test)', async () => {
+      const askMode: ZeusModeConfig = {
+        slug: 'ask',
+        name: 'Ask',
+        roleDefinition: 'Ask role',
+        groups: ['read', 'interactive', 'memory'],
+      };
+
+      const res = await executeNativeTool({
+        id: 'tc-commit-ask',
+        name: 'git_commit',
+        input: { message: 'feat: try to commit in ask mode' },
+        context: { workspaceRoot: tmpDir, sessionId: 's1', activeMode: askMode },
+      });
+
+      expect(res.success).toBe(false);
+      expect(res.error).toContain('disabled in "Ask" mode');
+    });
+  });
+
   describe('Provider Tool Schema Formatters', () => {
     it('formats tools for OpenAI, Anthropic, and Gemini', () => {
       const openAi = toOpenAiTools();
-      expect(openAi.length).toBe(13);
+      expect(openAi.length).toBe(15);
       expect(openAi[0].type).toBe('function');
       expect(openAi.some((t) => t.function.name === 'memory_save')).toBe(true);
       expect(openAi.some((t) => t.function.name === 'list_directory_tree')).toBe(true);
       expect(openAi.some((t) => t.function.name === 'view_code_symbols')).toBe(true);
       expect(openAi.some((t) => t.function.name === 'ask_followup_question')).toBe(true);
       expect(openAi.some((t) => t.function.name === 'attempt_completion')).toBe(true);
+      expect(openAi.some((t) => t.function.name === 'git_checkpoint')).toBe(true);
+      expect(openAi.some((t) => t.function.name === 'git_commit')).toBe(true);
 
       const anthropic = toAnthropicTools();
-      expect(anthropic.length).toBe(13);
+      expect(anthropic.length).toBe(15);
       expect(anthropic.some((t) => t.name === 'memory_save')).toBe(true);
       expect(anthropic.some((t) => t.name === 'ask_followup_question')).toBe(true);
       expect(anthropic.some((t) => t.name === 'attempt_completion')).toBe(true);
+      expect(anthropic.some((t) => t.name === 'git_checkpoint')).toBe(true);
+      expect(anthropic.some((t) => t.name === 'git_commit')).toBe(true);
 
       const gemini = toGeminiTools();
       expect(gemini.length).toBe(1);
-      expect(gemini[0].functionDeclarations.length).toBe(13);
+      expect(gemini[0].functionDeclarations.length).toBe(15);
       expect(gemini[0].functionDeclarations.some((t) => t.name === 'memory_save')).toBe(true);
       expect(gemini[0].functionDeclarations.some((t) => t.name === 'ask_followup_question')).toBe(true);
       expect(gemini[0].functionDeclarations.some((t) => t.name === 'attempt_completion')).toBe(true);
+      expect(gemini[0].functionDeclarations.some((t) => t.name === 'git_checkpoint')).toBe(true);
+      expect(gemini[0].functionDeclarations.some((t) => t.name === 'git_commit')).toBe(true);
     });
 
     it('scopes tools per mode persona in OpenAI, Anthropic, and Gemini formatters', () => {
-      // In architect mode: read, interactive, memory only (no write_file, edit_file, run_command)
+      // In architect mode: read, interactive, memory only (no write_file, edit_file, run_command, git_checkpoint, git_commit)
       const openAiArchitect = toOpenAiTools('architect');
       expect(openAiArchitect.some((t) => t.function.name === 'read_file')).toBe(true);
       expect(openAiArchitect.some((t) => t.function.name === 'list_directory_tree')).toBe(true);
@@ -989,6 +1261,8 @@ export function helper(): void {}
       expect(openAiArchitect.some((t) => t.function.name === 'write_file')).toBe(false);
       expect(openAiArchitect.some((t) => t.function.name === 'edit_file')).toBe(false);
       expect(openAiArchitect.some((t) => t.function.name === 'run_command')).toBe(false);
+      expect(openAiArchitect.some((t) => t.function.name === 'git_checkpoint')).toBe(false);
+      expect(openAiArchitect.some((t) => t.function.name === 'git_commit')).toBe(false);
 
       // In ask mode: read, interactive, memory only
       const anthropicAsk = toAnthropicTools('ask');
@@ -996,10 +1270,14 @@ export function helper(): void {}
       expect(anthropicAsk.some((t) => t.name === 'view_code_symbols')).toBe(true);
       expect(anthropicAsk.some((t) => t.name === 'write_file')).toBe(false);
       expect(anthropicAsk.some((t) => t.name === 'run_command')).toBe(false);
+      expect(anthropicAsk.some((t) => t.name === 'git_checkpoint')).toBe(false);
+      expect(anthropicAsk.some((t) => t.name === 'git_commit')).toBe(false);
 
-      // In code mode: all 13 tools present
+      // In code mode: all 15 tools present
       const geminiCode = toGeminiTools('code');
-      expect(geminiCode[0].functionDeclarations.length).toBe(13);
+      expect(geminiCode[0].functionDeclarations.length).toBe(15);
+      expect(geminiCode[0].functionDeclarations.some((t) => t.name === 'git_checkpoint')).toBe(true);
+      expect(geminiCode[0].functionDeclarations.some((t) => t.name === 'git_commit')).toBe(true);
 
       // Custom mode with only 'read' group
       const customReadOnlyMode: ZeusModeConfig = {

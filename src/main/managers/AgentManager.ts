@@ -252,7 +252,7 @@ const READ_TOOLS = new Set([
   'Read', 'Glob', 'Grep', 'LS', 'WebSearch', 'WebFetch', 'NotebookRead', 'TodoWrite',
   'read_files', 'read_file', 'web_search', 'fetch_web_content', 'fetch', 'search_codebase', 'find_by_name', 'list_dir',
   'list_directory_tree', 'view_code_symbols', 'memory_recall',
-  'ask_followup_question', 'attempt_completion',
+  'ask_followup_question', 'attempt_completion', 'git_checkpoint',
 ]);
 const WRITE_TOOLS = new Set([
   'Write', 'Edit', 'MultiEdit', 'NotebookEdit', 'Delete',
@@ -285,6 +285,8 @@ const AUTO_ALLOWED_INTERNAL_TOOLS = new Set([
   // interactive tools
   'ask_followup_question',
   'attempt_completion',
+  // git governance (safe read/snapshot ref)
+  'git_checkpoint',
   // zeus_search — retrieval
   'search_project',
   'find_files',
@@ -312,6 +314,7 @@ const COMMAND_TOOLS = new Set([
   'run_commands',
   'execute_command',
   'run_command',
+  'git_commit',
 ]);
 
 
@@ -1099,6 +1102,9 @@ export class AgentManager {
       (sessionId: string, question: string, options?: string[], signal?: AbortSignal) =>
         this.askFollowupQuestion(sessionId, question, options, signal),
     );
+    if (this.git) {
+      runtime.setGitManager?.(this.git);
+    }
   }
 
   /**
@@ -1185,6 +1191,7 @@ export class AgentManager {
   /** Inject the Git Manager so the agent can checkpoint before heavy work. */
   setGitManager(git: GitManager): void {
     this.git = git;
+    this.nativeRuntime?.setGitManager?.(git);
   }
 
   /**
@@ -6853,7 +6860,8 @@ export class AgentManager {
       // correct default for anything unrecognised.
       if (
         toolName.startsWith('mcp__zeus_memory__') ||
-        toolName.startsWith('mcp__zeus_search__')
+        toolName.startsWith('mcp__zeus_search__') ||
+        AUTO_ALLOWED_INTERNAL_TOOLS.has(toolName)
       ) {
         if (AUTO_ALLOWED_INTERNAL_TOOLS.has(bareMcpToolName(toolName))) {
           return { behavior: 'allow', updatedInput: input };
@@ -8252,6 +8260,10 @@ function summarizeTool(name: string, input: Record<string, unknown>, risk: ToolR
       return `Ask: ${truncate(String(input.question ?? ''), 50)}`;
     case 'attempt_completion':
       return 'Complete task';
+    case 'git_checkpoint':
+      return `Git checkpoint: ${truncate(String(input.label ?? ''), 50)}`;
+    case 'git_commit':
+      return `Git commit: ${truncate(String(input.message ?? ''), 50)}`;
     default:
       return risk === 'command' ? `Run ${name}` : name;
   }
@@ -8268,6 +8280,8 @@ function toolTarget(name: string, input: Record<string, unknown>): string | unde
   if (name === 'Grep' || name === 'search_codebase') return truncate(String(input.pattern ?? input.query ?? ''), 80) || undefined;
   if (name === 'ask_followup_question') return truncate(String(input.question ?? ''), 120) || undefined;
   if (name === 'attempt_completion') return truncate(String(input.result ?? ''), 120) || undefined;
+  if (name === 'git_checkpoint') return truncate(String(input.label ?? ''), 80) || undefined;
+  if (name === 'git_commit') return truncate(String(input.message ?? ''), 80) || undefined;
   const file = filePathOf(input);
   return file ? shortPath(file) : undefined;
 }
@@ -8293,6 +8307,12 @@ function permissionDetail(name: string, input: Record<string, unknown>): string 
     const cmd = input.command ? `\nCommand: ${truncate(String(input.command), 500)}` : '';
     return `${res}${cmd}`;
   }
+  if (name === 'git_commit') {
+    const msg = truncate(String(input.message ?? ''), 500);
+    const files = Array.isArray(input.files) ? `\nFiles: ${input.files.slice(0, 10).join(', ')}` : '';
+    return `${msg}${files}`;
+  }
+  if (name === 'git_checkpoint') return truncate(String(input.label ?? ''), 140);
   const file = filePathOf(input);
   return file;
 }

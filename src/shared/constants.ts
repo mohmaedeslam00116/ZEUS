@@ -1183,6 +1183,12 @@ export const NATIVE_RUNTIME_LIMITS = {
     maxResultLength: 10_000,
     maxCommandLength: 500,
   },
+  /** Git tool limits (XP-01 bounded outputs, Ticket #75). */
+  git: {
+    maxLabelLength: 140,
+    maxMessageLength: 500,
+    maxFilesCount: 100,
+  },
 } as const;
 
 /** Built-in default mode personas and tool scoping configurations (Ticket #74). */
