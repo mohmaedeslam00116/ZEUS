@@ -22,6 +22,37 @@ export interface ReleaseNotesEntry {
 /** Newest first. */
 export const RELEASE_NOTES: ReleaseNotesEntry[] = [
   {
+    version: '0.4.1',
+    date: '2026-09-26',
+    markdown: `ZEUS 0.4.1 marks the first official stable milestone release, graduating from alpha with a fully autonomous, local-first coding assistant architecture. This release introduces the Persistent Project Memory Engine, Extended Code Navigation, Mode-Based Personas, Automated Auto-Healing, Git Governance, and Sandboxed Headless Browser Automation (Wayfinder Map #67):
+
+### Added
+
+- **Persistent Project Memory Engine (\`zeus_memory\`)**:
+  - Native multi-tier rules discovery and hierarchical injection across \`CLAUDE.md\`, \`AGENTS.md\`, \`.cursorrules\`, and \`.clinerules\`.
+  - SQLite FTS5-indexed persistent memory storage with BM25 ranking, scoped memory tables (\`project_memories\`), and zero telemetry.
+  - Native memory tools (\`memory_save\`, \`memory_recall\`, \`memory_forget\`) wired directly into \`NativeAgentRuntime\`.
+- **Codebase Structural Navigation Tools**:
+  - \`list_directory_tree\`: Recursive hierarchical directory visualizer with \`.gitignore\` respect, configurable depth limits (1..5), and XP-01 output truncation bounds (150 entries max).
+  - \`view_code_symbols\`: AST code symbol extractor parsing functions, methods, classes, interfaces, and types with precise line numbers and XP-01 limits (100 symbols max).
+- **Interactive Disambiguation & Task Delivery**:
+  - \`ask_followup_question\`: Dedicated interactive clarification tool pausing execution and presenting structured question cards with selectable options in the conversation UI.
+  - \`attempt_completion\`: Structured task delivery tool formatting completion summaries, optional verification commands, and cleanly terminating the autonomous agent loop.
+- **Mode-Based Agent Personas & Dynamic Tool Scoping**:
+  - Specialized agent personas (\`code\`, \`architect\`, \`ask\`, \`test\`) with custom \`.zeusmodes\` / \`.roomodes\` discovery and fail-closed Layer 1 security gating.
+  - Dynamic tool capability scoping per persona (\`read\`, \`edit\`, \`command\`, \`interactive\`, \`memory\`, \`browser\`).
+- **Git Checkpointing & AI Conventional Commits**:
+  - \`git_checkpoint\`: Non-destructive repository snapshot creation under \`refs/zeus/checkpoints/\` before major edits.
+  - \`git_commit\`: AI commit authoring enforcing Conventional Commits formatting and strict Layer 1 workspace path containment.
+- **Automated Test & Lint Auto-Healing Loop**:
+  - Automated detection and diagnostic extraction from test, lint, and build failures across vitest/jest, pytest, cargo, go, eslint, and tsc.
+  - High-signal error extraction stripping ANSI noise, bounded by XP-01 ceilings (4,000 chars), with structured \`[Auto-Healing System Notice]\` prompts and bounded 3-turn retry limits.
+- **Sandboxed Headless Browser Automation (\`browser_action\`)**:
+  - Electron offscreen Chromium rendering in isolated, ephemeral in-memory partitions (\`session.fromPartition\`).
+  - Deep SEC-18 packet-level interception across all web requests and subresources with DNS rebinding protection and permanent cloud metadata (\`169.254.169.254\`) lockdown.
+  - Offscreen automation actions: \`launch\`, \`click\`, \`type\`, \`scroll\`, \`screenshot\`, \`get_console_logs\`, and \`close\`.`,
+  },
+  {
     version: '0.1.0-alpha.8',
     date: '2026-09-25',
     markdown: `ZEUS 0.1.0-alpha.8 delivers the first-party Native Agent Engine and Multi-Provider Hub (Master Spec #61):
@@ -91,28 +122,6 @@ export const RELEASE_NOTES: ReleaseNotesEntry[] = [
 - **OpenCode CLI discovery on Windows (\`The OpenCode CLI is not installed or not found on PATH\`)**:
   - OpenCode installed on Windows under custom or standard system paths (e.g. \`D:\\Program Files\\OpenCode\\opencode-cli.exe\` or \`%LOCALAPPDATA%\\Programs\\@opencode-aidesktop\`) was not detected when not in system PATH or named \`opencode-cli\`.
   - Added binary probing and spawn resolution for both \`opencode\` and \`opencode-cli\` aliases across common Windows installation locations and PATH directories.`,
-  },
-  {
-    version: '0.1.0-alpha.4',
-    date: '2026-09-20',
-    markdown: `ZEUS 0.1.0-alpha.4 resolves JSON-RPC wire-format incompatibilities with headless
-agents running under the Agent Client Protocol (ACP) and Codex app-server protocols.
-
-### Fixed
-
-- **Headless ACP agent parameter validation failures (\`ACP RPC Error [-32602]: Invalid params\`)**:
-  - In standard ACP v1, \`session/new\` enforces \`{"required": ["cwd", "mcpServers"]}\`.
-    ZEUS previously omitted \`mcpServers\`, triggering schema rejections (\`mcpServers: Invalid input\`)
-    in ACP runtimes like Cline and OpenCode. \`mcpServers: []\` is now always included.
-  - In ACP v1, \`session/prompt\` requires \`prompt\` to be an array of \`ContentBlock\` objects
-    (\`[{ type: 'text', text: ... }]\`). Raw strings previously caused schema rejection
-    (\`prompt: Invalid input: expected array, received string\`). Prompts are now normalized
-    into standard ACP content blocks.
-  - Added \`clientCapabilities\` (fs/terminal) during the initial \`initialize\` handshake.
-- **Codex turn dispatch error (\`Codex RPC Error [-32600]: Invalid request: missing field input\`)**:
-  - The Codex app-server wire protocol expects prompts structured under \`input\` as content
-    blocks rather than a top-level string \`prompt\`. Requests now supply \`input: [{ type: 'text', text: prompt }]\`
-    and normalize \`turnId\` from the returned \`turn.id\`.`,
   },
 ];
 

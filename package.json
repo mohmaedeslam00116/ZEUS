@@ -2,7 +2,7 @@
   "name": "zeus",
   "productName": "ZEUS",
   "description": "ZEUS - a local-first coding-agent desktop for driving AI coding agents against your workspaces.",
-  "version": "0.1.0-alpha.0",
+  "version": "0.4.1",
   "main": ".vite/build/main.js",
   "private": true,
   "scripts": {

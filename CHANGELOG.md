@@ -1557,6 +1557,36 @@ operational.
 
 ## [Unreleased]
 
+## [0.4.1] - 2026-09-26
+
+ZEUS 0.4.1 marks the first official stable milestone release, graduating from alpha with a fully autonomous, local-first coding assistant architecture. This release introduces the Persistent Project Memory Engine, Extended Code Navigation, Mode-Based Personas, Automated Auto-Healing, Git Governance, and Sandboxed Headless Browser Automation (Wayfinder Map #67):
+
+### Added
+
+- **Persistent Project Memory Engine (`zeus_memory`)**:
+  - Native multi-tier rules discovery and hierarchical injection across `CLAUDE.md`, `AGENTS.md`, `.cursorrules`, and `.clinerules`.
+  - SQLite FTS5-indexed persistent memory storage with BM25 ranking, scoped memory tables (`project_memories`), and zero telemetry.
+  - Native memory tools (`memory_save`, `memory_recall`, `memory_forget`) wired directly into `NativeAgentRuntime`.
+- **Codebase Structural Navigation Tools**:
+  - `list_directory_tree`: Recursive hierarchical directory visualizer with `.gitignore` respect, configurable depth limits (1..5), and XP-01 output truncation bounds (150 entries max).
+  - `view_code_symbols`: AST code symbol extractor parsing functions, methods, classes, interfaces, and types with precise line numbers and XP-01 limits (100 symbols max).
+- **Interactive Disambiguation & Task Delivery**:
+  - `ask_followup_question`: Dedicated interactive clarification tool pausing execution and presenting structured question cards with selectable options in the conversation UI.
+  - `attempt_completion`: Structured task delivery tool formatting completion summaries, optional verification commands, and cleanly terminating the autonomous agent loop.
+- **Mode-Based Agent Personas & Dynamic Tool Scoping**:
+  - Specialized agent personas (`code`, `architect`, `ask`, `test`) with custom `.zeusmodes` / `.roomodes` discovery and fail-closed Layer 1 security gating.
+  - Dynamic tool capability scoping per persona (`read`, `edit`, `command`, `interactive`, `memory`, `browser`).
+- **Git Checkpointing & AI Conventional Commits**:
+  - `git_checkpoint`: Non-destructive repository snapshot creation under `refs/zeus/checkpoints/` before major edits.
+  - `git_commit`: AI commit authoring enforcing Conventional Commits formatting and strict Layer 1 workspace path containment.
+- **Automated Test & Lint Auto-Healing Loop**:
+  - Automated detection and diagnostic extraction from test, lint, and build failures across vitest/jest, pytest, cargo, go, eslint, and tsc.
+  - High-signal error extraction stripping ANSI noise, bounded by XP-01 ceilings (4,000 chars), with structured `[Auto-Healing System Notice]` prompts and bounded 3-turn retry limits.
+- **Sandboxed Headless Browser Automation (`browser_action`)**:
+  - Electron offscreen Chromium rendering in isolated, ephemeral in-memory partitions (`session.fromPartition`).
+  - Deep SEC-18 packet-level interception across all web requests and subresources with DNS rebinding protection and permanent cloud metadata (`169.254.169.254`) lockdown.
+  - Offscreen automation actions: `launch`, `click`, `type`, `scroll`, `screenshot`, `get_console_logs`, and `close`.
+
 ## [0.1.0-alpha.8] - 2026-09-25
 
 ZEUS 0.1.0-alpha.8 delivers the first-party Native Agent Engine and Multi-Provider Hub (Master Spec #61):

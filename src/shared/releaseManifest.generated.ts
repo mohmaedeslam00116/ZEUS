@@ -24,6 +24,73 @@ import type { ReleaseIndexEntry, ReleaseManifestEntry } from './release';
 /** Newest first. */
 export const RELEASE_MANIFESTS: ReleaseManifestEntry[] = [
   {
+    "version": "0.4.1",
+    "date": "2026-09-26",
+    "channel": "stable",
+    "codename": null,
+    "gitTag": "v0.4.1",
+    "commit": null,
+    "buildNumber": null,
+    "summary": "ZEUS 0.4.1 marks the first official stable milestone release, graduating from alpha with a fully autonomous, local-first coding assistant architecture. This release introduces the Persistent Project Memory Engine, Extended Code Navigation, Mode-Based Personas, Automated Auto-Healing, Git Governance, and Sandboxed Headless Browser Automation (Wayfinder Map #67):",
+    "sections": [
+      {
+        "category": "added",
+        "title": "Added",
+        "items": [
+          {
+            "lead": "Persistent Project Memory Engine (`zeus_memory`)",
+            "text": ":\n  - Native multi-tier rules discovery and hierarchical injection across `CLAUDE.md`, `AGENTS.md`, `.cursorrules`, and `.clinerules`.\n  - SQLite FTS5-indexed persistent memory storage with BM25 ranking, scoped memory tables (`project_memories`), and zero telemetry.\n  - Native memory tools (`memory_save`, `memory_recall`, `memory_forget`) wired directly into `NativeAgentRuntime`."
+          },
+          {
+            "lead": "Codebase Structural Navigation Tools",
+            "text": ":\n  - `list_directory_tree`: Recursive hierarchical directory visualizer with `.gitignore` respect, configurable depth limits (1..5), and XP-01 output truncation bounds (150 entries max).\n  - `view_code_symbols`: AST code symbol extractor parsing functions, methods, classes, interfaces, and types with precise line numbers and XP-01 limits (100 symbols max)."
+          },
+          {
+            "lead": "Interactive Disambiguation & Task Delivery",
+            "text": ":\n  - `ask_followup_question`: Dedicated interactive clarification tool pausing execution and presenting structured question cards with selectable options in the conversation UI.\n  - `attempt_completion`: Structured task delivery tool formatting completion summaries, optional verification commands, and cleanly terminating the autonomous agent loop."
+          },
+          {
+            "lead": "Mode-Based Agent Personas & Dynamic Tool Scoping",
+            "text": ":\n  - Specialized agent personas (`code`, `architect`, `ask`, `test`) with custom `.zeusmodes` / `.roomodes` discovery and fail-closed Layer 1 security gating.\n  - Dynamic tool capability scoping per persona (`read`, `edit`, `command`, `interactive`, `memory`, `browser`)."
+          },
+          {
+            "lead": "Git Checkpointing & AI Conventional Commits",
+            "text": ":\n  - `git_checkpoint`: Non-destructive repository snapshot creation under `refs/zeus/checkpoints/` before major edits.\n  - `git_commit`: AI commit authoring enforcing Conventional Commits formatting and strict Layer 1 workspace path containment."
+          },
+          {
+            "lead": "Automated Test & Lint Auto-Healing Loop",
+            "text": ":\n  - Automated detection and diagnostic extraction from test, lint, and build failures across vitest/jest, pytest, cargo, go, eslint, and tsc.\n  - High-signal error extraction stripping ANSI noise, bounded by XP-01 ceilings (4,000 chars), with structured `[Auto-Healing System Notice]` prompts and bounded 3-turn retry limits."
+          },
+          {
+            "lead": "Sandboxed Headless Browser Automation (`browser_action`)",
+            "text": ":\n  - Electron offscreen Chromium rendering in isolated, ephemeral in-memory partitions (`session.fromPartition`).\n  - Deep SEC-18 packet-level interception across all web requests and subresources with DNS rebinding protection and permanent cloud metadata (`169.254.169.254`) lockdown.\n  - Offscreen automation actions: `launch`, `click`, `type`, `scroll`, `screenshot`, `get_console_logs`, and `close`."
+          }
+        ],
+        "markdown": "- **Persistent Project Memory Engine (`zeus_memory`)**:\n  - Native multi-tier rules discovery and hierarchical injection across `CLAUDE.md`, `AGENTS.md`, `.cursorrules`, and `.clinerules`.\n  - SQLite FTS5-indexed persistent memory storage with BM25 ranking, scoped memory tables (`project_memories`), and zero telemetry.\n  - Native memory tools (`memory_save`, `memory_recall`, `memory_forget`) wired directly into `NativeAgentRuntime`.\n- **Codebase Structural Navigation Tools**:\n  - `list_directory_tree`: Recursive hierarchical directory visualizer with `.gitignore` respect, configurable depth limits (1..5), and XP-01 output truncation bounds (150 entries max).\n  - `view_code_symbols`: AST code symbol extractor parsing functions, methods, classes, interfaces, and types with precise line numbers and XP-01 limits (100 symbols max).\n- **Interactive Disambiguation & Task Delivery**:\n  - `ask_followup_question`: Dedicated interactive clarification tool pausing execution and presenting structured question cards with selectable options in the conversation UI.\n  - `attempt_completion`: Structured task delivery tool formatting completion summaries, optional verification commands, and cleanly terminating the autonomous agent loop.\n- **Mode-Based Agent Personas & Dynamic Tool Scoping**:\n  - Specialized agent personas (`code`, `architect`, `ask`, `test`) with custom `.zeusmodes` / `.roomodes` discovery and fail-closed Layer 1 security gating.\n  - Dynamic tool capability scoping per persona (`read`, `edit`, `command`, `interactive`, `memory`, `browser`).\n- **Git Checkpointing & AI Conventional Commits**:\n  - `git_checkpoint`: Non-destructive repository snapshot creation under `refs/zeus/checkpoints/` before major edits.\n  - `git_commit`: AI commit authoring enforcing Conventional Commits formatting and strict Layer 1 workspace path containment.\n- **Automated Test & Lint Auto-Healing Loop**:\n  - Automated detection and diagnostic extraction from test, lint, and build failures across vitest/jest, pytest, cargo, go, eslint, and tsc.\n  - High-signal error extraction stripping ANSI noise, bounded by XP-01 ceilings (4,000 chars), with structured `[Auto-Healing System Notice]` prompts and bounded 3-turn retry limits.\n- **Sandboxed Headless Browser Automation (`browser_action`)**:\n  - Electron offscreen Chromium rendering in isolated, ephemeral in-memory partitions (`session.fromPartition`).\n  - Deep SEC-18 packet-level interception across all web requests and subresources with DNS rebinding protection and permanent cloud metadata (`169.254.169.254`) lockdown.\n  - Offscreen automation actions: `launch`, `click`, `type`, `scroll`, `screenshot`, `get_console_logs`, and `close`."
+      }
+    ],
+    "contributors": [],
+    "pullRequests": [],
+    "mergedBranches": [],
+    "assets": [],
+    "signing": [],
+    "stats": {
+      "commits": null,
+      "filesChanged": null,
+      "additions": null,
+      "deletions": null
+    },
+    "links": {
+      "release": "https://github.com/mohmaedeslam00116/ZEUS/releases/tag/v0.4.1",
+      "compare": null,
+      "tag": "https://github.com/mohmaedeslam00116/ZEUS/releases/tag/v0.4.1",
+      "milestone": null
+    },
+    "checksumManifest": "SHA256SUMS",
+    "provenanceRepo": "mohmaedeslam00116/ZEUS",
+    "markdown": "ZEUS 0.4.1 marks the first official stable milestone release, graduating from alpha with a fully autonomous, local-first coding assistant architecture. This release introduces the Persistent Project Memory Engine, Extended Code Navigation, Mode-Based Personas, Automated Auto-Healing, Git Governance, and Sandboxed Headless Browser Automation (Wayfinder Map #67):\n\n### Added\n\n- **Persistent Project Memory Engine (`zeus_memory`)**:\n  - Native multi-tier rules discovery and hierarchical injection across `CLAUDE.md`, `AGENTS.md`, `.cursorrules`, and `.clinerules`.\n  - SQLite FTS5-indexed persistent memory storage with BM25 ranking, scoped memory tables (`project_memories`), and zero telemetry.\n  - Native memory tools (`memory_save`, `memory_recall`, `memory_forget`) wired directly into `NativeAgentRuntime`.\n- **Codebase Structural Navigation Tools**:\n  - `list_directory_tree`: Recursive hierarchical directory visualizer with `.gitignore` respect, configurable depth limits (1..5), and XP-01 output truncation bounds (150 entries max).\n  - `view_code_symbols`: AST code symbol extractor parsing functions, methods, classes, interfaces, and types with precise line numbers and XP-01 limits (100 symbols max).\n- **Interactive Disambiguation & Task Delivery**:\n  - `ask_followup_question`: Dedicated interactive clarification tool pausing execution and presenting structured question cards with selectable options in the conversation UI.\n  - `attempt_completion`: Structured task delivery tool formatting completion summaries, optional verification commands, and cleanly terminating the autonomous agent loop.\n- **Mode-Based Agent Personas & Dynamic Tool Scoping**:\n  - Specialized agent personas (`code`, `architect`, `ask`, `test`) with custom `.zeusmodes` / `.roomodes` discovery and fail-closed Layer 1 security gating.\n  - Dynamic tool capability scoping per persona (`read`, `edit`, `command`, `interactive`, `memory`, `browser`).\n- **Git Checkpointing & AI Conventional Commits**:\n  - `git_checkpoint`: Non-destructive repository snapshot creation under `refs/zeus/checkpoints/` before major edits.\n  - `git_commit`: AI commit authoring enforcing Conventional Commits formatting and strict Layer 1 workspace path containment.\n- **Automated Test & Lint Auto-Healing Loop**:\n  - Automated detection and diagnostic extraction from test, lint, and build failures across vitest/jest, pytest, cargo, go, eslint, and tsc.\n  - High-signal error extraction stripping ANSI noise, bounded by XP-01 ceilings (4,000 chars), with structured `[Auto-Healing System Notice]` prompts and bounded 3-turn retry limits.\n- **Sandboxed Headless Browser Automation (`browser_action`)**:\n  - Electron offscreen Chromium rendering in isolated, ephemeral in-memory partitions (`session.fromPartition`).\n  - Deep SEC-18 packet-level interception across all web requests and subresources with DNS rebinding protection and permanent cloud metadata (`169.254.169.254`) lockdown.\n  - Offscreen automation actions: `launch`, `click`, `type`, `scroll`, `screenshot`, `get_console_logs`, and `close`."
+  },
+  {
     "version": "0.1.0-alpha.8",
     "date": "2026-09-25",
     "channel": "preview",
@@ -225,58 +292,18 @@ export const RELEASE_MANIFESTS: ReleaseManifestEntry[] = [
     "checksumManifest": "SHA256SUMS",
     "provenanceRepo": "mohmaedeslam00116/ZEUS",
     "markdown": "ZEUS 0.1.0-alpha.5 resolves headless agent streaming, discovery, and handshake issues across Cline, Codex, and OpenCode on Windows:\n\n### Fixed\n\n- **Cline text and thought streaming omitted from conversation UI**:\n  - Cline emits streamed text and thinking responses wrapped in ACP v1 nested session updates (`{\"method\": \"session/update\", \"params\": {\"update\": {\"sessionUpdate\": \"agent_message_chunk\", \"content\": {\"type\": \"text\", \"text\": \"...\"}}}}`).\n  - Previously, `translateAcpNotification` only inspected flat `params.kind === 'textDelta'`, dropping nested session chunks. ZEUS now unpacks `agent_message_chunk`, `agent_thought_chunk`, `tool_call`, and `tool_call_update` so all model outputs, thoughts, and tool actions stream live to the UI.\n- **Codex initialize timeout (`Codex request timed out after 60000ms: method \"initialize\" (id: 1)`)**:\n  - The Codex app-server emits initial response frames without an explicit `\"jsonrpc\": \"2.0\"` header (e.g. `{\"id\": 1, \"result\": {...}}`).\n  - `JsonRpcStreamParser` previously rejected these frames as invalid JSON-RPC, causing `initialize` and subsequent method calls to hang until timeout. The parser now tolerates frames containing `'id'` or `'method'` without the strict `\"jsonrpc\"` header.\n- **OpenCode CLI discovery on Windows (`The OpenCode CLI is not installed or not found on PATH`)**:\n  - OpenCode installed on Windows under custom or standard system paths (e.g. `D:\\Program Files\\OpenCode\\opencode-cli.exe` or `%LOCALAPPDATA%\\Programs\\@opencode-aidesktop`) was not detected when not in system PATH or named `opencode-cli`.\n  - Added binary probing and spawn resolution for both `opencode` and `opencode-cli` aliases across common Windows installation locations and PATH directories."
-  },
-  {
-    "version": "0.1.0-alpha.4",
-    "date": "2026-09-20",
-    "channel": "preview",
-    "codename": null,
-    "gitTag": "v0.1.0-alpha.4",
-    "commit": null,
-    "buildNumber": null,
-    "summary": "ZEUS 0.1.0-alpha.4 resolves JSON-RPC wire-format incompatibilities with headless\nagents running under the Agent Client Protocol (ACP) and Codex app-server protocols.",
-    "sections": [
-      {
-        "category": "fixed",
-        "title": "Fixed",
-        "items": [
-          {
-            "lead": "Headless ACP agent parameter validation failures (`ACP RPC Error [-32602]: Invalid params`)",
-            "text": ":\n  - In standard ACP v1, `session/new` enforces `{\"required\": [\"cwd\", \"mcpServers\"]}`.\n    ZEUS previously omitted `mcpServers`, triggering schema rejections (`mcpServers: Invalid input`)\n    in ACP runtimes like Cline and OpenCode. `mcpServers: []` is now always included.\n  - In ACP v1, `session/prompt` requires `prompt` to be an array of `ContentBlock` objects\n    (`[{ type: 'text', text: ... }]`). Raw strings previously caused schema rejection\n    (`prompt: Invalid input: expected array, received string`). Prompts are now normalized\n    into standard ACP content blocks.\n  - Added `clientCapabilities` (fs/terminal) during the initial `initialize` handshake."
-          },
-          {
-            "lead": "Codex turn dispatch error (`Codex RPC Error [-32600]: Invalid request: missing field input`)",
-            "text": ":\n  - The Codex app-server wire protocol expects prompts structured under `input` as content\n    blocks rather than a top-level string `prompt`. Requests now supply `input: [{ type: 'text', text: prompt }]`\n    and normalize `turnId` from the returned `turn.id`."
-          }
-        ],
-        "markdown": "- **Headless ACP agent parameter validation failures (`ACP RPC Error [-32602]: Invalid params`)**:\n  - In standard ACP v1, `session/new` enforces `{\"required\": [\"cwd\", \"mcpServers\"]}`.\n    ZEUS previously omitted `mcpServers`, triggering schema rejections (`mcpServers: Invalid input`)\n    in ACP runtimes like Cline and OpenCode. `mcpServers: []` is now always included.\n  - In ACP v1, `session/prompt` requires `prompt` to be an array of `ContentBlock` objects\n    (`[{ type: 'text', text: ... }]`). Raw strings previously caused schema rejection\n    (`prompt: Invalid input: expected array, received string`). Prompts are now normalized\n    into standard ACP content blocks.\n  - Added `clientCapabilities` (fs/terminal) during the initial `initialize` handshake.\n- **Codex turn dispatch error (`Codex RPC Error [-32600]: Invalid request: missing field input`)**:\n  - The Codex app-server wire protocol expects prompts structured under `input` as content\n    blocks rather than a top-level string `prompt`. Requests now supply `input: [{ type: 'text', text: prompt }]`\n    and normalize `turnId` from the returned `turn.id`."
-      }
-    ],
-    "contributors": [],
-    "pullRequests": [],
-    "mergedBranches": [],
-    "assets": [],
-    "signing": [],
-    "stats": {
-      "commits": null,
-      "filesChanged": null,
-      "additions": null,
-      "deletions": null
-    },
-    "links": {
-      "release": "https://github.com/mohmaedeslam00116/ZEUS/releases/tag/v0.1.0-alpha.4",
-      "compare": null,
-      "tag": "https://github.com/mohmaedeslam00116/ZEUS/releases/tag/v0.1.0-alpha.4",
-      "milestone": null
-    },
-    "checksumManifest": "SHA256SUMS",
-    "provenanceRepo": "mohmaedeslam00116/ZEUS",
-    "markdown": "ZEUS 0.1.0-alpha.4 resolves JSON-RPC wire-format incompatibilities with headless\nagents running under the Agent Client Protocol (ACP) and Codex app-server protocols.\n\n### Fixed\n\n- **Headless ACP agent parameter validation failures (`ACP RPC Error [-32602]: Invalid params`)**:\n  - In standard ACP v1, `session/new` enforces `{\"required\": [\"cwd\", \"mcpServers\"]}`.\n    ZEUS previously omitted `mcpServers`, triggering schema rejections (`mcpServers: Invalid input`)\n    in ACP runtimes like Cline and OpenCode. `mcpServers: []` is now always included.\n  - In ACP v1, `session/prompt` requires `prompt` to be an array of `ContentBlock` objects\n    (`[{ type: 'text', text: ... }]`). Raw strings previously caused schema rejection\n    (`prompt: Invalid input: expected array, received string`). Prompts are now normalized\n    into standard ACP content blocks.\n  - Added `clientCapabilities` (fs/terminal) during the initial `initialize` handshake.\n- **Codex turn dispatch error (`Codex RPC Error [-32600]: Invalid request: missing field input`)**:\n  - The Codex app-server wire protocol expects prompts structured under `input` as content\n    blocks rather than a top-level string `prompt`. Requests now supply `input: [{ type: 'text', text: prompt }]`\n    and normalize `turnId` from the returned `turn.id`."
   }
 ];
 
 /** Every released version, newest first. */
 export const RELEASE_INDEX: ReleaseIndexEntry[] = [
+  {
+    "version": "0.4.1",
+    "date": "2026-09-26",
+    "channel": "stable",
+    "summary": "ZEUS 0.4.1 marks the first official stable milestone release, graduating from alpha with a fully autonomous, local-first coding assistant architecture. This release introduces the Persistent Project Memory Engine, Extended Code Navigation, Mode-Based Personas, Automated Auto-Healing, Git Governance, and Sandboxed Headless Browser Automation (Wayfinder Map #67):",
+    "detailed": true
+  },
   {
     "version": "0.1.0-alpha.8",
     "date": "2026-09-25",
@@ -310,7 +337,7 @@ export const RELEASE_INDEX: ReleaseIndexEntry[] = [
     "date": "2026-09-20",
     "channel": "preview",
     "summary": "ZEUS 0.1.0-alpha.4 resolves JSON-RPC wire-format incompatibilities with headless\nagents running under the Agent Client Protocol (ACP) and Codex app-server protocols.",
-    "detailed": true
+    "detailed": false
   },
   {
     "version": "0.1.0-alpha.3",
